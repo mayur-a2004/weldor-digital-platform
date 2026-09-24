@@ -1,0 +1,20 @@
+[
+  {
+    "leadNumber": "WEL-2026-6949",
+    "companyName": "Tata Motors Precision Engineering",
+    "contactName": "Sanjay Deshmukh",
+    "contactEmail": "sanjay.d@tatamotors.com",
+    "contactPhone": "+91 98250 99881",
+    "country": "India",
+    "source": "Website Public RFQ",
+    "stage": "NEW_LEAD",
+    "assignedTo": "emp-101",
+    "assignedToName": "Vikram Mehta",
+    "estimatedValueUSD": 37500,
+    "probability": 25,
+    "technicalRequirements": "Urgent custom manifold evaluation for new EV assembly line.",
+    "urgency": "HIGH",
+    "createdAt": "2026-09-23T13:40:15.694Z",
+    "id": "lead-1790170815694"
+  }
+]

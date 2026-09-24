@@ -1,0 +1,47 @@
+[
+  {
+    "id": "cat-pnc-01",
+    "name": "Pneumatic Automation Components",
+    "slug": "pneumatic-components",
+    "description": "High-cycle ISO 15552 standard pneumatic cylinders, compact air actuators, 5/2 & 5/3 directional solenoid valves, and precision FRL air preparation units.",
+    "iconName": "Wind",
+    "productCount": 6,
+    "featured": true,
+    "image": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=800",
+    "bannerImage": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=1600",
+    "subCategories": ["ISO 15552 Cylinders", "Compact Guided Cylinders", "Solenoid Valves 5/2 & 5/3", "FRL Air Preparation", "Rotary Actuators"],
+    "seoKeywords": ["pneumatic cylinder", "solenoid valve", "air regulator", "automation cylinder", "ISO 15552"],
+    "seoMetaTitle": "Pneumatic Automation Components | Weldor Industries",
+    "seoMetaDescription": "Industrial grade pneumatic cylinders, solenoid valves, and air preparation units for high-speed automated production lines."
+  },
+  {
+    "id": "cat-hyd-02",
+    "name": "High-Pressure Hydraulic Systems",
+    "slug": "hydraulic-systems",
+    "description": "Heavy-duty 700 Bar hydraulic power pack valves, welded hydraulic cylinders, modular subplate manifolds, and pilot-operated check valves.",
+    "iconName": "Droplets",
+    "productCount": 5,
+    "featured": true,
+    "image": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800",
+    "bannerImage": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1600",
+    "subCategories": ["Hydraulic Directional Valves", "High-Pressure Cylinders", "Modular Subplates & Manifolds", "Hydraulic Powerpacks", "Flow Control Valves"],
+    "seoKeywords": ["hydraulic valve", "hydraulic power pack", "700 bar cylinder", "high pressure hydraulics", "welded cylinder"],
+    "seoMetaTitle": "High-Pressure Hydraulic Systems | Weldor Industries",
+    "seoMetaDescription": "Precision hydraulic components engineered for heavy stamping presses, injection molding machines, and industrial powerpacks."
+  },
+  {
+    "id": "cat-cnc-03",
+    "name": "Industrial Brass & Precision CNC Parts",
+    "slug": "brass-cnc-components",
+    "description": "Micron-tolerance brass push-in fittings, nickel-plated quick connect couplers, CNC turned manifolds, and custom OEM precision machined components.",
+    "iconName": "Cpu",
+    "productCount": 5,
+    "featured": true,
+    "image": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?auto=format&fit=crop&q=80&w=800",
+    "bannerImage": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?auto=format&fit=crop&q=80&w=1600",
+    "subCategories": ["Brass Push-In Fittings", "Quick Release Couplers", "CNC Turned Manifolds", "Flange Adapters", "Custom OEM Machined Parts"],
+    "seoKeywords": ["brass fittings", "quick coupler", "CNC turned parts", "precision machined brass", "pneumatic fittings"],
+    "seoMetaTitle": "Industrial Brass & Precision CNC Machined Parts | Weldor Industries",
+    "seoMetaDescription": "ISO 9001 certified precision CNC machined components and brass fittings manufactured at our Jamnagar engineering facility."
+  }
+]

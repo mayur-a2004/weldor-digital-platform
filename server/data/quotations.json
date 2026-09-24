@@ -1,0 +1,34 @@
+[
+  {
+    "id": "quote-1790170833031",
+    "quotationNumber": "WEL-QT-2026-2017",
+    "leadId": "lead-1790170815668",
+    "companyName": "Tata Motors Precision Engineering",
+    "contactName": "Sanjay Deshmukh",
+    "email": "sanjay.d@tatamotors.com",
+    "items": [
+      {
+        "id": "item-1790170833031",
+        "productId": "prod-spec-1790170833031",
+        "productName": "Hydraulic Components (Standard Weldor Spec)",
+        "sku": "WEL-SPEC-01",
+        "quantity": 250,
+        "unitPriceUSD": 250,
+        "discountPercentage": 5,
+        "taxPercentage": 18,
+        "totalPriceUSD": 59375
+      }
+    ],
+    "subtotalUSD": 62500,
+    "totalDiscountUSD": 3125,
+    "taxTotalUSD": 10687.5,
+    "freightCostUSD": 1500,
+    "grandTotalUSD": 71562.5,
+    "paymentTerms": "30% Advance, 70% against Shipping Documents",
+    "deliveryTerms": "Ex-Factory Weldor Plant / FOB",
+    "validityDays": 30,
+    "status": "Pending Manager Approval",
+    "requiresApproval": true,
+    "createdAt": "2026-09-23T13:40:33.031Z"
+  }
+]

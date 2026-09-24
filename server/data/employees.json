@@ -1,0 +1,135 @@
+[
+  {
+    "employeeId": "WEL-1609",
+    "employeeCode": "WLD-002",
+    "name": "vishal",
+    "fatherName": "yashbhai",
+    "dateOfBirth": "1995-01-01",
+    "dateOfJoining": "2026-09-19",
+    "gender": "Male",
+    "employmentType": "Full-Time",
+    "designation": "zsxdcgfvghbhjnjkmlk",
+    "department": "Sales & BD",
+    "roleId": "role-hr-manager",
+    "roleName": "HR & Payroll Manager",
+    "reportingManager": "Super Admin",
+    "email": "email@gmail.com",
+    "phone": "1234567890",
+    "panNumber": "ZXCCBV1212",
+    "aadhaarNumber": "123456789123",
+    "uanNumber": "",
+    "pfNumber": "",
+    "bankDetails": {
+      "bankName": "HDFC Bank Ltd",
+      "accountNumber": "",
+      "ifscCode": "",
+      "branch": "Ahmedabad",
+      "accountType": "Salary"
+    },
+    "salaryStructure": {
+      "baseSalary": 18500,
+      "hra": 7400,
+      "da": 3700,
+      "specialAllowance": 3700,
+      "conveyanceAllowance": 3000,
+      "medicalAllowance": 3000,
+      "pfDeductionEmployee": 2220,
+      "pfDeductionEmployer": 2220,
+      "professionalTax": 200,
+      "tdsTax": 500,
+      "grossMonthlySalary": 39300,
+      "netMonthlySalary": 36380,
+      "annualCTC": 498240
+    },
+    "territory": [
+      "India"
+    ],
+    "productCategories": [
+      "Pneumatic Components"
+    ],
+    "scope": "All",
+    "status": "Active",
+    "avatarUrl": "/uploads/file-1789819481407-99486210.jfif",
+    "address": {
+      "currentAddress": "fg hjk",
+      "city": "Ahmedabad",
+      "state": "Gujarat",
+      "pincode": "380015"
+    },
+    "emergencyContact": {
+      "name": "",
+      "relation": "Parent / Spouse",
+      "phone": ""
+    },
+    "password": "email",
+    "id": "emp-1789819573938",
+    "createdAt": "2026-09-19T12:06:13.950Z",
+    "activeSessionToken": null,
+    "lastLoginAt": "2026-09-19T12:06:41.157Z",
+    "lastLoginDevice": "Google Chrome (Workstation)",
+    "updatedAt": "2026-09-19T12:07:18.578Z",
+    "lastLogoutAt": "2026-09-19T12:07:18.575Z"
+  },
+  {
+    "id": "emp-root-superadmin",
+    "employeeId": "WEL-1001",
+    "employeeCode": "WLD-001",
+    "name": "Super Admin",
+    "fatherName": "",
+    "dateOfBirth": "1985-01-01",
+    "dateOfJoining": "2026-09-19",
+    "gender": "Male",
+    "employmentType": "Full-Time",
+    "designation": "Managing Director & Platform Administrator",
+    "department": "Executive Management",
+    "roleId": "role-super-admin",
+    "roleName": "Super Admin",
+    "reportingManager": "Board of Directors",
+    "email": "admin@weldorindustries.com",
+    "password": "Weldor@2026",
+    "phone": "+91 98250 11223",
+    "bankDetails": {
+      "bankName": "State Bank of India",
+      "accountNumber": "",
+      "ifscCode": "",
+      "branch": "Metoda GIDC, Rajkot",
+      "accountType": "Salary"
+    },
+    "salaryStructure": {
+      "baseSalary": 100000,
+      "hra": 40000,
+      "da": 20000,
+      "specialAllowance": 20000,
+      "conveyanceAllowance": 3000,
+      "medicalAllowance": 3000,
+      "pfDeductionEmployee": 12000,
+      "pfDeductionEmployer": 12000,
+      "professionalTax": 200,
+      "tdsTax": 15000,
+      "grossMonthlySalary": 186000,
+      "netMonthlySalary": 158800,
+      "annualCTC": 2376000
+    },
+    "territory": [
+      "All"
+    ],
+    "productCategories": [
+      "All"
+    ],
+    "scope": "All",
+    "status": "Active",
+    "avatarUrl": "/uploads/file-1789813897316-573525194.jfif",
+    "address": {
+      "currentAddress": "GIDC Industrial Area",
+      "city": "Rajkot",
+      "state": "Gujarat",
+      "pincode": "360021"
+    },
+    "createdAt": "2026-09-19T07:23:02.304Z",
+    "updatedAt": "2026-09-23T13:39:51.069Z",
+    "activeSessionToken": "weldor_sess_3238afad9fc7c9901da46bac5a057605ff8ce43c00d6a710_1790170791068",
+    "lastLoginAt": "2026-09-23T13:39:51.068Z",
+    "lastLoginDevice": "Google Chrome (Workstation)",
+    "lastLogoutAt": "2026-09-19T14:49:57.181Z"
+  }
+]

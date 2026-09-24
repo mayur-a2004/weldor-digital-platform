@@ -1,0 +1,65 @@
+[
+  {
+    "id": "aud-1790170791075-665",
+    "action": "USER_LOGIN",
+    "module": "auth",
+    "targetId": "emp-root-superadmin",
+    "performedBy": "Super Admin (Super Admin)",
+    "details": "User logged in from Google Chrome (Workstation).",
+    "timestamp": "2026-09-23T13:39:51.068Z"
+  },
+  {
+    "id": "aud-1789829397203-564",
+    "action": "USER_LOGOUT",
+    "module": "auth",
+    "targetId": "emp-root-superadmin",
+    "performedBy": "Super Admin",
+    "details": "User logged out cleanly. Session terminated.",
+    "timestamp": "2026-09-19T14:49:57.204Z"
+  },
+  {
+    "id": "aud-1789819644933-867",
+    "action": "USER_LOGIN",
+    "module": "auth",
+    "targetId": "emp-root-superadmin",
+    "performedBy": "Super Admin (Super Admin)",
+    "details": "User logged in from Google Chrome (Workstation). New session token generated. Previous sessions invalidated.",
+    "timestamp": "2026-09-19T12:07:24.917Z"
+  },
+  {
+    "id": "aud-1789819638580-40",
+    "action": "USER_LOGOUT",
+    "module": "auth",
+    "targetId": "emp-1789819573938",
+    "performedBy": "vishal",
+    "details": "User logged out cleanly. Session terminated.",
+    "timestamp": "2026-09-19T12:07:18.580Z"
+  },
+  {
+    "id": "aud-1789819601162-689",
+    "action": "USER_LOGIN",
+    "module": "auth",
+    "targetId": "emp-1789819573938",
+    "performedBy": "vishal (HR & Payroll Manager)",
+    "details": "User logged in from Google Chrome (Workstation). New session token generated. Previous sessions invalidated.",
+    "timestamp": "2026-09-19T12:06:41.157Z"
+  },
+  {
+    "id": "aud-1789819586404-919",
+    "action": "USER_LOGOUT",
+    "module": "auth",
+    "targetId": "emp-root-superadmin",
+    "performedBy": "Super Admin",
+    "details": "User logged out cleanly. Session terminated.",
+    "timestamp": "2026-09-19T12:06:26.404Z"
+  },
+  {
+    "id": "aud-1789815017111-353",
+    "action": "USER_LOGIN",
+    "module": "auth",
+    "targetId": "emp-root-superadmin",
+    "performedBy": "Super Admin (Super Admin)",
+    "details": "User logged in from Google Chrome (Workstation). New session token generated. Previous sessions invalidated.",
+    "timestamp": "2026-09-19T10:50:17.098Z"
+  }
+]
