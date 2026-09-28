@@ -1,20 +1,21 @@
 [
   {
-    "leadNumber": "WEL-2026-6949",
-    "companyName": "Tata Motors Precision Engineering",
-    "contactName": "Sanjay Deshmukh",
-    "contactEmail": "sanjay.d@tatamotors.com",
-    "contactPhone": "+91 98250 99881",
+    "leadNumber": "WEL-2026-9924",
+    "companyName": "Larsen & Toubro Heavy Fabrication",
+    "contactName": "Rajesh Sharma",
+    "contactEmail": "rajesh.sharma@lt-heavy.com",
+    "contactPhone": "+91 98765 43210",
     "country": "India",
     "source": "Website Public RFQ",
     "stage": "NEW_LEAD",
-    "assignedTo": "emp-101",
-    "assignedToName": "Vikram Mehta",
-    "estimatedValueUSD": 37500,
+    "assignedTo": "emp-admin",
+    "assignedToName": "Super Admin",
+    "estimatedValueUSD": 15000,
     "probability": 25,
-    "technicalRequirements": "Urgent custom manifold evaluation for new EV assembly line.",
+    "technicalRequirements": "Need 100 units of 24KD 4-meter EURO torches for structural welding pipeline project.",
     "urgency": "HIGH",
-    "createdAt": "2026-09-23T13:40:15.694Z",
-    "id": "lead-1790170815694"
+    "createdAt": "2026-09-25T17:50:03.270Z",
+    "id": "lead-1790358603270-114",
+    "updatedAt": "2026-09-25T17:50:03.271Z"
   }
 ]

@@ -77,8 +77,8 @@ export const Footer: React.FC = () => {
               <span className="tech-badge flex items-center gap-1 text-orange-800 bg-orange-50 border-orange-200 font-bold text-xs">
                 <ShieldCheck className="w-3.5 h-3.5 text-orange-600" /> ISO 9001:2015 Registered
               </span>
-              <span className="tech-badge flex items-center gap-1 text-blue-800 bg-blue-50 border-blue-200 font-bold text-xs">
-                <Award className="w-3.5 h-3.5 text-blue-600" /> ZED Bronze MSME Certified
+              <span className="tech-badge flex items-center gap-1 text-emerald-800 bg-emerald-50 border-emerald-200 font-bold text-xs">
+                <Award className="w-3.5 h-3.5 text-emerald-600" /> MSME ZED Silver Certified
               </span>
             </div>
           </div>
@@ -89,27 +89,27 @@ export const Footer: React.FC = () => {
             <ul className="space-y-2 text-sm font-semibold text-slate-700">
               <li>
                 <button onClick={() => setActiveView('public-products')} className="hover:text-orange-600 transition-colors">
-                  Pneumatic Components
+                  MIG / CO2 & TIG Torches
                 </button>
               </li>
               <li>
                 <button onClick={() => setActiveView('public-products')} className="hover:text-orange-600 transition-colors">
-                  Hydraulic Valves & Fittings
+                  Plasma & Gas Cutting Torches
                 </button>
               </li>
               <li>
                 <button onClick={() => setActiveView('public-products')} className="hover:text-orange-600 transition-colors">
-                  Welding Component Torches
+                  300 Bar Gas Regulators
                 </button>
               </li>
               <li>
                 <button onClick={() => setActiveView('public-products')} className="hover:text-orange-600 transition-colors">
-                  Fire Safety Equipment
+                  Welding & Cutting Consumables
                 </button>
               </li>
               <li>
-                <button onClick={() => setActiveView('public-products')} className="hover:text-orange-600 transition-colors">
-                  Precision 5-Axis CNC Parts
+                <button onClick={() => setActiveView('public-about')} className="hover:text-orange-600 transition-colors">
+                  Quality & Certifications
                 </button>
               </li>
             </ul>

@@ -28,231 +28,179 @@ const DEFAULT_SYSTEM_ROLES = [
       { module: 'rbac', actions: ['view', 'create', 'edit', 'delete', 'assign', 'approve'] },
       { module: 'audit', actions: ['view', 'export'] },
     ]
-  },
-  {
-    id: 'role-sales-manager',
-    name: 'Sales Manager',
-    description: 'Manages team leads, quotation approvals, pipeline targets, and performance reports.',
-    isSystem: false,
-    scope: 'Team',
-    permissions: [
-      { module: 'dashboard', actions: ['view', 'export'] },
-      { module: 'leads', actions: ['view', 'create', 'edit', 'assign', 'export'] },
-      { module: 'rfqs', actions: ['view', 'create', 'edit', 'assign', 'export'] },
-      { module: 'quotations', actions: ['view', 'create', 'edit', 'approve', 'export'] },
-      { module: 'orders', actions: ['view', 'create', 'edit', 'approve', 'export'] },
-      { module: 'samples', actions: ['view', 'create', 'edit', 'approve'] },
-      { module: 'trials', actions: ['view', 'create', 'edit'] },
-      { module: 'products', actions: ['view'] }
-    ]
-  },
-  {
-    id: 'role-hr-manager',
-    name: 'HR & Payroll Manager',
-    description: 'Manages employee directory, biometric attendance, salary generation, and compliance.',
-    isSystem: false,
-    scope: 'All',
-    permissions: [
-      { module: 'dashboard', actions: ['view'] },
-      { module: 'employees', actions: ['view', 'create', 'edit', 'delete', 'approve', 'export'] },
-      { module: 'payroll', actions: ['view', 'create', 'edit', 'approve', 'export'] },
-      { module: 'attendance', actions: ['view', 'create', 'edit', 'approve', 'export'] },
-      { module: 'audit', actions: ['view'] }
-    ]
-  },
-  {
-    id: 'role-sales-exec',
-    name: 'Sales Executive',
-    description: 'Assigned customer leads, client RFQs, and generating basic quotations.',
-    isSystem: false,
-    scope: 'Assigned',
-    permissions: [
-      { module: 'dashboard', actions: ['view'] },
-      { module: 'leads', actions: ['view', 'create', 'edit'] },
-      { module: 'rfqs', actions: ['view', 'create', 'edit'] },
-      { module: 'quotations', actions: ['view', 'create', 'edit'] },
-      { module: 'samples', actions: ['view', 'create'] },
-      { module: 'products', actions: ['view'] }
-    ]
-  },
-  {
-    id: 'role-quality-inspector',
-    name: 'Quality Inspector & Lab Tech',
-    description: 'Executes technical trials, validates sample metallurgy tolerances and test certificates.',
-    isSystem: false,
-    scope: 'Assigned',
-    permissions: [
-      { module: 'dashboard', actions: ['view'] },
-      { module: 'samples', actions: ['view', 'create', 'edit', 'approve'] },
-      { module: 'trials', actions: ['view', 'create', 'edit', 'approve'] },
-      { module: 'products', actions: ['view'] }
-    ]
   }
 ];
 
 // --- ROLES & RBAC ---
-router.get('/roles', (req, res) => {
-  let roles = db.get('roles', DEFAULT_SYSTEM_ROLES);
-  if (!Array.isArray(roles) || roles.length === 0) {
-    roles = DEFAULT_SYSTEM_ROLES;
-    db.set('roles', roles);
+router.get('/roles', async (req, res) => {
+  try {
+    let roles = await db.get('roles', DEFAULT_SYSTEM_ROLES);
+    if (!Array.isArray(roles) || roles.length === 0) {
+      roles = DEFAULT_SYSTEM_ROLES;
+      await db.set('roles', roles);
+    }
+    res.json({ success: true, count: roles.length, data: roles });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch roles', error: err.message });
   }
-  res.json({ success: true, count: roles.length, data: roles });
 });
 
-router.post('/roles', (req, res) => {
-  const roleData = {
-    ...req.body,
-    id: req.body.id || `role-${Date.now()}`,
-    isSystem: false,
-    scope: req.body.scope || 'Assigned',
-    permissions: req.body.permissions || [],
-  };
-  let roles = db.get('roles', DEFAULT_SYSTEM_ROLES);
-  if (!Array.isArray(roles)) roles = DEFAULT_SYSTEM_ROLES;
-  roles.push(roleData);
-  db.set('roles', roles);
-  res.status(201).json({ success: true, message: 'Custom role created', data: roleData });
-});
-
-router.put('/roles/:id', (req, res) => {
-  let roles = db.get('roles', DEFAULT_SYSTEM_ROLES);
-  if (!Array.isArray(roles)) roles = DEFAULT_SYSTEM_ROLES;
-  const index = roles.findIndex(r => r.id === req.params.id);
-  if (index === -1) return res.status(404).json({ success: false, message: 'Role not found' });
-  
-  // Super admin remains system role
-  const isSuperAdmin = req.params.id === 'role-super-admin' || roles[index].name === 'Super Admin';
-  roles[index] = {
-    ...roles[index],
-    ...req.body,
-    isSystem: isSuperAdmin ? true : (roles[index].isSystem ?? false),
-    updatedAt: new Date().toISOString()
-  };
-  db.set('roles', roles);
-  res.json({ success: true, message: 'Role updated', data: roles[index] });
-});
-
-router.delete('/roles/:id', (req, res) => {
-  if (req.params.id === 'role-super-admin') {
-    return res.status(400).json({ success: false, message: 'Super Admin system role cannot be deleted' });
+router.post('/roles', async (req, res) => {
+  try {
+    const role = await db.insert('roles', req.body);
+    res.status(201).json({ success: true, message: 'Role created', data: role });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to create role', error: err.message });
   }
-  let roles = db.get('roles', DEFAULT_SYSTEM_ROLES);
-  if (!Array.isArray(roles)) roles = DEFAULT_SYSTEM_ROLES;
-  const filtered = roles.filter(r => r.id !== req.params.id && r.name !== 'Super Admin');
-  db.set('roles', filtered);
-  res.json({ success: true, message: 'Role deleted' });
+});
+
+router.put('/roles/:id', async (req, res) => {
+  try {
+    const updated = await db.update('roles', req.params.id, req.body);
+    if (!updated) return res.status(404).json({ success: false, message: 'Role not found' });
+    res.json({ success: true, message: 'Role updated', data: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update role', error: err.message });
+  }
+});
+
+router.delete('/roles/:id', async (req, res) => {
+  try {
+    const deleted = await db.delete('roles', req.params.id);
+    if (!deleted) return res.status(404).json({ success: false, message: 'Role not found' });
+    res.json({ success: true, message: 'Role deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to delete role', error: err.message });
+  }
 });
 
 // --- EMPLOYEES ---
-router.get('/employees', (req, res) => {
-  let employees = db.get('employees', []);
-  if (!Array.isArray(employees)) employees = [];
-  res.json({ success: true, count: employees.length, data: employees });
+router.get('/employees', async (req, res) => {
+  try {
+    let employees = await db.get('employees', []);
+    if (!Array.isArray(employees)) employees = [];
+    res.json({ success: true, count: employees.length, data: employees });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch employees', error: err.message });
+  }
 });
 
-router.post('/employees', (req, res) => {
-  const empData = {
-    ...req.body,
-    password: req.body.password || 'Weldor@2026',
-    status: req.body.status || 'Active',
-  };
-  const newEmp = db.insert('employees', empData);
-  res.status(201).json({ success: true, message: 'Employee onboarded', data: newEmp });
+router.post('/employees', async (req, res) => {
+  try {
+    const employee = await db.insert('employees', req.body);
+    res.status(201).json({ success: true, message: 'Employee onboarded', data: employee });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to create employee', error: err.message });
+  }
 });
 
-router.put('/employees/:id', (req, res) => {
-  const updated = db.update('employees', req.params.id, req.body);
-  if (!updated) return res.status(404).json({ success: false, message: 'Employee not found' });
-  res.json({ success: true, message: 'Employee updated', data: updated });
+router.put('/employees/:id', async (req, res) => {
+  try {
+    const updated = await db.update('employees', req.params.id, req.body);
+    if (!updated) return res.status(404).json({ success: false, message: 'Employee not found' });
+    res.json({ success: true, message: 'Employee profile updated', data: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update employee', error: err.message });
+  }
 });
 
-router.delete('/employees/:id', (req, res) => {
-  const deleted = db.delete('employees', req.params.id);
-  if (!deleted) return res.status(404).json({ success: false, message: 'Employee not found' });
-  res.json({ success: true, message: 'Employee deleted' });
+router.delete('/employees/:id', async (req, res) => {
+  try {
+    const deleted = await db.delete('employees', req.params.id);
+    if (!deleted) return res.status(404).json({ success: false, message: 'Employee not found' });
+    res.json({ success: true, message: 'Employee removed' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to delete employee', error: err.message });
+  }
 });
 
 // --- PAYROLL ---
-router.get('/payroll', (req, res) => {
-  let payrolls = db.get('payrolls', []);
-  if (!Array.isArray(payrolls)) payrolls = [];
-  res.json({ success: true, count: payrolls.length, data: payrolls });
-});
-
-router.post('/payroll', (req, res) => {
-  const rec = db.insert('payrolls', req.body);
-  res.status(201).json({ success: true, message: 'Payroll record created', data: rec });
-});
-
-router.post('/payroll/bulk', (req, res) => {
-  const records = req.body.records || (Array.isArray(req.body) ? req.body : []);
-  let payrolls = db.get('payrolls', []);
-  if (!Array.isArray(payrolls)) payrolls = [];
-
-  const created = [];
-  for (const r of records) {
-    const existingIndex = payrolls.findIndex(p => p.id === r.id || (p.employeeId === r.employeeId && p.payrollMonth === r.payrollMonth && p.payrollYear === r.payrollYear));
-    if (existingIndex >= 0) {
-      payrolls[existingIndex] = { ...payrolls[existingIndex], ...r };
-      created.push(payrolls[existingIndex]);
-    } else {
-      const item = { ...r, id: r.id || `pay-${Date.now()}-${Math.floor(Math.random()*1000)}` };
-      payrolls.unshift(item);
-      created.push(item);
-    }
+router.get('/payroll', async (req, res) => {
+  try {
+    let payroll = await db.get('payrolls', []);
+    if (!Array.isArray(payroll)) payroll = [];
+    res.json({ success: true, count: payroll.length, data: payroll });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch payroll', error: err.message });
   }
-
-  db.set('payrolls', payrolls);
-  res.status(201).json({ success: true, message: `Processed ${created.length} payroll records`, data: created });
 });
 
-router.put('/payroll/:id', (req, res) => {
-  const updated = db.update('payrolls', req.params.id, req.body);
-  if (!updated) return res.status(404).json({ success: false, message: 'Payroll record not found' });
-  res.json({ success: true, message: 'Payroll record updated', data: updated });
+router.post('/payroll', async (req, res) => {
+  try {
+    const record = await db.insert('payrolls', req.body);
+    res.status(201).json({ success: true, message: 'Payroll record created', data: record });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to create payroll', error: err.message });
+  }
 });
 
-router.delete('/payroll/:id', (req, res) => {
-  const deleted = db.delete('payrolls', req.params.id);
-  if (!deleted) return res.status(404).json({ success: false, message: 'Payroll record not found' });
-  res.json({ success: true, message: 'Payroll record deleted' });
+router.put('/payroll/:id', async (req, res) => {
+  try {
+    const updated = await db.update('payrolls', req.params.id, req.body);
+    if (!updated) return res.status(404).json({ success: false, message: 'Payroll record not found' });
+    res.json({ success: true, message: 'Payroll record updated', data: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update payroll', error: err.message });
+  }
 });
 
-// --- ATTENDANCE ---
-router.get('/attendance', (req, res) => {
-  let attendance = db.get('attendance', []);
-  if (!Array.isArray(attendance)) attendance = [];
-  res.json({ success: true, count: attendance.length, data: attendance });
+router.delete('/payroll/:id', async (req, res) => {
+  try {
+    const deleted = await db.delete('payrolls', req.params.id);
+    if (!deleted) return res.status(404).json({ success: false, message: 'Payroll record not found' });
+    res.json({ success: true, message: 'Payroll record deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to delete payroll', error: err.message });
+  }
 });
 
-router.post('/attendance', (req, res) => {
-  const record = db.insert('attendance', req.body);
-  res.status(201).json({ success: true, message: 'Attendance logged', data: record });
+// --- ATTENDANCE & LEAVES ---
+router.get('/attendance', async (req, res) => {
+  try {
+    let attendance = await db.get('attendances', []);
+    if (!Array.isArray(attendance)) attendance = [];
+    res.json({ success: true, count: attendance.length, data: attendance });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch attendance', error: err.message });
+  }
 });
 
-router.put('/attendance/:id', (req, res) => {
-  const updated = db.update('attendance', req.params.id, req.body);
-  if (!updated) return res.status(404).json({ success: false, message: 'Attendance record not found' });
-  res.json({ success: true, message: 'Attendance record updated', data: updated });
+router.post('/attendance', async (req, res) => {
+  try {
+    const record = await db.insert('attendances', req.body);
+    res.status(201).json({ success: true, message: 'Attendance logged', data: record });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to log attendance', error: err.message });
+  }
 });
 
-// --- LEAVES ---
-router.get('/leaves', (req, res) => {
-  let leaves = db.get('leaves', []);
-  if (!Array.isArray(leaves)) leaves = [];
-  res.json({ success: true, count: leaves.length, data: leaves });
+router.get('/leaves', async (req, res) => {
+  try {
+    let leaves = await db.get('leaves', []);
+    if (!Array.isArray(leaves)) leaves = [];
+    res.json({ success: true, count: leaves.length, data: leaves });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch leaves', error: err.message });
+  }
 });
 
-router.post('/leaves', (req, res) => {
-  const leave = db.insert('leaves', req.body);
-  res.status(201).json({ success: true, message: 'Leave request submitted', data: leave });
+router.post('/leaves', async (req, res) => {
+  try {
+    const leave = await db.insert('leaves', req.body);
+    res.status(201).json({ success: true, message: 'Leave request submitted', data: leave });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to submit leave', error: err.message });
+  }
 });
 
-router.put('/leaves/:id', (req, res) => {
-  const updated = db.update('leaves', req.params.id, req.body);
-  if (!updated) return res.status(404).json({ success: false, message: 'Leave request not found' });
-  res.json({ success: true, message: 'Leave request updated', data: updated });
+router.put('/leaves/:id', async (req, res) => {
+  try {
+    const updated = await db.update('leaves', req.params.id, req.body);
+    if (!updated) return res.status(404).json({ success: false, message: 'Leave request not found' });
+    res.json({ success: true, message: 'Leave status updated', data: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update leave', error: err.message });
+  }
 });
 
 export default router;

@@ -1,47 +1,108 @@
 [
   {
-    "id": "cat-pnc-01",
-    "name": "Pneumatic Automation Components",
-    "slug": "pneumatic-components",
-    "description": "High-cycle ISO 15552 standard pneumatic cylinders, compact air actuators, 5/2 & 5/3 directional solenoid valves, and precision FRL air preparation units.",
-    "iconName": "Wind",
-    "productCount": 6,
+    "id": "cat-wel-01",
+    "name": "MIG / CO2 & TIG Welding Torches",
+    "slug": "mig-tig-welding-torches",
+    "description": "Heavy-duty 24KD, 36KD, PANA 350A/500A, and precision high-frequency TIG welding torches with air-cooled and water-cooled configurations.",
+    "iconName": "Flame",
+    "productCount": 4,
     "featured": true,
-    "image": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=800",
-    "bannerImage": "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=1600",
-    "subCategories": ["ISO 15552 Cylinders", "Compact Guided Cylinders", "Solenoid Valves 5/2 & 5/3", "FRL Air Preparation", "Rotary Actuators"],
-    "seoKeywords": ["pneumatic cylinder", "solenoid valve", "air regulator", "automation cylinder", "ISO 15552"],
-    "seoMetaTitle": "Pneumatic Automation Components | Weldor Industries",
-    "seoMetaDescription": "Industrial grade pneumatic cylinders, solenoid valves, and air preparation units for high-speed automated production lines."
+    "image": "/catalog_pages/page_4.png",
+    "bannerImage": "/catalog_pages/page_4.png",
+    "subCategories": [
+      "24KD MIG Torches",
+      "36KD MIG Torches",
+      "PANA 350A/500A Torches",
+      "TIG Welding Torches (WP-18/26)"
+    ],
+    "seoKeywords": [
+      "MIG welding torch",
+      "24KD torch",
+      "36KD torch",
+      "PANA 500A torch",
+      "TIG torch",
+      "CO2 welding torch"
+    ],
+    "seoMetaTitle": "MIG & TIG Industrial Welding Torches | Weldor Industries",
+    "seoMetaDescription": "High-performance air-cooled and water-cooled MIG & TIG welding torches manufactured by Earth Metal Industries."
   },
   {
-    "id": "cat-hyd-02",
-    "name": "High-Pressure Hydraulic Systems",
-    "slug": "hydraulic-systems",
-    "description": "Heavy-duty 700 Bar hydraulic power pack valves, welded hydraulic cylinders, modular subplate manifolds, and pilot-operated check valves.",
+    "id": "cat-cut-02",
+    "name": "Plasma & Gas Cutting Torches",
+    "slug": "plasma-gas-cutting-torches",
+    "description": "Manual handheld and Automatic CNC Plasma cutting torches up to 200A and injector / equal-pressure PNME & ANME gas cutting torches up to 300mm capacity.",
+    "iconName": "Zap",
+    "productCount": 4,
+    "featured": true,
+    "image": "/catalog_pages/page_6.png",
+    "bannerImage": "/catalog_pages/page_7.png",
+    "subCategories": [
+      "Plasma Manual Torches",
+      "Plasma Automatic CNC Torches",
+      "PNME Injector Gas Torches",
+      "ANME Equal Pressure Torches"
+    ],
+    "seoKeywords": [
+      "plasma torch",
+      "CNC plasma torch",
+      "gas cutting torch",
+      "PNME torch",
+      "ANME cutting torch"
+    ],
+    "seoMetaTitle": "Plasma & Oxy-Fuel Gas Cutting Torches | Weldor Industries",
+    "seoMetaDescription": "Industrial plasma and gas cutting torches for structural steel cutting up to 300mm thickness."
+  },
+  {
+    "id": "cat-reg-03",
+    "name": "Industrial Gas Pressure Regulators",
+    "slug": "gas-pressure-regulators",
+    "description": "Heavy-duty forged brass gas pressure regulators and flowmeters for Oxygen, Acetylene, Argon/CO2, Nitrogen, Hydrogen, and LPG.",
     "iconName": "Droplets",
     "productCount": 5,
     "featured": true,
-    "image": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800",
-    "bannerImage": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1600",
-    "subCategories": ["Hydraulic Directional Valves", "High-Pressure Cylinders", "Modular Subplates & Manifolds", "Hydraulic Powerpacks", "Flow Control Valves"],
-    "seoKeywords": ["hydraulic valve", "hydraulic power pack", "700 bar cylinder", "high pressure hydraulics", "welded cylinder"],
-    "seoMetaTitle": "High-Pressure Hydraulic Systems | Weldor Industries",
-    "seoMetaDescription": "Precision hydraulic components engineered for heavy stamping presses, injection molding machines, and industrial powerpacks."
+    "image": "/catalog_pages/page_9.png",
+    "bannerImage": "/catalog_pages/page_9.png",
+    "subCategories": [
+      "Oxygen Regulators",
+      "Acetylene Regulators",
+      "Argon / CO2 Flowmeters",
+      "Nitrogen High-Pressure Regulators",
+      "Industrial LPG Regulators"
+    ],
+    "seoKeywords": [
+      "gas regulator",
+      "oxygen regulator",
+      "argon flowmeter",
+      "acetylene regulator",
+      "300 bar regulator"
+    ],
+    "seoMetaTitle": "Heavy-Duty Forged Brass Gas Pressure Regulators | Weldor",
+    "seoMetaDescription": "High-pressure forged brass gas regulators for oxy-fuel cutting, MIG/TIG shielding gas, and industrial heating."
   },
   {
-    "id": "cat-cnc-03",
-    "name": "Industrial Brass & Precision CNC Parts",
-    "slug": "brass-cnc-components",
-    "description": "Micron-tolerance brass push-in fittings, nickel-plated quick connect couplers, CNC turned manifolds, and custom OEM precision machined components.",
+    "id": "cat-con-04",
+    "name": "Welding & Cutting Consumables",
+    "slug": "welding-cutting-consumables",
+    "description": "CuCrZr contact tips, conical MIG nozzles, gas diffusers, plasma electrodes, swirl rings, and precision CNC machined PNME/ANME cutting nozzles.",
     "iconName": "Cpu",
-    "productCount": 5,
+    "productCount": 3,
     "featured": true,
-    "image": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?auto=format&fit=crop&q=80&w=800",
-    "bannerImage": "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?auto=format&fit=crop&q=80&w=1600",
-    "subCategories": ["Brass Push-In Fittings", "Quick Release Couplers", "CNC Turned Manifolds", "Flange Adapters", "Custom OEM Machined Parts"],
-    "seoKeywords": ["brass fittings", "quick coupler", "CNC turned parts", "precision machined brass", "pneumatic fittings"],
-    "seoMetaTitle": "Industrial Brass & Precision CNC Machined Parts | Weldor Industries",
-    "seoMetaDescription": "ISO 9001 certified precision CNC machined components and brass fittings manufactured at our Jamnagar engineering facility."
+    "image": "/catalog_pages/page_10.png",
+    "bannerImage": "/catalog_pages/page_8.png",
+    "subCategories": [
+      "MIG Contact Tips & Nozzles",
+      "Plasma Electrodes & Nozzles",
+      "PNME/ANME Cutting Tips",
+      "Gas Diffusers & Insulators"
+    ],
+    "seoKeywords": [
+      "MIG contact tip",
+      "welding nozzle",
+      "plasma electrode",
+      "cutting nozzle",
+      "gas diffuser"
+    ],
+    "seoMetaTitle": "Welding & Cutting Consumables & Spare Parts | Weldor",
+    "seoMetaDescription": "Precision machined copper and brass consumables for MIG, TIG, Plasma, and Oxy-Fuel torches."
   }
 ]

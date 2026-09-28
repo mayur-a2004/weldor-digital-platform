@@ -1,1 +1,110 @@
-[]
+[
+  {
+    "id": "gal-cat-1",
+    "title": "Weldor Official Catalog \u2014 Page 1",
+    "category": "Product Catalog & Drawings",
+    "url": "/catalog_pages/page_1.png",
+    "thumbnail": "/catalog_pages/page_1.png",
+    "description": "Official Weldor Welding & Cutting Catalog Page 1 published by Earth Metal Industries, Jamnagar.",
+    "createdAt": "2026-09-25T12:00:00Z"
+  },
+  {
+    "id": "gal-cat-2",
+    "title": "Weldor Official Catalog \u2014 Page 2",
+    "category": "Product Catalog & Drawings",
+    "url": "/catalog_pages/page_2.png",
+    "thumbnail": "/catalog_pages/page_2.png",
+    "description": "Official Weldor Welding & Cutting Catalog Page 2 published by Earth Metal Industries, Jamnagar.",
+    "createdAt": "2026-09-25T12:00:00Z"
+  },
+  {
+    "id": "gal-cat-3",
+    "title": "Weldor Official Catalog \u2014 Page 3",
+    "category": "Product Catalog & Drawings",
+    "url": "/catalog_pages/page_3.png",
+    "thumbnail": "/catalog_pages/page_3.png",
+    "description": "Official Weldor Welding & Cutting Catalog Page 3 published by Earth Metal Industries, Jamnagar.",
+    "createdAt": "2026-09-25T12:00:00Z"
+  },
+  {
+    "id": "gal-cat-4",
+    "title": "Weldor Official Catalog \u2014 Page 4",
+    "category": "Product Catalog & Drawings",
+    "url": "/catalog_pages/page_4.png",
+    "thumbnail": "/catalog_pages/page_4.png",
+    "description": "Official Weldor Welding & Cutting Catalog Page 4 published by Earth Metal Industries, Jamnagar.",
+    "createdAt": "2026-09-25T12:00:00Z"
+  },
+  {
+    "id": "gal-cat-5",
+    "title": "Weldor Official Catalog \u2014 Page 5",
+    "category": "Product Catalog & Drawings",
+    "url": "/catalog_pages/page_5.png",
+    "thumbnail": "/catalog_pages/page_5.png",
+    "description": "Official Weldor Welding & Cutting Catalog Page 5 published by Earth Metal Industries, Jamnagar.",
+    "createdAt": "2026-09-25T12:00:00Z"
+  },
+  {
+    "id": "gal-cat-6",
+    "title": "Weldor Official Catalog \u2014 Page 6",
+    "category": "Product Catalog & Drawings",
+    "url": "/catalog_pages/page_6.png",
+    "thumbnail": "/catalog_pages/page_6.png",
+    "description": "Official Weldor Welding & Cutting Catalog Page 6 published by Earth Metal Industries, Jamnagar.",
+    "createdAt": "2026-09-25T12:00:00Z"
+  },
+  {
+    "id": "gal-cat-7",
+    "title": "Weldor Official Catalog \u2014 Page 7",
+    "category": "Product Catalog & Drawings",
+    "url": "/catalog_pages/page_7.png",
+    "thumbnail": "/catalog_pages/page_7.png",
+    "description": "Official Weldor Welding & Cutting Catalog Page 7 published by Earth Metal Industries, Jamnagar.",
+    "createdAt": "2026-09-25T12:00:00Z"
+  },
+  {
+    "id": "gal-cat-8",
+    "title": "Weldor Official Catalog \u2014 Page 8",
+    "category": "Product Catalog & Drawings",
+    "url": "/catalog_pages/page_8.png",
+    "thumbnail": "/catalog_pages/page_8.png",
+    "description": "Official Weldor Welding & Cutting Catalog Page 8 published by Earth Metal Industries, Jamnagar.",
+    "createdAt": "2026-09-25T12:00:00Z"
+  },
+  {
+    "id": "gal-cat-9",
+    "title": "Weldor Official Catalog \u2014 Page 9",
+    "category": "Product Catalog & Drawings",
+    "url": "/catalog_pages/page_9.png",
+    "thumbnail": "/catalog_pages/page_9.png",
+    "description": "Official Weldor Welding & Cutting Catalog Page 9 published by Earth Metal Industries, Jamnagar.",
+    "createdAt": "2026-09-25T12:00:00Z"
+  },
+  {
+    "id": "gal-cat-10",
+    "title": "Weldor Official Catalog \u2014 Page 10",
+    "category": "Product Catalog & Drawings",
+    "url": "/catalog_pages/page_10.png",
+    "thumbnail": "/catalog_pages/page_10.png",
+    "description": "Official Weldor Welding & Cutting Catalog Page 10 published by Earth Metal Industries, Jamnagar.",
+    "createdAt": "2026-09-25T12:00:00Z"
+  },
+  {
+    "id": "gal-cat-11",
+    "title": "Weldor Official Catalog \u2014 Page 11",
+    "category": "Product Catalog & Drawings",
+    "url": "/catalog_pages/page_11.png",
+    "thumbnail": "/catalog_pages/page_11.png",
+    "description": "Official Weldor Welding & Cutting Catalog Page 11 published by Earth Metal Industries, Jamnagar.",
+    "createdAt": "2026-09-25T12:00:00Z"
+  },
+  {
+    "id": "gal-cat-12",
+    "title": "Weldor Official Catalog \u2014 Page 12",
+    "category": "Product Catalog & Drawings",
+    "url": "/catalog_pages/page_12.png",
+    "thumbnail": "/catalog_pages/page_12.png",
+    "description": "Official Weldor Welding & Cutting Catalog Page 12 published by Earth Metal Industries, Jamnagar.",
+    "createdAt": "2026-09-25T12:00:00Z"
+  }
+]

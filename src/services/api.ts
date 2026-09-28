@@ -843,18 +843,4 @@ export const api = {
       return { success: false, error: 'NETWORK_ERROR' };
     }
   },
-  changePassword: async (data: { currentPassword?: string; newPassword: string; userId?: string }, token?: string) => {
-    try {
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers['x-session-token'] = token;
-      const res = await fetch(`${API_BASE}/auth/change-password`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(data),
-      });
-      return await res.json();
-    } catch (e) {
-      return { success: false, message: 'Password change failed' };
-    }
-  },
 };

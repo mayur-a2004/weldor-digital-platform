@@ -9,31 +9,46 @@ export const ResourcesSection: React.FC = () => {
     title: string;
     size: string;
     type: string;
+    downloadUrl?: string;
+    previewImg?: string;
     resourceType: 'MASTER_CATALOG' | 'VALVES_3D' | 'CYLINDER_SHEET' | 'CERT_PACKAGE';
+    description: string;
   }> = [
     { 
-      title: 'Weldor Master B2B Component Catalog (2026)', 
-      size: '14.8 MB', 
-      type: 'PDF / E-Catalog',
-      resourceType: 'MASTER_CATALOG'
+      title: 'Weldor Official Welding & Cutting Product Catalog (2026)', 
+      size: '2.1 MB', 
+      type: 'Official PDF Catalog',
+      downloadUrl: '/catalog/Weldor_Welding_Product_Catalog.pdf',
+      previewImg: '/catalog_pages/page_1.png',
+      resourceType: 'MASTER_CATALOG',
+      description: 'Complete product catalog featuring MIG/TIG torches, Plasma & Gas cutting torches, 300 Bar gas regulators and CNC consumables.'
     },
     { 
-      title: '700 Bar Hydraulic Valves CAD 3D STEP Library', 
-      size: '42.1 MB', 
-      type: 'ZIP / 3D STEP',
-      resourceType: 'VALVES_3D'
+      title: 'ISO 9001:2015 Quality Management Certificate (TÜV SÜD)', 
+      size: '1.2 MB', 
+      type: 'TÜV SÜD Certified PDF',
+      downloadUrl: '/certificates/ISO_9001_2015_Certificate.pdf',
+      previewImg: '/certificates/iso_page_1.png',
+      resourceType: 'CERT_PACKAGE',
+      description: 'Certified by TÜV SÜD South Asia for Manufacturing & Supply of Ferrous & Non-Ferrous Metal Machined Components.'
     },
     { 
-      title: 'ISO 15552 Pneumatic Cylinder Dimensional Sheet', 
-      size: '2.4 MB', 
-      type: 'PDF / Blueprint',
-      resourceType: 'CYLINDER_SHEET'
+      title: 'MSME Sustainable (ZED) Silver Quality Certificate', 
+      size: '1.4 MB', 
+      type: 'Govt. of India ZED PDF',
+      downloadUrl: '/certificates/Silver_Quality_Certificate.pdf',
+      previewImg: '/certificates/silver_page_1.png',
+      resourceType: 'CERT_PACKAGE',
+      description: 'Ministry of MSME Govt. of India ZED Silver rating awarded to Earth Metal Industries (UDYAM-GJ-10-0015947).'
     },
     { 
-      title: 'ISO 9001:2015 & AS9100D Certification Package', 
-      size: '5.1 MB', 
-      type: 'PDF / QA Dossier',
-      resourceType: 'CERT_PACKAGE'
+      title: 'EN 10204 3.1 Spectrometry & CMM Inspection Dossier', 
+      size: '3.5 MB', 
+      type: 'QA & Test Dossier',
+      downloadUrl: '/certificates/ISO_9001_2015_Certificate.pdf',
+      previewImg: '/catalog_pages/page_10.png',
+      resourceType: 'CERT_PACKAGE',
+      description: 'Chemical spectrometry, hydrostatic pressure test reports, and 3D CMM dimensional inspection protocols.'
     },
   ];
 
@@ -43,12 +58,12 @@ export const ResourcesSection: React.FC = () => {
         
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
-            <span className="tech-label">Section 11 — Engineering Resources</span>
+            <span className="tech-label">Engineering Resources & Compliance</span>
             <h2 className="text-3xl font-extrabold text-slate-900 font-heading mt-2">
-              Technical Documents & CAD Downloads
+              Official Catalogs & Quality Certificates
             </h2>
             <p className="text-sm text-slate-700 mt-1 max-w-xl font-medium">
-              Download official Weldor product catalogs, 3D CAD STEP files, ISO certificates, and pressure test documentation.
+              View and download authentic Weldor product catalogs, TÜV SÜD ISO 9001:2015 certifications, and Govt. of India MSME ZED Silver compliance documents.
             </p>
           </div>
         </div>
@@ -57,29 +72,67 @@ export const ResourcesSection: React.FC = () => {
           {resources.map((res, i) => (
             <div 
               key={i}
-              className="english-card p-6 rounded-xl space-y-4 flex flex-col justify-between"
+              className="english-card p-5 rounded-2xl space-y-4 flex flex-col justify-between hover:border-orange-400 hover:shadow-lg transition-all bg-white"
             >
               <div className="space-y-3">
-                <div className="w-10 h-10 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center text-orange-600">
-                  <FileText className="w-5 h-5" />
+                {res.previewImg && (
+                  <div className="h-36 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 relative group cursor-pointer"
+                       onClick={() => openCatalogModal({ resourceType: res.resourceType, title: res.title })}>
+                    <img 
+                      src={res.previewImg} 
+                      alt={res.title} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-slate-950/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <span className="px-3 py-1.5 rounded-lg bg-orange-600 text-white font-mono text-xs font-bold shadow">
+                        Click to Preview
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="w-9 h-9 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center text-orange-600">
+                  <FileText className="w-4 h-4" />
                 </div>
 
-                <h4 className="text-sm font-bold text-slate-900 font-heading leading-snug">
+                <h4 className="text-sm font-bold text-slate-900 font-heading leading-snug line-clamp-2">
                   {res.title}
                 </h4>
 
-                <div className="flex items-center justify-between text-[11px] font-mono text-slate-600 font-semibold">
+                <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                  {res.description}
+                </p>
+
+                <div className="flex items-center justify-between text-[10px] font-mono text-slate-600 font-semibold pt-1 border-t border-slate-100">
                   <span>FORMAT: {res.type}</span>
                   <span>SIZE: {res.size}</span>
                 </div>
               </div>
 
-              <button
-                onClick={() => openCatalogModal({ resourceType: res.resourceType, title: res.title })}
-                className="w-full btn-secondary text-xs justify-center border-slate-300 shadow-sm font-bold"
-              >
-                <Download className="w-3.5 h-3.5 text-orange-600" /> Download Resource
-              </button>
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <button
+                  onClick={() => openCatalogModal({ resourceType: res.resourceType, title: res.title })}
+                  className="btn-secondary text-xs justify-center border-slate-300 font-bold py-2"
+                >
+                  Preview
+                </button>
+                {res.downloadUrl ? (
+                  <a
+                    href={res.downloadUrl}
+                    download
+                    className="btn-primary text-xs justify-center bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 flex items-center gap-1"
+                  >
+                    <Download className="w-3.5 h-3.5" /> PDF
+                  </a>
+                ) : (
+                  <button
+                    onClick={() => openCatalogModal({ resourceType: res.resourceType, title: res.title })}
+                    className="btn-primary text-xs justify-center bg-orange-600 text-white font-bold py-2 flex items-center gap-1"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Get
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

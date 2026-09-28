@@ -1,12 +1,13 @@
 [
   {
-    "leadId": "lead-1790170815694",
-    "leadNumber": "WEL-2026-6949",
-    "title": "Custom 500-ton Hydraulic Press Manifold Inquiry",
-    "targetQuantity": 250,
-    "technicalNotes": "Urgent custom manifold evaluation for new EV assembly line.",
+    "leadId": "lead-1790358603270-114",
+    "leadNumber": "WEL-2026-9924",
+    "title": "Inquiry for 24KD & 36KD MIG Torches",
+    "targetQuantity": 100,
+    "technicalNotes": "Need 100 units of 24KD 4-meter EURO torches for structural welding pipeline project.",
     "status": "Pending Review",
-    "createdAt": "2026-09-23T13:40:15.695Z",
-    "id": "rfqs-1790170815695"
+    "createdAt": "2026-09-25T17:50:03.411Z",
+    "id": "rfqs-1790358603411-10",
+    "updatedAt": "2026-09-25T17:50:03.411Z"
   }
 ]

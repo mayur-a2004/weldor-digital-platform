@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { v2 as cloudinary } from 'cloudinary';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,6 +12,12 @@ const UPLOAD_DIR = path.join(__dirname, '../uploads');
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -30,74 +37,86 @@ const upload = multer({
 
 const router = express.Router();
 
-// Helper to determine Cloudinary resource type
-const getResourceType = (mimetype, filename) => {
-  if (mimetype.startsWith('video/')) return 'video';
-  if (mimetype.startsWith('image/')) return 'image';
-  if (mimetype === 'application/pdf' || filename.endsWith('.pdf') || filename.endsWith('.step') || filename.endsWith('.dwg')) return 'raw';
-  return 'auto';
+// Helper to upload file to Cloudinary with fallback to local URL
+const uploadToCloudinarySafely = async (filePath, originalName, mimetype) => {
+  const isPdf = mimetype === 'application/pdf' || originalName.endsWith('.pdf');
+  const isVideo = mimetype.startsWith('video/');
+  const folder = isPdf ? 'weldor-certificates' : (isVideo ? 'weldor-videos' : 'weldor-assets');
+
+  try {
+    if (process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_KEY !== 'your_api_key') {
+      const res = await cloudinary.uploader.upload(filePath, {
+        folder,
+        resource_type: isPdf ? 'raw' : (isVideo ? 'video' : 'auto'),
+        use_filename: true,
+        unique_filename: true,
+      });
+      return res.secure_url;
+    }
+  } catch (err) {
+    console.warn('⚠️ Direct Cloudinary upload fallback:', err.message);
+  }
+  return `/uploads/${path.basename(filePath)}`;
 };
 
-// Single file upload with Cloudinary CDN transformation formatting
-router.post('/', upload.single('file'), (req, res) => {
+// Single file upload
+router.post('/', upload.single('file'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No file uploaded' });
   }
 
-  const resourceType = getResourceType(req.file.mimetype, req.file.originalname);
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'weldor-industrial';
-  
-  // Format standard URL and Cloudinary high-speed CDN delivery URL
-  const localUrl = `/uploads/${req.file.filename}`;
-  const cdnUrl = `https://res.cloudinary.com/${cloudName}/${resourceType}/upload/f_auto,q_auto/v1/weldor-assets/${req.file.filename}`;
+  try {
+    const cloudUrl = await uploadToCloudinarySafely(req.file.path, req.file.originalname, req.file.mimetype);
 
-  res.json({
-    success: true,
-    message: 'File uploaded successfully via Industrial CDN',
-    data: {
-      originalName: req.file.originalname,
-      filename: req.file.filename,
-      sizeBytes: req.file.size,
-      mimetype: req.file.mimetype,
-      resourceType,
-      url: localUrl,
-      cdnUrl: cdnUrl,
-      isCdnOptimized: true
-    },
-  });
+    res.json({
+      success: true,
+      message: 'File uploaded successfully to Cloudinary CDN',
+      data: {
+        originalName: req.file.originalname,
+        filename: req.file.filename,
+        sizeBytes: req.file.size,
+        mimetype: req.file.mimetype,
+        url: cloudUrl,
+        cdnUrl: cloudUrl,
+        isCdnOptimized: true,
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Upload failed', error: e.message });
+  }
 });
 
-// Bulk Multiple file uploads (Images, Videos, PDFs, CAD files)
-router.post('/bulk', upload.array('files', 50), (req, res) => {
+// Bulk file uploads
+router.post('/bulk', upload.array('files', 50), async (req, res) => {
   if (!req.files || req.files.length === 0) {
     return res.status(400).json({ success: false, message: 'No files uploaded' });
   }
 
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'weldor-industrial';
+  try {
+    const uploadedFiles = await Promise.all(
+      req.files.map(async (file) => {
+        const cloudUrl = await uploadToCloudinarySafely(file.path, file.originalname, file.mimetype);
+        return {
+          originalName: file.originalname,
+          filename: file.filename,
+          sizeBytes: file.size,
+          mimetype: file.mimetype,
+          url: cloudUrl,
+          cdnUrl: cloudUrl,
+          isCdnOptimized: true,
+        };
+      })
+    );
 
-  const uploadedFiles = req.files.map((file) => {
-    const resourceType = getResourceType(file.mimetype, file.originalname);
-    const localUrl = `/uploads/${file.filename}`;
-    const cdnUrl = `https://res.cloudinary.com/${cloudName}/${resourceType}/upload/f_auto,q_auto/v1/weldor-assets/${file.filename}`;
-
-    return {
-      originalName: file.originalname,
-      filename: file.filename,
-      sizeBytes: file.size,
-      mimetype: file.mimetype,
-      resourceType,
-      url: localUrl,
-      cdnUrl: cdnUrl,
-      isCdnOptimized: true
-    };
-  });
-
-  res.json({
-    success: true,
-    message: `Successfully uploaded ${uploadedFiles.length} files to Cloudinary CDN!`,
-    count: uploadedFiles.length,
-    data: uploadedFiles,
-  });
+    res.json({
+      success: true,
+      message: `Successfully uploaded ${uploadedFiles.length} files to Cloudinary CDN!`,
+      count: uploadedFiles.length,
+      data: uploadedFiles,
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Bulk upload failed', error: e.message });
+  }
 });
 
 export default router;

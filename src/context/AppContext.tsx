@@ -24,6 +24,12 @@ import type {
   CompanySettings
 } from '../types';
 import { INITIAL_ROLES } from '../config/roles';
+import { 
+  OFFICIAL_WELDOR_PRODUCTS, 
+  OFFICIAL_WELDOR_CATEGORIES, 
+  OFFICIAL_WELDOR_BANNERS,
+  OFFICIAL_WELDOR_GALLERY
+} from '../config/catalogData';
 
 export type ViewMode = 
   | 'public-home'
@@ -335,10 +341,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isConcurrentLogoutAlertOpen, setIsConcurrentLogoutAlertOpen] = useState(false);
   const isAuthenticated = !!(currentUser && sessionToken);
 
-  const [categories, setCategories] = useState<ProductCategory[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [galleryMedia, setGalleryMedia] = useState<GalleryMedia[]>([]);
-  const [banners, setBanners] = useState<HeroBanner[]>([]);
+  const [categories, setCategories] = useState<ProductCategory[]>(OFFICIAL_WELDOR_CATEGORIES);
+  const [products, setProducts] = useState<Product[]>(OFFICIAL_WELDOR_PRODUCTS);
+  const [galleryMedia, setGalleryMedia] = useState<GalleryMedia[]>(OFFICIAL_WELDOR_GALLERY);
+  const [banners, setBanners] = useState<HeroBanner[]>(OFFICIAL_WELDOR_BANNERS);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [compareList, setCompareList] = useState<Product[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState<boolean>(false);

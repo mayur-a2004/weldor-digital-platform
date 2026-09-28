@@ -690,39 +690,85 @@ export const ProductCatalogModal: React.FC = () => {
               </div>
             )}
 
-            {/* MODE E: ISO CERTIFICATION PACKAGE */}
+            {/* MODE E: OFFICIAL ISO & MSME CERTIFICATION PACKAGE */}
             {resourceType === 'CERT_PACKAGE' && (
               <div className="space-y-6">
-                <div className="p-5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2">
-                  <span className="text-[10px] font-mono text-emerald-800 font-bold uppercase">Quality Assurance Compliance</span>
-                  <h3 className="text-base font-bold text-emerald-950 font-heading">
-                    ISO 9001:2015 & AS9100D Aerospace & Industrial Quality Certification
+                <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-2">
+                  <span className="text-[10px] font-mono text-emerald-800 font-bold uppercase tracking-wider">
+                    Quality Assurance & Accreditations
+                  </span>
+                  <h3 className="text-lg font-extrabold text-emerald-950 font-heading">
+                    ISO 9001:2015 & MSME Sustainable ZED Silver Quality Certification
                   </h3>
-                  <p className="text-xs text-emerald-900">
-                    Earth Metal Industries maintains strict 100% batch traceability, coordinate measuring machine (CMM) dimensional verification, and helium leak testing for all pressurized components.
+                  <p className="text-xs text-emerald-900 leading-relaxed">
+                    Earth Metal Industries (Plot 588, G.I.D.C. Phase-2, Dared, Jamnagar) maintains strict 100% batch traceability, CMM dimensional inspection, and spectrometry validation.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
-                    <h4 className="text-xs font-mono font-bold text-slate-900 uppercase">Quality Management Highlights:</h4>
-                    <ul className="text-xs text-slate-700 space-y-1">
-                      <li>• Zeiss CMM 3D Coordinate Inspection (0.001mm tolerance)</li>
-                      <li>• Spectrometer Raw Material Chemical Analysis</li>
-                      <li>• 100% Automated Hydrostatic & Pneumatic Proof Testing</li>
-                      <li>• Surface Roughness Profilometer (Ra & Rz)</li>
-                    </ul>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  {/* ISO 9001:2015 Card */}
+                  <div className="p-5 rounded-2xl border-2 border-orange-300 bg-white space-y-4 shadow-sm flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="h-56 rounded-xl bg-slate-50 border border-slate-200 overflow-hidden flex items-center justify-center p-2">
+                        <img 
+                          src="/certificates/iso_page_1.png" 
+                          alt="TÜV SÜD ISO 9001:2015 Certificate" 
+                          className="max-h-full object-contain"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-mono font-bold text-orange-700 bg-orange-100 px-2 py-0.5 rounded uppercase">
+                          TÜV SÜD SOUTH ASIA
+                        </span>
+                        <h4 className="text-sm font-bold text-slate-900 mt-1">ISO 9001:2015 Certificate</h4>
+                        <p className="text-[11px] text-slate-600 mt-1">
+                          Scope: Manufacturing & Supply of Ferrous and Non-Ferrous Metal Machined Components.
+                        </p>
+                      </div>
+                    </div>
+
+                    <a
+                      href="/certificates/ISO_9001_2015_Certificate.pdf"
+                      download="Weldor_ISO_9001_2015_Certificate.pdf"
+                      className="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-colors"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download ISO 9001 PDF</span>
+                    </a>
                   </div>
 
-                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
-                    <h4 className="text-xs font-mono font-bold text-slate-900 uppercase">Certificates Included in Package:</h4>
-                    <ul className="text-xs text-slate-700 space-y-1">
-                      <li>• ISO 9001:2015 Quality Management Certificate</li>
-                      <li>• AS9100D Aerospace Standards Compliance</li>
-                      <li>• European CE Declaration of Conformity</li>
-                      <li>• RoHS 3 Directive (EU 2015/863) Compliance Statement</li>
-                    </ul>
+                  {/* MSME ZED Silver Card */}
+                  <div className="p-5 rounded-2xl border-2 border-slate-200 bg-white space-y-4 shadow-sm flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="h-56 rounded-xl bg-slate-50 border border-slate-200 overflow-hidden flex items-center justify-center p-2">
+                        <img 
+                          src="/certificates/silver_page_1.png" 
+                          alt="Govt of India MSME ZED Silver Certificate" 
+                          className="max-h-full object-contain"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-mono font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded uppercase">
+                          GOVT. OF INDIA MSME
+                        </span>
+                        <h4 className="text-sm font-bold text-slate-900 mt-1">MSME ZED Silver Certificate</h4>
+                        <p className="text-[11px] text-slate-600 mt-1">
+                          Zero Defect Zero Effect Scheme (Reg: UDYAM-GJ-10-0015947 | Cert: 25032026_466755).
+                        </p>
+                      </div>
+                    </div>
+
+                    <a
+                      href="/certificates/Silver_Quality_Certificate.pdf"
+                      download="Weldor_MSME_ZED_Silver_Certificate.pdf"
+                      className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-colors"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download MSME ZED PDF</span>
+                    </a>
                   </div>
+
                 </div>
               </div>
             )}

@@ -675,38 +675,95 @@ export const CMSManager: React.FC = () => {
                 </div>
               </div>
 
-              {/* Background & 3D Product Image URLs */}
+              {/* Background & 3D Product Image URLs / File Upload */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700 font-mono uppercase tracking-wider block">
-                    Background HD Image URL *
-                  </label>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-slate-700 font-mono uppercase tracking-wider block">
+                      Background HD Image *
+                    </label>
+                    <label className="text-[10.5px] font-mono font-bold text-orange-600 hover:text-orange-700 bg-orange-50 px-2 py-0.5 rounded cursor-pointer border border-orange-200">
+                      📁 Upload File
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              if (typeof reader.result === 'string') {
+                                setFormData(prev => ({ ...prev, bgImageUrl: reader.result as string }));
+                                showNotification(`Background image loaded from device!`, 'success');
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
                   <input 
-                    type="url"
+                    type="text"
                     required
                     value={formData.bgImageUrl}
                     onChange={e => setFormData({ ...formData, bgImageUrl: e.target.value })}
-                    placeholder="https://images.unsplash.com/..."
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-orange-600 focus:outline-none bg-slate-50 text-slate-900 font-mono"
+                    placeholder="Paste URL or upload image file above..."
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:border-orange-600 focus:outline-hidden bg-slate-50 text-slate-900 font-mono text-xs"
                   />
                   {formData.bgImageUrl && (
-                    <img src={formData.bgImageUrl} alt="BG Preview" className="h-24 w-full object-cover rounded-xl mt-2 border border-slate-200" />
+                    <div className="relative group">
+                      <img src={formData.bgImageUrl} alt="BG Preview" className="h-28 w-full object-cover rounded-xl border border-slate-200 shadow-2xs" />
+                      <span className="absolute bottom-1 right-2 bg-black/70 text-white text-[9px] font-mono px-1.5 py-0.5 rounded">
+                        Live Preview
+                      </span>
+                    </div>
                   )}
                 </div>
 
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700 font-mono uppercase tracking-wider block">
-                    3D Floating Product Card Image & Linked SKU
-                  </label>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-slate-700 font-mono uppercase tracking-wider block">
+                      3D Floating Product Image
+                    </label>
+                    <label className="text-[10.5px] font-mono font-bold text-orange-600 hover:text-orange-700 bg-orange-50 px-2 py-0.5 rounded cursor-pointer border border-orange-200">
+                      📁 Upload PNG
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              if (typeof reader.result === 'string') {
+                                setFormData(prev => ({ ...prev, productImageUrl: reader.result as string }));
+                                showNotification(`Product graphic loaded from device!`, 'success');
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
                   <input 
-                    type="url"
+                    type="text"
                     value={formData.productImageUrl}
                     onChange={e => setFormData({ ...formData, productImageUrl: e.target.value })}
-                    placeholder="Product image URL..."
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-orange-600 focus:outline-none bg-slate-50 text-slate-900 font-mono"
+                    placeholder="Paste PNG/URL or upload image file above..."
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:border-orange-600 focus:outline-hidden bg-slate-50 text-slate-900 font-mono text-xs"
                   />
 
-                  <div className="pt-1.5 flex items-center gap-2">
+                  {formData.productImageUrl && (
+                    <div className="relative group">
+                      <img src={formData.productImageUrl} alt="Product Preview" className="h-20 w-auto object-contain bg-slate-100 rounded-xl p-1 border border-slate-200" />
+                    </div>
+                  )}
+
+                  <div className="pt-1 flex items-center gap-2">
                     <input 
                       type="text"
                       value={formData.productSku}

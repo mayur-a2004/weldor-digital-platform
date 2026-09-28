@@ -3,47 +3,44 @@ import { db } from '../db.js';
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
-  const { type, category } = req.query;
-  let items = db.get('gallery', []);
-  if (!Array.isArray(items)) items = [];
+router.get('/', async (req, res) => {
+  try {
+    const { type, category } = req.query;
+    let items = await db.get('gallery', []);
+    if (!Array.isArray(items)) items = [];
 
-  if (type && type !== 'All') {
-    items = items.filter((i) => i && i.type === type);
+    if (type && type !== 'All') {
+      items = items.filter((i) => i && i.type === type);
+    }
+
+    if (category && category !== 'All') {
+      items = items.filter((i) => i && i.category === category);
+    }
+
+    res.json({ success: true, count: items.length, data: items });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch gallery', error: err.message });
   }
-
-  if (category && category !== 'All') {
-    items = items.filter((i) => i && i.category === category);
-  }
-
-  res.json({ success: true, count: items.length, data: items });
 });
 
-router.post('/', (req, res) => {
-  const newItem = db.insert('gallery', req.body);
-  res.status(201).json({ success: true, message: 'Media item added', data: newItem });
+router.post('/', async (req, res) => {
+  try {
+    const newItem = await db.insert('gallery', req.body);
+    res.status(201).json({ success: true, message: 'Media item added', data: newItem });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to add media item', error: err.message });
+  }
 });
 
 // POST bulk upload media items
-router.post('/bulk', (req, res) => {
+router.post('/bulk', async (req, res) => {
   try {
     const items = Array.isArray(req.body) ? req.body : (req.body.items || []);
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ success: false, message: 'No media items provided for bulk upload' });
     }
 
-    const inserted = [];
-    for (const item of items) {
-      if (!item.title || !item.url) continue;
-      const mediaToSave = {
-        ...item,
-        type: item.type || 'Photo',
-        category: item.category || 'Machining Bay',
-        createdAt: item.createdAt || new Date().toISOString()
-      };
-      const created = db.insert('gallery', mediaToSave);
-      inserted.push(created);
-    }
+    const inserted = await db.bulkInsert('gallery', items);
 
     res.status(201).json({
       success: true,
@@ -57,16 +54,24 @@ router.post('/bulk', (req, res) => {
   }
 });
 
-router.put('/:id', (req, res) => {
-  const updated = db.update('gallery', req.params.id, req.body);
-  if (!updated) return res.status(404).json({ success: false, message: 'Media item not found' });
-  res.json({ success: true, message: 'Media item updated', data: updated });
+router.put('/:id', async (req, res) => {
+  try {
+    const updated = await db.update('gallery', req.params.id, req.body);
+    if (!updated) return res.status(404).json({ success: false, message: 'Media item not found' });
+    res.json({ success: true, message: 'Media item updated', data: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update media item', error: err.message });
+  }
 });
 
-router.delete('/:id', (req, res) => {
-  const deleted = db.delete('gallery', req.params.id);
-  if (!deleted) return res.status(404).json({ success: false, message: 'Media item not found' });
-  res.json({ success: true, message: 'Media item deleted' });
+router.delete('/:id', async (req, res) => {
+  try {
+    const deleted = await db.delete('gallery', req.params.id);
+    if (!deleted) return res.status(404).json({ success: false, message: 'Media item not found' });
+    res.json({ success: true, message: 'Media item deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to delete media item', error: err.message });
+  }
 });
 
 export default router;

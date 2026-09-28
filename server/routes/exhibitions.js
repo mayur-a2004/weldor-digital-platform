@@ -33,61 +33,78 @@ const resolveExpoStatus = (expo) => {
 };
 
 // GET all exhibitions
-router.get('/', (req, res) => {
-  const { status } = req.query;
-  let expos = db.get('exhibitions', []);
-  if (!Array.isArray(expos)) expos = [];
+router.get('/', async (req, res) => {
+  try {
+    const { status } = req.query;
+    let expos = await db.get('exhibitions', []);
+    if (!Array.isArray(expos)) expos = [];
 
-  expos = expos.filter(Boolean).map(resolveExpoStatus);
+    expos = expos.filter(Boolean).map(resolveExpoStatus);
 
-  if (status && status !== 'All') {
-    if (status === 'Upcoming') {
-      expos = expos.filter((e) => e.computedStatus === 'Upcoming' || e.computedStatus === 'Live');
-    } else if (status === 'Past') {
-      expos = expos.filter((e) => e.computedStatus === 'Past Exhibition');
+    if (status && status !== 'All') {
+      if (status === 'Upcoming') {
+        expos = expos.filter((e) => e.computedStatus === 'Upcoming' || e.computedStatus === 'Live');
+      } else if (status === 'Past') {
+        expos = expos.filter((e) => e.computedStatus === 'Past Exhibition');
+      }
     }
-  }
 
-  res.json({ success: true, count: expos.length, data: expos });
+    res.json({ success: true, count: expos.length, data: expos });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch exhibitions', error: err.message });
+  }
 });
 
 // GET exhibition by QR slug
-router.get('/slug/:slug', (req, res) => {
-  let expos = db.get('exhibitions', []);
-  if (!Array.isArray(expos)) expos = [];
-  const expo = expos.find((e) => e && e.qrSlug === req.params.slug);
-  if (!expo) {
-    return res.status(404).json({ success: false, message: 'Exhibition QR slug not found' });
+router.get('/slug/:slug', async (req, res) => {
+  try {
+    let expos = await db.get('exhibitions', []);
+    if (!Array.isArray(expos)) expos = [];
+    const expo = expos.find((e) => e && e.qrSlug === req.params.slug);
+    if (!expo) {
+      return res.status(404).json({ success: false, message: 'Exhibition QR slug not found' });
+    }
+    res.json({ success: true, data: resolveExpoStatus(expo) });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch exhibition', error: err.message });
   }
-  res.json({ success: true, data: resolveExpoStatus(expo) });
 });
 
 // POST create exhibition
-router.post('/', (req, res) => {
-  const newExpo = db.insert('exhibitions', {
-    ...req.body,
-    leadsCapturedCount: 0,
-    autoArchivePassedDate: req.body.autoArchivePassedDate ?? true,
-  });
-  res.status(201).json({ success: true, message: 'Exhibition created', data: resolveExpoStatus(newExpo) });
+router.post('/', async (req, res) => {
+  try {
+    const newExpo = await db.insert('exhibitions', {
+      ...req.body,
+      qrSlug: req.body.qrSlug || `expo-${Date.now()}`,
+      leadsCapturedCount: 0,
+      createdAt: new Date().toISOString(),
+    });
+    res.status(201).json({ success: true, message: 'Exhibition created', data: newExpo });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to create exhibition', error: err.message });
+  }
 });
 
 // PUT update exhibition
-router.put('/:id', (req, res) => {
-  const updated = db.update('exhibitions', req.params.id, req.body);
-  if (!updated) {
-    return res.status(404).json({ success: false, message: 'Exhibition not found' });
+router.put('/:id', async (req, res) => {
+  try {
+    const updated = await db.update('exhibitions', req.params.id, req.body);
+    if (!updated) return res.status(404).json({ success: false, message: 'Exhibition not found' });
+    res.json({ success: true, message: 'Exhibition updated', data: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update exhibition', error: err.message });
   }
-  res.json({ success: true, message: 'Exhibition updated', data: resolveExpoStatus(updated) });
 });
 
 // DELETE exhibition
-router.delete('/:id', (req, res) => {
-  const deleted = db.delete('exhibitions', req.params.id);
-  if (!deleted) {
-    return res.status(404).json({ success: false, message: 'Exhibition not found' });
+router.delete('/:id', async (req, res) => {
+  try {
+    const deleted = await db.delete('exhibitions', req.params.id);
+    if (!deleted) return res.status(404).json({ success: false, message: 'Exhibition not found' });
+    res.json({ success: true, message: 'Exhibition deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to delete exhibition', error: err.message });
   }
-  res.json({ success: true, message: 'Exhibition deleted' });
 });
 
 export default router;

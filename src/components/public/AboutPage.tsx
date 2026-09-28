@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   Award, 
@@ -19,11 +19,23 @@ import {
   Zap,
   Target,
   Users,
-  Compass
+  Compass,
+  Download,
+  Eye,
+  X,
+  FileText
 } from 'lucide-react';
 
 export const AboutPage: React.FC = () => {
   const { setActiveView } = useApp();
+  const [selectedCertModal, setSelectedCertModal] = useState<{
+    title: string;
+    authority: string;
+    regNo: string;
+    scope: string;
+    image: string;
+    pdfUrl: string;
+  } | null>(null);
 
   const googleMapsUrl = "https://www.google.com/maps/place/Weldor+by+Earth+Metal+Industries/@22.4145771,70.059849,17z/data=!3m1!4b1!4m6!3m5!1s0x39576b0f8c29599d:0x4b5181f8c3ddc48!8m2!3d22.4145771!4d70.059849!16s%2Fg%2F11fj_75ywj?hl=en-US&entry=ttu";
   const embedMapUrl = "https://maps.google.com/maps?q=22.4145771,70.059849&hl=en&z=16&output=embed";
@@ -271,91 +283,223 @@ export const AboutPage: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. OUR CERTIFICATIONS SECTION (Matching Image 3 Clean Presentation) */}
+      {/* 4. OUR CERTIFICATIONS SECTION (Real TÜV SÜD ISO 9001:2015 & Govt. of India ZED Silver) */}
       <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div className="text-center space-y-3">
-          <h2 className="text-3xl sm:text-4xl font-extrabold font-heading text-orange-600 tracking-tight">
-            Our Certifications
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 border border-orange-300 text-orange-700 text-xs font-mono font-bold uppercase tracking-wider">
+            <Award className="w-3.5 h-3.5" />
+            <span>ACCORDED ACCREDITATIONS & COMPLIANCE</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold font-heading text-slate-900 tracking-tight">
+            Official Quality Certifications
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 max-w-xl mx-auto font-medium">
-            Certified by national and international accreditation bodies for strict Quality Management Systems and Sustainable Manufacturing.
+          <p className="text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto font-medium">
+            Earth Metal Industries is certified by international and national accreditation bodies with complete metallurgical traceability and strict zero-defect quality systems.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
-          {/* Certificate 1: ZED Bronze MSME */}
-          <div className="bg-white p-6 rounded-3xl border-2 border-slate-200/90 shadow-md hover:shadow-xl hover:border-orange-400 transition-all space-y-4">
-            <div className="h-72 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center p-6 text-center overflow-hidden relative">
-              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center mb-3">
-                <Award className="w-8 h-8" />
-              </div>
-              <span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-100 px-3 py-1 rounded-full uppercase mb-2">
-                GOVT. OF INDIA MSME
-              </span>
-              <h4 className="font-extrabold text-base text-slate-900 font-heading">
-                ZED Bronze Certified
-              </h4>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Zero Defect Zero Effect Manufacturing accreditation by Ministry of MSME.
-              </p>
-            </div>
-            <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-700 pt-1">
-              <span>Status: Active</span>
-              <span className="text-emerald-600 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Verified
-              </span>
-            </div>
-          </div>
-
-          {/* Certificate 2: ISO 9001:2015 */}
-          <div className="bg-white p-6 rounded-3xl border-2 border-orange-300 shadow-md hover:shadow-xl hover:border-orange-500 transition-all space-y-4 relative">
+          {/* Certificate 1: ISO 9001:2015 (TÜV SÜD South Asia) */}
+          <div className="bg-white p-6 rounded-3xl border-2 border-orange-300 shadow-lg hover:shadow-2xl hover:border-orange-500 transition-all space-y-4 flex flex-col justify-between relative group">
             <div className="absolute -top-3 right-6 bg-orange-600 text-white font-mono text-[10px] font-bold px-3 py-0.5 rounded-full shadow-sm">
-              PRIMARY STANDARD
+              PRIMARY QA STANDARD
             </div>
-            <div className="h-72 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center p-6 text-center overflow-hidden relative">
-              <div className="w-16 h-16 rounded-2xl bg-orange-500/10 text-orange-600 flex items-center justify-center mb-3">
-                <ShieldCheck className="w-8 h-8" />
+            
+            <div className="space-y-4">
+              <div 
+                onClick={() => setSelectedCertModal({
+                  title: "ISO 9001:2015 Quality Management System Certificate",
+                  authority: "TÜV SÜD South Asia Private Limited",
+                  regNo: "Earth Metal Industries (Plot 588, GIDC Phase 2, Dared, Jamnagar)",
+                  scope: "Manufacturing and Supply of Ferrous and Non Ferrous Metal Machined Components",
+                  image: "/certificates/iso_page_1.png",
+                  pdfUrl: "/certificates/ISO_9001_2015_Certificate.pdf"
+                })}
+                className="h-64 rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden relative cursor-pointer group"
+              >
+                <img 
+                  src="/certificates/iso_page_1.png" 
+                  alt="ISO 9001:2015 Certificate - TÜV SÜD"
+                  className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300" 
+                />
+                <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <span className="px-3 py-1.5 rounded-lg bg-orange-600 text-white font-mono text-xs font-bold flex items-center gap-1 shadow">
+                    <Eye className="w-3.5 h-3.5" /> View Certificate
+                  </span>
+                </div>
               </div>
-              <span className="text-[10px] font-mono font-bold text-orange-800 bg-orange-100 px-3 py-1 rounded-full uppercase mb-2">
-                QUALITY MANAGEMENT
-              </span>
-              <h4 className="font-extrabold text-base text-slate-900 font-heading">
-                ISO 9001:2015 Registration
-              </h4>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Quality Management System certified for design, machining & distribution of industrial components.
-              </p>
+
+              <div className="space-y-1">
+                <span className="text-[10px] font-mono font-bold text-orange-700 bg-orange-100 px-2.5 py-0.5 rounded-full uppercase">
+                  TÜV SÜD SOUTH ASIA
+                </span>
+                <h4 className="font-extrabold text-base text-slate-900 font-heading pt-1">
+                  ISO 9001:2015 Registration
+                </h4>
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  Certified for Manufacturing & Supply of Ferrous and Non-Ferrous Metal Machined Components at Jamnagar plant.
+                </p>
+              </div>
             </div>
-            <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-700 pt-1">
-              <span>Audited Annually</span>
-              <span className="text-emerald-600 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Certified
-              </span>
+
+            <div className="space-y-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-700">
+                <span className="text-slate-500">Body: TÜV SÜD</span>
+                <span className="text-emerald-600 flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Certified
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setSelectedCertModal({
+                    title: "ISO 9001:2015 Quality Management System Certificate",
+                    authority: "TÜV SÜD South Asia Private Limited",
+                    regNo: "Earth Metal Industries (Plot 588, GIDC Phase 2, Dared, Jamnagar)",
+                    scope: "Manufacturing and Supply of Ferrous and Non Ferrous Metal Machined Components",
+                    image: "/certificates/iso_page_1.png",
+                    pdfUrl: "/certificates/ISO_9001_2015_Certificate.pdf"
+                  })}
+                  className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-mono font-bold flex items-center justify-center gap-1 transition-colors"
+                >
+                  <Eye className="w-3.5 h-3.5" /> Preview
+                </button>
+                <a
+                  href="/certificates/ISO_9001_2015_Certificate.pdf"
+                  download="Weldor_ISO_9001_2015_Certificate.pdf"
+                  className="px-3 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-mono font-bold flex items-center justify-center gap-1 transition-colors shadow-sm"
+                >
+                  <Download className="w-3.5 h-3.5" /> PDF
+                </a>
+              </div>
             </div>
           </div>
 
-          {/* Certificate 3: Material Test & Inspection Report */}
-          <div className="bg-white p-6 rounded-3xl border-2 border-slate-200/90 shadow-md hover:shadow-xl hover:border-orange-400 transition-all space-y-4">
-            <div className="h-72 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center p-6 text-center overflow-hidden relative">
-              <div className="w-16 h-16 rounded-2xl bg-sky-500/10 text-sky-600 flex items-center justify-center mb-3">
-                <FileCheck2 className="w-8 h-8" />
-              </div>
-              <span className="text-[10px] font-mono font-bold text-sky-800 bg-sky-100 px-3 py-1 rounded-full uppercase mb-2">
-                LAB VERIFICATION
-              </span>
-              <h4 className="font-extrabold text-base text-slate-900 font-heading">
-                Material & Inspection Reports
-              </h4>
-              <p className="text-[11px] text-slate-500 mt-1">
-                EN 10204 3.1 chemical spectrometry analysis and 3D CMM dimensional inspection certificate with every batch.
-              </p>
+          {/* Certificate 2: MSME Sustainable (ZED) Silver Certificate */}
+          <div className="bg-white p-6 rounded-3xl border-2 border-slate-200/90 shadow-lg hover:shadow-2xl hover:border-orange-400 transition-all space-y-4 flex flex-col justify-between relative group">
+            <div className="absolute -top-3 right-6 bg-slate-800 text-white font-mono text-[10px] font-bold px-3 py-0.5 rounded-full shadow-sm">
+              GOVT. OF INDIA
             </div>
-            <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-700 pt-1">
-              <span>Batch Traceable</span>
-              <span className="text-emerald-600 flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Certified
-              </span>
+
+            <div className="space-y-4">
+              <div 
+                onClick={() => setSelectedCertModal({
+                  title: "MSME Sustainable (ZED) Silver Quality Certificate",
+                  authority: "Ministry of Micro, Small & Medium Enterprises, Govt. of India",
+                  regNo: "UDYAM-GJ-10-0015947 | Cert: 25032026_466755",
+                  scope: "Manufacture of Basic Metals & Precision Machined Components",
+                  image: "/certificates/silver_page_1.png",
+                  pdfUrl: "/certificates/Silver_Quality_Certificate.pdf"
+                })}
+                className="h-64 rounded-2xl bg-slate-50 border border-slate-200 overflow-hidden relative cursor-pointer group"
+              >
+                <img 
+                  src="/certificates/silver_page_1.png" 
+                  alt="MSME ZED Silver Certificate - Govt of India"
+                  className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300" 
+                />
+                <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <span className="px-3 py-1.5 rounded-lg bg-orange-600 text-white font-mono text-xs font-bold flex items-center gap-1 shadow">
+                    <Eye className="w-3.5 h-3.5" /> View Certificate
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[10px] font-mono font-bold text-slate-700 bg-slate-100 px-2.5 py-0.5 rounded-full uppercase">
+                  MINISTRY OF MSME (ZED)
+                </span>
+                <h4 className="font-extrabold text-base text-slate-900 font-heading pt-1">
+                  MSME ZED Silver Rating
+                </h4>
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  Sustainable Zero Defect Zero Effect manufacturing scheme awarded to Earth Metal Industries (UDYAM-GJ-10-0015947).
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-700">
+                <span className="text-slate-500">Agency: Conformity India</span>
+                <span className="text-emerald-600 flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Verified
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setSelectedCertModal({
+                    title: "MSME Sustainable (ZED) Silver Quality Certificate",
+                    authority: "Ministry of Micro, Small & Medium Enterprises, Govt. of India",
+                    regNo: "UDYAM-GJ-10-0015947 | Cert: 25032026_466755",
+                    scope: "Manufacture of Basic Metals & Precision Machined Components",
+                    image: "/certificates/silver_page_1.png",
+                    pdfUrl: "/certificates/Silver_Quality_Certificate.pdf"
+                  })}
+                  className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-mono font-bold flex items-center justify-center gap-1 transition-colors"
+                >
+                  <Eye className="w-3.5 h-3.5" /> Preview
+                </button>
+                <a
+                  href="/certificates/Silver_Quality_Certificate.pdf"
+                  download="Weldor_MSME_ZED_Silver_Certificate.pdf"
+                  className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-bold flex items-center justify-center gap-1 transition-colors shadow-sm"
+                >
+                  <Download className="w-3.5 h-3.5" /> PDF
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Certificate 3: Material & Lab QA Dossier */}
+          <div className="bg-white p-6 rounded-3xl border-2 border-slate-200/90 shadow-lg hover:shadow-2xl hover:border-orange-400 transition-all space-y-4 flex flex-col justify-between relative group">
+            <div className="space-y-4">
+              <div className="h-64 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-700 overflow-hidden relative flex flex-col items-center justify-center p-6 text-center text-white">
+                <div className="w-16 h-16 rounded-2xl bg-orange-500/20 text-orange-400 flex items-center justify-center mb-3">
+                  <FileCheck2 className="w-8 h-8" />
+                </div>
+                <span className="text-[10px] font-mono font-bold text-orange-400 bg-orange-950/80 border border-orange-500/30 px-3 py-1 rounded-full uppercase mb-2">
+                  EN 10204 TYPE 3.1
+                </span>
+                <h4 className="font-extrabold text-sm font-heading text-white">
+                  Metallurgical & CMM Inspection Dossier
+                </h4>
+                <p className="text-[11px] text-slate-300 mt-2 line-clamp-3">
+                  100% Spectrometry chemical composition report, hardness tests, and 3D coordinate measuring inspection with every dispatch batch.
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[10px] font-mono font-bold text-sky-800 bg-sky-100 px-2.5 py-0.5 rounded-full uppercase">
+                  LAB TESTING STANDARDS
+                </span>
+                <h4 className="font-extrabold text-base text-slate-900 font-heading pt-1">
+                  Chemical & Physical QA Testing
+                </h4>
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  IS 319, CW614N, CuCrZr raw material certification with hydrostatic burst pressure testing up to 700 Bar.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-700">
+                <span className="text-slate-500">Traceable: Batch Wise</span>
+                <span className="text-emerald-600 flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> 100% Tested
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <a
+                  href="/catalog/Weldor_Welding_Product_Catalog.pdf"
+                  download="Weldor_Welding_Product_Catalog.pdf"
+                  className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-mono font-bold flex items-center justify-center gap-1 transition-colors col-span-2 text-center"
+                >
+                  <Download className="w-3.5 h-3.5 text-orange-600" /> Download Product Catalog
+                </a>
+              </div>
             </div>
           </div>
 
@@ -489,6 +633,70 @@ export const AboutPage: React.FC = () => {
 
         </div>
       </section>
+
+      {/* 8. DEDICATED OFFICIAL CERTIFICATE PREVIEW MODAL */}
+      {selectedCertModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+            {/* Modal Header */}
+            <div className="p-4 sm:p-6 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-mono font-bold text-orange-600 uppercase tracking-widest block">
+                  OFFICIAL ACCREDITATION PREVIEW
+                </span>
+                <h3 className="text-base sm:text-lg font-bold font-heading text-slate-900">
+                  {selectedCertModal.title}
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedCertModal(null)}
+                className="w-8 h-8 rounded-full bg-white border border-slate-300 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body / Image View */}
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+              <div className="md:col-span-7 bg-slate-100 rounded-2xl p-2 border border-slate-200 flex items-center justify-center">
+                <img 
+                  src={selectedCertModal.image} 
+                  alt={selectedCertModal.title} 
+                  className="max-h-[60vh] object-contain rounded-xl shadow-sm"
+                />
+              </div>
+
+              <div className="md:col-span-5 space-y-4">
+                <div className="p-4 rounded-2xl bg-orange-50/70 border border-orange-200 space-y-2">
+                  <span className="text-[10px] font-mono font-bold text-orange-700 uppercase">Issuing Authority</span>
+                  <p className="text-xs font-bold text-slate-900">{selectedCertModal.authority}</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                  <span className="text-[10px] font-mono font-bold text-slate-500 uppercase">Registration / Certificate ID</span>
+                  <p className="text-xs font-mono font-semibold text-slate-800">{selectedCertModal.regNo}</p>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                  <span className="text-[10px] font-mono font-bold text-slate-500 uppercase">Certified Scope</span>
+                  <p className="text-xs text-slate-700 leading-relaxed">{selectedCertModal.scope}</p>
+                </div>
+
+                <div className="pt-2">
+                  <a
+                    href={selectedCertModal.pdfUrl}
+                    download
+                    className="w-full py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-mono text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-orange-600/30 transition-all cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Download Original PDF Certificate</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

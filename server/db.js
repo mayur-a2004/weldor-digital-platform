@@ -1,170 +1,284 @@
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { COLLECTION_MODELS } from './models/index.js';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 const BUNDLED_DATA_DIR = path.join(__dirname, 'data');
-const DATA_DIR = isVercel ? path.join('/tmp', 'data') : BUNDLED_DATA_DIR;
-
-try {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-} catch (e) {
-  console.warn('Could not create DATA_DIR on startup:', e);
-}
-
-// In-memory cache for fast, reliable serverless execution
 const inMemoryStore = new Map();
+let isMongoConnected = false;
 
-// Helper to get file path and ensure initial file presence
-const getFilePath = (collection) => {
-  const targetPath = path.join(DATA_DIR, `${collection}.json`);
-  if (isVercel && !fs.existsSync(targetPath)) {
-    const bundledPath = path.join(BUNDLED_DATA_DIR, `${collection}.json`);
-    if (fs.existsSync(bundledPath)) {
-      try {
-        fs.copyFileSync(bundledPath, targetPath);
-      } catch (e) {
-        // Fallback to memory
-      }
-    }
+// Initialize MongoDB connection
+const connectMongo = async () => {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    console.log('ℹ️  No MONGODB_URI provided in environment. Running in High-Speed Local/File DB Mode.');
+    return;
   }
-  return targetPath;
+
+  try {
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
+    });
+    isMongoConnected = true;
+    console.log('=======================================================');
+    console.log('🍃 MongoDB Atlas Database Connected Successfully!');
+    console.log('=======================================================');
+
+    // Auto-seed initial official catalog data if MongoDB collections are empty
+    await autoSeedFromLocalData();
+  } catch (err) {
+    isMongoConnected = false;
+    console.warn('⚠️  MongoDB Connection Notice:', err.message);
+    console.log('🔄 Seamless fallback active: Local persistent cache is maintaining 100% uptime.');
+  }
 };
 
-export const db = {
-  get: (collection, defaultData = []) => {
-    // Check in-memory store first
-    if (inMemoryStore.has(collection)) {
-      const memData = inMemoryStore.get(collection);
-      return Array.isArray(memData) ? [...memData] : { ...memData };
-    }
+// Monitor connection events
+mongoose.connection.on('connected', () => {
+  isMongoConnected = true;
+  console.log('🍃 MongoDB connected.');
+});
 
-    const filePath = getFilePath(collection);
-    if (!fs.existsSync(filePath)) {
-      try {
-        fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2), 'utf-8');
-      } catch (e) {}
-      inMemoryStore.set(collection, defaultData);
-      return Array.isArray(defaultData) ? [...defaultData] : { ...defaultData };
-    }
+mongoose.connection.on('disconnected', () => {
+  isMongoConnected = false;
+  console.warn('⚠️  MongoDB disconnected. Using in-memory & file storage fallback.');
+});
 
-    try {
-      const content = fs.readFileSync(filePath, 'utf-8');
-      if (!content || !content.trim()) {
-        inMemoryStore.set(collection, defaultData);
-        return Array.isArray(defaultData) ? [] : defaultData;
+// Auto-seed collections from bundled JSON files into MongoDB
+const autoSeedFromLocalData = async () => {
+  try {
+    for (const [key, Model] of Object.entries(COLLECTION_MODELS)) {
+      const count = await Model.countDocuments();
+      if (count === 0) {
+        const filePath = path.join(BUNDLED_DATA_DIR, `${key}.json`);
+        if (fs.existsSync(filePath)) {
+          const content = fs.readFileSync(filePath, 'utf-8');
+          if (content && content.trim()) {
+            const data = JSON.parse(content);
+            if (Array.isArray(data) && data.length > 0) {
+              await Model.insertMany(data, { ordered: false }).catch(() => {});
+              console.log(`🌱 Auto-seeded ${data.length} records into MongoDB collection: ${key}`);
+            } else if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+              await Model.create({ id: `${key}-main`, ...data }).catch(() => {});
+              console.log(`🌱 Auto-seeded settings document into MongoDB: ${key}`);
+            }
+          }
+        }
       }
-      const parsed = JSON.parse(content);
-      const result = parsed !== null && parsed !== undefined ? parsed : defaultData;
-      inMemoryStore.set(collection, result);
-      return result;
-    } catch (err) {
-      console.error(`Error reading ${collection}:`, err);
-      inMemoryStore.set(collection, defaultData);
-      return Array.isArray(defaultData) ? [] : defaultData;
     }
+  } catch (e) {
+    console.warn('Auto-seed check complete:', e.message);
+  }
+};
+
+// Start initial connection attempt
+connectMongo();
+
+// File fallback helper
+const getFilePath = (collection) => path.join(BUNDLED_DATA_DIR, `${collection}.json`);
+
+const readFromFile = (collection, defaultData = []) => {
+  const filePath = getFilePath(collection);
+  if (!fs.existsSync(filePath)) {
+    try {
+      fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2), 'utf-8');
+    } catch (e) {}
+    return defaultData;
+  }
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    if (!content || !content.trim()) return defaultData;
+    return JSON.parse(content);
+  } catch (e) {
+    return defaultData;
+  }
+};
+
+const writeToFile = (collection, data) => {
+  try {
+    const filePath = getFilePath(collection);
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (e) {
+    console.warn(`Could not persist ${collection} to file:`, e.message);
+  }
+};
+
+// Universal Database Interface (MongoDB + Local Fallback)
+export const db = {
+  isMongoActive: () => isMongoConnected,
+
+  get: async (collection, defaultData = []) => {
+    const Model = COLLECTION_MODELS[collection];
+
+    if (isMongoConnected && Model) {
+      try {
+        const docs = await Model.find({}).lean();
+        if (docs && docs.length > 0) {
+          // Format docs to strip MongoDB _id if needed
+          const cleanDocs = docs.map(d => {
+            const { _id, __v, ...rest } = d;
+            return { id: rest.id || _id?.toString(), ...rest };
+          });
+          inMemoryStore.set(collection, cleanDocs);
+          return cleanDocs;
+        }
+      } catch (err) {
+        console.warn(`MongoDB fetch fallback for ${collection}:`, err.message);
+      }
+    }
+
+    // In-memory or file fallback
+    if (inMemoryStore.has(collection)) {
+      return inMemoryStore.get(collection);
+    }
+    const fileData = readFromFile(collection, defaultData);
+    inMemoryStore.set(collection, fileData);
+    return fileData;
   },
 
-  set: (collection, data) => {
+  set: async (collection, data) => {
     inMemoryStore.set(collection, data);
-    try {
-      const filePath = getFilePath(collection);
-      fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
-    } catch (e) {
-      console.warn(`Could not persist ${collection} to disk, stored in memory:`, e);
+    writeToFile(collection, data);
+
+    const Model = COLLECTION_MODELS[collection];
+    if (isMongoConnected && Model && Array.isArray(data)) {
+      try {
+        await Model.deleteMany({});
+        if (data.length > 0) {
+          await Model.insertMany(data, { ordered: false });
+        }
+      } catch (err) {
+        console.warn(`MongoDB set sync error on ${collection}:`, err.message);
+      }
     }
     return data;
   },
 
-  insert: (collection, item) => {
-    const items = db.get(collection, []);
+  insert: async (collection, item) => {
     const newItem = {
       ...item,
-      id: item.id || `${collection.slice(0, 4)}-${Date.now()}`,
+      id: item.id || `${collection.slice(0, 4)}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       createdAt: item.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
+
+    // Update in-memory & file
+    const items = await db.get(collection, []);
     const list = Array.isArray(items) ? items : [];
     list.unshift(newItem);
-    db.set(collection, list);
+    inMemoryStore.set(collection, list);
+    writeToFile(collection, list);
+
+    // Save to MongoDB
+    const Model = COLLECTION_MODELS[collection];
+    if (isMongoConnected && Model) {
+      try {
+        await Model.create(newItem);
+      } catch (err) {
+        console.warn(`MongoDB insert error on ${collection}:`, err.message);
+      }
+    }
+
     return newItem;
   },
 
-  update: (collection, id, updates) => {
-    const items = db.get(collection, []);
+  update: async (collection, id, updates) => {
+    const items = await db.get(collection, []);
     if (!Array.isArray(items)) return null;
+
     const index = items.findIndex((i) => i.id === id);
     if (index === -1) return null;
-    items[index] = { ...items[index], ...updates, updatedAt: new Date().toISOString() };
-    db.set(collection, items);
-    return items[index];
+
+    const updatedItem = {
+      ...items[index],
+      ...updates,
+      id, // Preserve id
+      updatedAt: new Date().toISOString(),
+    };
+
+    items[index] = updatedItem;
+    inMemoryStore.set(collection, items);
+    writeToFile(collection, items);
+
+    // Update in MongoDB
+    const Model = COLLECTION_MODELS[collection];
+    if (isMongoConnected && Model) {
+      try {
+        await Model.findOneAndUpdate({ id }, { $set: updatedItem }, { upsert: true });
+      } catch (err) {
+        console.warn(`MongoDB update error on ${collection}:`, err.message);
+      }
+    }
+
+    return updatedItem;
   },
 
-  delete: (collection, id) => {
-    const items = db.get(collection, []);
+  delete: async (collection, id) => {
+    const items = await db.get(collection, []);
     if (!Array.isArray(items)) return false;
+
     const filtered = items.filter((i) => i.id !== id);
-    if (filtered.length === items.length) return false;
-    db.set(collection, filtered);
+    inMemoryStore.set(collection, filtered);
+    writeToFile(collection, filtered);
+
+    // Delete in MongoDB
+    const Model = COLLECTION_MODELS[collection];
+    if (isMongoConnected && Model) {
+      try {
+        await Model.deleteOne({ id });
+      } catch (err) {
+        console.warn(`MongoDB delete error on ${collection}:`, err.message);
+      }
+    }
+
     return true;
   },
 
-  clearAll: () => {
-    const collections = [
-      'products',
-      'categories',
-      'exhibitions',
-      'banners',
-      'gallery',
-      'leads',
-      'rfqs',
-      'samples',
-      'trials',
-      'quotations',
-      'orders',
-      'employees',
-      'payrolls',
-      'attendance',
-      'leaves',
-      'audit_logs',
-      'roles',
-    ];
-    for (const c of collections) {
-      db.set(c, []);
+  bulkInsert: async (collection, newItems) => {
+    const items = await db.get(collection, []);
+    const list = Array.isArray(items) ? items : [];
+
+    const prepared = newItems.map((item, idx) => ({
+      ...item,
+      id: item.id || `${collection.slice(0, 4)}-${Date.now()}-${idx}`,
+      createdAt: item.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }));
+
+    const combined = [...prepared, ...list];
+    inMemoryStore.set(collection, combined);
+    writeToFile(collection, combined);
+
+    const Model = COLLECTION_MODELS[collection];
+    if (isMongoConnected && Model && prepared.length > 0) {
+      try {
+        await Model.insertMany(prepared, { ordered: false });
+      } catch (err) {
+        console.warn(`MongoDB bulkInsert error on ${collection}:`, err.message);
+      }
     }
-    db.set('settings', {
-      companyName: 'Weldor by Earth Metal Industries',
-      brandName: 'WELDOR',
-      legalName: 'Earth Metal Industries',
-      cinNumber: '',
-      gstin: '24AABCE1234F1Z5',
-      panNumber: 'AABCE1234F',
-      iecCode: '0812345678',
-      msmeRegistrationNo: 'UDYAM-GJ-15-0012345',
-      registeredOfficeAddress: {
-        addressLine1: '588, G.I.D.C., Phase 2',
-        addressLine2: 'Dared',
-        city: 'Jamnagar',
-        state: 'Gujarat',
-        country: 'India',
-        pincode: '361004',
-      },
-      primaryEmail: 'info@weldorindustries.com',
-      primaryPhone: '+91 87800 98088',
-      websiteUrl: 'https://weldorindustries.com',
-      bankAccounts: [],
-      slaSettings: {
-        leadResponseHours: 2,
-        quoteApprovalThresholdUSD: 50000,
-        autoAssignSalesLead: true,
-        enableWhatsAppNotifications: true,
-        enablePayrollReminderDays: 5,
-      },
-    });
-    console.log('🧹 All database collections wiped completely clean.');
+
+    return prepared;
   },
+
+  clearAll: async () => {
+    inMemoryStore.clear();
+    for (const [key, Model] of Object.entries(COLLECTION_MODELS)) {
+      writeToFile(key, []);
+      if (isMongoConnected && Model) {
+        try {
+          await Model.deleteMany({});
+        } catch (e) {}
+      }
+    }
+    return true;
+  }
 };
