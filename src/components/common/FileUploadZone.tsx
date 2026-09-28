@@ -48,7 +48,7 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
       if (res && res.success && res.data) {
         onChange({
           name: res.data.originalName || file.name,
-          url: res.data.url,
+          url: res.data.cdnUrl || res.data.url,
           size: formatFileSize(res.data.sizeBytes || file.size),
           type: res.data.mimetype || file.type,
         });

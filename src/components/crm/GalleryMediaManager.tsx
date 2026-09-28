@@ -182,12 +182,22 @@ export const GalleryMediaManager: React.FC = () => {
     setFormData(prev => ({ ...prev, seoKeywords: prev.seoKeywords.filter(k => k !== kw) }));
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, targetField: 'url' | 'thumbnail') => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, targetField: 'url' | 'thumbnail') => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const objectUrl = URL.createObjectURL(file);
-    setFormData(prev => ({ ...prev, [targetField]: objectUrl }));
-    showNotification(`Uploaded ${file.name} successfully!`, 'info');
+    showNotification(`Uploading ${file.name}...`, 'info');
+    let uploadedUrl = '';
+    try {
+      const res = await api.uploadFile(file);
+      if (res?.success && (res?.data?.cdnUrl || res?.data?.url)) {
+        uploadedUrl = res.data.cdnUrl || res.data.url;
+      }
+    } catch (err) {
+      console.warn('Upload error:', err);
+    }
+    const finalUrl = uploadedUrl || URL.createObjectURL(file);
+    setFormData(prev => ({ ...prev, [targetField]: finalUrl }));
+    showNotification(`Uploaded ${file.name} successfully!`, 'success');
   };
 
   // Helper to auto-generate industrial engineering descriptions based on title and category

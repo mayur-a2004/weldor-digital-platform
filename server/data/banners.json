@@ -1,7 +1,7 @@
 [
   {
     "id": "ban-weldor-01",
-    "badge": "EARTH METAL INDUSTRIES \u2014 WELDOR BRAND",
+    "badge": "EARTH METAL INDUSTRIES — WELDOR BRAND",
     "title": "Precision In Every Spark.",
     "highlightText": "High-Performance MIG, TIG & Plasma Cutting Torches.",
     "subtitle": "ISO 9001:2015 Certified OEM & Global Exporter | Make in India",
@@ -37,7 +37,8 @@
     ],
     "active": true,
     "displayOrder": 1,
-    "autoplayDurationSec": 6
+    "autoplayDurationSec": 6,
+    "imageUrl": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_1.png"
   },
   {
     "id": "ban-weldor-02",
@@ -77,6 +78,7 @@
     ],
     "active": true,
     "displayOrder": 2,
-    "autoplayDurationSec": 6
+    "autoplayDurationSec": 6,
+    "imageUrl": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_4.png"
   }
 ]

@@ -312,8 +312,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const [roles, setRoles] = useState<Role[]>(INITIAL_ROLES);
-  const [currentRole, setCurrentRole] = useState<Role>(INITIAL_ROLES[0]);
+  // Local cache persistence helpers for seamless offline & refresh support
+  const loadLocal = <T,>(key: string, fallback: T): T => {
+    if (typeof window === 'undefined') return fallback;
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return fallback;
+      const parsed = JSON.parse(raw);
+      return parsed !== null && parsed !== undefined ? parsed : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  };
+
+  const saveLocal = (key: string, data: any) => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (e) {}
+  };
+
+  const [roles, setRoles] = useState<Role[]>(() => loadLocal('weldor_roles', INITIAL_ROLES));
+  const [currentRole, setCurrentRole] = useState<Role>(() => loadLocal('weldor_roles', INITIAL_ROLES)[0] || INITIAL_ROLES[0]);
 
   // Authentication State with Single Active Session
   const [sessionToken, setSessionToken] = useState<string | null>(() => {
@@ -334,17 +354,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return null;
   });
 
-  const [employees, setEmployees] = useState<Employee[]>([DEFAULT_EMPLOYEE]);
+  const [employees, setEmployees] = useState<Employee[]>(() => loadLocal('weldor_employees', [DEFAULT_EMPLOYEE]));
   const [currentEmployee, setCurrentEmployee] = useState<Employee>(() => currentUser || DEFAULT_EMPLOYEE);
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isConcurrentLogoutAlertOpen, setIsConcurrentLogoutAlertOpen] = useState(false);
   const isAuthenticated = !!(currentUser && sessionToken);
 
-  const [categories, setCategories] = useState<ProductCategory[]>(OFFICIAL_WELDOR_CATEGORIES);
-  const [products, setProducts] = useState<Product[]>(OFFICIAL_WELDOR_PRODUCTS);
-  const [galleryMedia, setGalleryMedia] = useState<GalleryMedia[]>(OFFICIAL_WELDOR_GALLERY);
-  const [banners, setBanners] = useState<HeroBanner[]>(OFFICIAL_WELDOR_BANNERS);
+  const [categories, setCategories] = useState<ProductCategory[]>(() => loadLocal('weldor_categories', OFFICIAL_WELDOR_CATEGORIES));
+  const [products, setProducts] = useState<Product[]>(() => loadLocal('weldor_products', OFFICIAL_WELDOR_PRODUCTS));
+  const [galleryMedia, setGalleryMedia] = useState<GalleryMedia[]>(() => loadLocal('weldor_gallery', OFFICIAL_WELDOR_GALLERY));
+  const [banners, setBanners] = useState<HeroBanner[]>(() => loadLocal('weldor_banners', OFFICIAL_WELDOR_BANNERS));
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [compareList, setCompareList] = useState<Product[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState<boolean>(false);
@@ -373,48 +393,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCatalogModal(null);
   };
 
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [rfqs, setRfqs] = useState<RFQRequirement[]>([]);
-  const [samples, setSamples] = useState<SampleRequest[]>([]);
-  const [trials, setTrials] = useState<TechnicalTrial[]>([]);
-  const [quotations, setQuotations] = useState<Quotation[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
+  const [leads, setLeads] = useState<Lead[]>(() => loadLocal('weldor_leads', []));
+  const [rfqs, setRfqs] = useState<RFQRequirement[]>(() => loadLocal('weldor_rfqs', []));
+  const [samples, setSamples] = useState<SampleRequest[]>(() => loadLocal('weldor_samples', []));
+  const [trials, setTrials] = useState<TechnicalTrial[]>(() => loadLocal('weldor_trials', []));
+  const [quotations, setQuotations] = useState<Quotation[]>(() => loadLocal('weldor_quotations', []));
+  const [orders, setOrders] = useState<Order[]>(() => loadLocal('weldor_orders', []));
+  const [exhibitions, setExhibitions] = useState<Exhibition[]>(() => loadLocal('weldor_exhibitions', []));
   const [selectedExpoSlug, setSelectedExpoSlug] = useState<string | null>(null);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => loadLocal('weldor_audit', []));
 
   // HRMS, Payroll & Settings State
-  const [payrolls, setPayrolls] = useState<PayrollRecord[]>([]);
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
-  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
-  const [companySettings, setCompanySettings] = useState<CompanySettings>(BLANK_SETTINGS);
+  const [payrolls, setPayrolls] = useState<PayrollRecord[]>(() => loadLocal('weldor_payrolls', []));
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>(() => loadLocal('weldor_attendance', []));
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(() => loadLocal('weldor_leaves', []));
+  const [companySettings, setCompanySettings] = useState<CompanySettings>(() => loadLocal('weldor_settings', BLANK_SETTINGS));
 
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' | 'warning' } | null>(null);
 
-  // Load live data from Backend API on mount
+  // Load live data from Backend API on mount with resilient allSettled
   useEffect(() => {
     const fetchBackendData = async () => {
       try {
-        const [
-          prodRes,
-          catRes,
-          expoRes,
-          banRes,
-          galRes,
-          leadRes,
-          rfqRes,
-          quoteRes,
-          orderRes,
-          smpRes,
-          trlRes,
-          empRes,
-          payRes,
-          attRes,
-          leaveRes,
-          settRes,
-          audRes,
-          roleRes,
-        ] = await Promise.all([
+        const results = await Promise.allSettled([
           api.getProducts(),
           api.getCategories(),
           api.getExhibitions(),
@@ -435,25 +436,84 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           api.getRoles(),
         ]);
 
-        if (prodRes?.success && prodRes.data?.length > 0) setProducts(prodRes.data);
-        if (catRes?.success && catRes.data?.length > 0) setCategories(catRes.data);
-        if (expoRes?.success && expoRes.data?.length > 0) setExhibitions(expoRes.data);
-        if (banRes?.success && banRes.data?.length > 0) setBanners(banRes.data);
-        if (galRes?.success && galRes.data?.length > 0) setGalleryMedia(galRes.data);
-        if (leadRes?.success && leadRes.data?.length > 0) setLeads(leadRes.data);
-        if (rfqRes?.success && rfqRes.data?.length > 0) setRfqs(rfqRes.data);
-        if (quoteRes?.success && quoteRes.data?.length > 0) setQuotations(quoteRes.data);
-        if (orderRes?.success && orderRes.data?.length > 0) setOrders(orderRes.data);
-        if (smpRes?.success && smpRes.data?.length > 0) setSamples(smpRes.data);
-        if (trlRes?.success && trlRes.data?.length > 0) setTrials(trlRes.data);
-        if (empRes?.success && empRes.data?.length > 0) setEmployees(empRes.data);
-        if (payRes?.success && payRes.data?.length > 0) setPayrolls(payRes.data);
-        if (attRes?.success && attRes.data?.length > 0) setAttendance(attRes.data);
-        if (leaveRes?.success && leaveRes.data?.length > 0) setLeaveRequests(leaveRes.data);
-        if (settRes?.success && settRes.data) setCompanySettings(settRes.data);
-        if (audRes?.success && audRes.data?.length > 0) setAuditLogs(audRes.data);
-        if (roleRes?.success && roleRes.data?.length > 0) {
+        const [
+          prodRes, catRes, expoRes, banRes, galRes,
+          leadRes, rfqRes, quoteRes, orderRes, smpRes,
+          trlRes, empRes, payRes, attRes, leaveRes,
+          settRes, audRes, roleRes
+        ] = results.map(r => r.status === 'fulfilled' ? r.value : null);
+
+        if (prodRes?.success && Array.isArray(prodRes.data)) {
+          setProducts(prodRes.data);
+          saveLocal('weldor_products', prodRes.data);
+        }
+        if (catRes?.success && Array.isArray(catRes.data)) {
+          setCategories(catRes.data);
+          saveLocal('weldor_categories', catRes.data);
+        }
+        if (expoRes?.success && Array.isArray(expoRes.data)) {
+          setExhibitions(expoRes.data);
+          saveLocal('weldor_exhibitions', expoRes.data);
+        }
+        if (banRes?.success && Array.isArray(banRes.data)) {
+          setBanners(banRes.data);
+          saveLocal('weldor_banners', banRes.data);
+        }
+        if (galRes?.success && Array.isArray(galRes.data)) {
+          setGalleryMedia(galRes.data);
+          saveLocal('weldor_gallery', galRes.data);
+        }
+        if (leadRes?.success && Array.isArray(leadRes.data)) {
+          setLeads(leadRes.data);
+          saveLocal('weldor_leads', leadRes.data);
+        }
+        if (rfqRes?.success && Array.isArray(rfqRes.data)) {
+          setRfqs(rfqRes.data);
+          saveLocal('weldor_rfqs', rfqRes.data);
+        }
+        if (quoteRes?.success && Array.isArray(quoteRes.data)) {
+          setQuotations(quoteRes.data);
+          saveLocal('weldor_quotations', quoteRes.data);
+        }
+        if (orderRes?.success && Array.isArray(orderRes.data)) {
+          setOrders(orderRes.data);
+          saveLocal('weldor_orders', orderRes.data);
+        }
+        if (smpRes?.success && Array.isArray(smpRes.data)) {
+          setSamples(smpRes.data);
+          saveLocal('weldor_samples', smpRes.data);
+        }
+        if (trlRes?.success && Array.isArray(trlRes.data)) {
+          setTrials(trlRes.data);
+          saveLocal('weldor_trials', trlRes.data);
+        }
+        if (empRes?.success && Array.isArray(empRes.data)) {
+          setEmployees(empRes.data);
+          saveLocal('weldor_employees', empRes.data);
+        }
+        if (payRes?.success && Array.isArray(payRes.data)) {
+          setPayrolls(payRes.data);
+          saveLocal('weldor_payrolls', payRes.data);
+        }
+        if (attRes?.success && Array.isArray(attRes.data)) {
+          setAttendance(attRes.data);
+          saveLocal('weldor_attendance', attRes.data);
+        }
+        if (leaveRes?.success && Array.isArray(leaveRes.data)) {
+          setLeaveRequests(leaveRes.data);
+          saveLocal('weldor_leaves', leaveRes.data);
+        }
+        if (settRes?.success && settRes.data) {
+          setCompanySettings(settRes.data);
+          saveLocal('weldor_settings', settRes.data);
+        }
+        if (audRes?.success && Array.isArray(audRes.data)) {
+          setAuditLogs(audRes.data);
+          saveLocal('weldor_audit', audRes.data);
+        }
+        if (roleRes?.success && Array.isArray(roleRes.data)) {
           setRoles(roleRes.data);
+          saveLocal('weldor_roles', roleRes.data);
           if (currentUser) {
             const matched = roleRes.data.find((r: Role) => r.name === currentUser.roleName || r.id === currentUser.roleId);
             if (matched) setCurrentRole(matched);
@@ -534,7 +594,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: `role-${Date.now()}`,
       isSystem: false,
     };
-    setRoles(prev => [...prev, newRole]);
+    setRoles(prev => {
+      const next = [...prev, newRole];
+      saveLocal('weldor_roles', next);
+      return next;
+    });
     try {
       await api.createRole(newRole);
       addAuditLog('ROLE_CREATED', 'rbac', newRole.id, `Created custom security role "${newRole.name}" (${newRole.scope} Scope)`);
@@ -545,7 +609,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateRole = async (id: string, updatedFields: Partial<Role>) => {
-    setRoles(prev => prev.map(r => r.id === id ? { ...r, ...updatedFields } : r));
+    setRoles(prev => {
+      const next = prev.map(r => r.id === id ? { ...r, ...updatedFields } : r);
+      saveLocal('weldor_roles', next);
+      return next;
+    });
     if (currentRole.id === id) {
       setCurrentRole(prev => ({ ...prev, ...updatedFields }));
     }
@@ -564,7 +632,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
     const roleToDelete = roles.find(r => r.id === id);
-    setRoles(prev => prev.filter(r => r.id !== id));
+    setRoles(prev => {
+      const next = prev.filter(r => r.id !== id);
+      saveLocal('weldor_roles', next);
+      return next;
+    });
     try {
       await api.deleteRole(id);
       addAuditLog('ROLE_DELETED', 'rbac', id, `Deleted custom security role "${roleToDelete?.name || id}"`);
@@ -593,23 +665,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Employee HRMS Handlers
   const addEmployee = (emp: Omit<Employee, 'id'>) => {
     const newEmp: Employee = { ...emp, id: `emp-${Date.now()}` };
-    setEmployees(prev => [newEmp, ...prev]);
-    api.createEmployee(newEmp).catch(() => {});
+    setEmployees(prev => {
+      const next = [newEmp, ...prev];
+      saveLocal('weldor_employees', next);
+      return next;
+    });
+    api.createEmployee(newEmp).catch(e => console.warn('Employee create API error:', e));
     addAuditLog('EMPLOYEE_ONBOARDED', 'employees', newEmp.id, `Onboarded new staff ${newEmp.name} (${newEmp.employeeCode || newEmp.employeeId})`);
     showNotification(`Employee ${newEmp.name} registered successfully!`, 'success');
   };
 
   const updateEmployee = (id: string, updatedFields: Partial<Employee>) => {
-    setEmployees(prev => prev.map(e => e.id === id ? { ...e, ...updatedFields } : e));
-    api.updateEmployee(id, updatedFields).catch(() => {});
+    setEmployees(prev => {
+      const next = prev.map(e => e.id === id ? { ...e, ...updatedFields } : e);
+      saveLocal('weldor_employees', next);
+      return next;
+    });
+    api.updateEmployee(id, updatedFields).catch(e => console.warn('Employee update API error:', e));
     addAuditLog('EMPLOYEE_UPDATED', 'employees', id, `Updated employee profile for ID ${id}`);
     showNotification(`Employee record updated!`, 'success');
   };
 
   const deleteEmployee = (id: string) => {
     const emp = employees.find(e => e.id === id);
-    setEmployees(prev => prev.filter(e => e.id !== id));
-    api.deleteEmployee(id).catch(() => {});
+    setEmployees(prev => {
+      const next = prev.filter(e => e.id !== id);
+      saveLocal('weldor_employees', next);
+      return next;
+    });
+    api.deleteEmployee(id).catch(e => console.warn('Employee delete API error:', e));
     addAuditLog('EMPLOYEE_DELETED', 'employees', id, `Removed employee ${emp?.name || id}`);
     showNotification('Employee removed from directory', 'info');
   };
@@ -617,21 +701,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Payroll Handlers
   const addPayrollRecord = (rec: Omit<PayrollRecord, 'id'>) => {
     const newRec: PayrollRecord = { ...rec, id: `pay-${Date.now()}` };
-    setPayrolls(prev => [newRec, ...prev]);
+    setPayrolls(prev => {
+      const next = [newRec, ...prev];
+      saveLocal('weldor_payrolls', next);
+      return next;
+    });
     api.createPayroll(newRec).catch(err => console.warn('Payroll API error:', err));
     addAuditLog('PAYROLL_CREATED', 'payroll', newRec.id, `Created manual payroll entry for ${newRec.employeeName}`);
     showNotification(`Salary slip for ${newRec.employeeName} added!`, 'success');
   };
 
   const updatePayrollRecord = (id: string, updatedFields: Partial<PayrollRecord>) => {
-    setPayrolls(prev => prev.map(p => p.id === id ? { ...p, ...updatedFields } : p));
+    setPayrolls(prev => {
+      const next = prev.map(p => p.id === id ? { ...p, ...updatedFields } : p);
+      saveLocal('weldor_payrolls', next);
+      return next;
+    });
     api.updatePayroll(id, updatedFields).catch(err => console.warn('Payroll API error:', err));
     addAuditLog('PAYROLL_UPDATED', 'payroll', id, `Updated payroll record for ID ${id}`);
     showNotification('Salary details updated!', 'success');
   };
 
   const deletePayrollRecord = (id: string) => {
-    setPayrolls(prev => prev.filter(p => p.id !== id));
+    setPayrolls(prev => {
+      const next = prev.filter(p => p.id !== id);
+      saveLocal('weldor_payrolls', next);
+      return next;
+    });
     api.deletePayroll(id).catch(err => console.warn('Payroll API error:', err));
     addAuditLog('PAYROLL_DELETED', 'payroll', id, `Deleted salary slip ID ${id}`);
     showNotification('Payroll slip deleted', 'info');
@@ -735,14 +831,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
 
-    setPayrolls(prev => [...newRecords, ...prev]);
+    setPayrolls(prev => {
+      const next = [...newRecords, ...prev];
+      saveLocal('weldor_payrolls', next);
+      return next;
+    });
     api.bulkCreatePayroll(newRecords).catch(err => console.warn('Payroll backend sync:', err));
     addAuditLog('PAYROLL_GENERATED', 'payroll', `${month}-${year}`, `Generated ${newRecords.length} payroll slips for ${month}`);
     showNotification(`Generated ${newRecords.length} employee payslips for ${month}!`, 'success');
   };
 
   const approvePayrollRecord = (id: string) => {
-    setPayrolls(prev => prev.map(p => p.id === id ? { ...p, status: 'Approved' } : p));
+    setPayrolls(prev => {
+      const next = prev.map(p => p.id === id ? { ...p, status: 'Approved' as const } : p);
+      saveLocal('weldor_payrolls', next);
+      return next;
+    });
     api.updatePayroll(id, { status: 'Approved' }).catch(err => console.warn('Payroll API error:', err));
     addAuditLog('PAYROLL_APPROVED', 'payroll', id, `Approved salary slip ${id}`);
     showNotification('Salary slip approved for bank disbursal!', 'success');
@@ -754,10 +858,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       showNotification(`No draft payslips found to approve for ${month}.`, 'info');
       return;
     }
-    setPayrolls(prev => prev.map(p => (p.payrollMonth === month && p.status === 'Draft') ? {
-      ...p,
-      status: 'Approved'
-    } : p));
+    setPayrolls(prev => {
+      const next = prev.map(p => (p.payrollMonth === month && p.status === 'Draft') ? {
+        ...p,
+        status: 'Approved' as const
+      } : p);
+      saveLocal('weldor_payrolls', next);
+      return next;
+    });
 
     draftRecords.forEach(r => {
       api.updatePayroll(r.id, { status: 'Approved' }).catch(err => console.warn('Payroll API error:', err));
@@ -770,12 +878,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const disbursePayrollRecord = (id: string, ref?: string) => {
     const txRef = ref || `CMS-DISB-${Date.now()}`;
     const timestamp = new Date().toISOString();
-    setPayrolls(prev => prev.map(p => p.id === id ? {
-      ...p,
-      status: 'Paid',
-      transactionReference: txRef,
-      disbursedAt: timestamp
-    } : p));
+    setPayrolls(prev => {
+      const next = prev.map(p => p.id === id ? {
+        ...p,
+        status: 'Paid' as const,
+        transactionReference: txRef,
+        disbursedAt: timestamp
+      } : p);
+      saveLocal('weldor_payrolls', next);
+      return next;
+    });
     api.updatePayroll(id, {
       status: 'Paid',
       transactionReference: txRef,
@@ -790,12 +902,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const timestamp = new Date().toISOString();
     const recordsToUpdate = payrolls.filter(p => p.payrollMonth === month && p.status !== 'Paid');
     
-    setPayrolls(prev => prev.map(p => (p.payrollMonth === month && p.status !== 'Paid') ? {
-      ...p,
-      status: 'Paid',
-      transactionReference: txBatch,
-      disbursedAt: timestamp
-    } : p));
+    setPayrolls(prev => {
+      const next = prev.map(p => (p.payrollMonth === month && p.status !== 'Paid') ? {
+        ...p,
+        status: 'Paid' as const,
+        transactionReference: txBatch,
+        disbursedAt: timestamp
+      } : p);
+      saveLocal('weldor_payrolls', next);
+      return next;
+    });
 
     recordsToUpdate.forEach(r => {
       api.updatePayroll(r.id, {
@@ -812,32 +928,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Attendance & Leaves Handlers
   const logAttendance = (rec: Omit<AttendanceRecord, 'id'>) => {
     const newRec: AttendanceRecord = { ...rec, id: `att-${Date.now()}` };
-    setAttendance(prev => [newRec, ...prev]);
+    setAttendance(prev => {
+      const next = [newRec, ...prev];
+      saveLocal('weldor_attendance', next);
+      return next;
+    });
     api.createAttendance(newRec).catch(() => {});
     addAuditLog('ATTENDANCE_LOGGED', 'attendance', newRec.id, `Logged attendance for ${newRec.employeeName}`);
     showNotification(`Attendance logged for ${newRec.employeeName}`, 'success');
   };
 
   const updateAttendance = (id: string, rec: Partial<AttendanceRecord>) => {
-    setAttendance(prev => prev.map(a => a.id === id ? { ...a, ...rec } : a));
+    setAttendance(prev => {
+      const next = prev.map(a => a.id === id ? { ...a, ...rec } : a);
+      saveLocal('weldor_attendance', next);
+      return next;
+    });
     api.updateAttendance(id, rec).catch(() => {});
     showNotification('Attendance record updated', 'success');
   };
 
   const applyLeaveRequest = (req: Omit<LeaveRequest, 'id'>) => {
     const newReq: LeaveRequest = { ...req, id: `lev-${Date.now()}` };
-    setLeaveRequests(prev => [newReq, ...prev]);
+    setLeaveRequests(prev => {
+      const next = [newReq, ...prev];
+      saveLocal('weldor_leaves', next);
+      return next;
+    });
     api.createLeave(newReq).catch(() => {});
     addAuditLog('LEAVE_APPLIED', 'attendance', newReq.id, `Applied for leave by ${newReq.employeeName}`);
     showNotification('Leave application submitted for approval!', 'success');
   };
 
   const updateLeaveRequestStatus = (id: string, status: LeaveRequest['status'], approvedBy?: string) => {
-    setLeaveRequests(prev => prev.map(l => l.id === id ? {
-      ...l,
-      status,
-      approvedBy: approvedBy || currentEmployee.name
-    } : l));
+    setLeaveRequests(prev => {
+      const next = prev.map(l => l.id === id ? {
+        ...l,
+        status,
+        approvedBy: approvedBy || currentEmployee.name
+      } : l);
+      saveLocal('weldor_leaves', next);
+      return next;
+    });
     api.updateLeave(id, { status, approvedBy }).catch(() => {});
     addAuditLog('LEAVE_STATUS_CHANGED', 'attendance', id, `Leave ${id} marked as ${status}`);
     showNotification(`Leave application marked as ${status}!`, 'success');
@@ -845,7 +977,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Settings Handlers
   const updateCompanySettings = (settings: Partial<CompanySettings>) => {
-    setCompanySettings(prev => ({ ...prev, ...settings }));
+    setCompanySettings(prev => {
+      const next = { ...prev, ...settings };
+      saveLocal('weldor_settings', next);
+      return next;
+    });
     api.updateSettings(settings).catch(() => {});
     addAuditLog('COMPANY_SETTINGS_UPDATED', 'settings', 'company', `Updated enterprise company profile & banking`);
     showNotification('Company settings saved successfully!', 'success');
@@ -854,23 +990,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Product CRUD
   const addProduct = (p: Omit<Product, 'id'>) => {
     const newProd: Product = { ...p, id: `prod-${Date.now()}` };
-    setProducts(prev => [newProd, ...prev]);
-    api.createProduct(newProd).catch(() => {});
+    setProducts(prev => {
+      const next = [newProd, ...prev];
+      saveLocal('weldor_products', next);
+      return next;
+    });
+    api.createProduct(newProd).catch(e => console.warn('Product create API error:', e));
     addAuditLog('PRODUCT_CREATED', 'products', newProd.id, `Created product ${newProd.name} (${newProd.sku})`);
     showNotification(`Product "${newProd.name}" added to catalog successfully!`, 'success');
   };
 
   const updateProduct = (id: string, updatedFields: Partial<Product>) => {
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updatedFields } : p));
-    api.updateProduct(id, updatedFields).catch(() => {});
+    setProducts(prev => {
+      const next = prev.map(p => p.id === id ? { ...p, ...updatedFields } : p);
+      saveLocal('weldor_products', next);
+      return next;
+    });
+    api.updateProduct(id, updatedFields).catch(e => console.warn('Product update API error:', e));
     addAuditLog('PRODUCT_UPDATED', 'products', id, `Updated product details for ID ${id}`);
     showNotification(`Product details updated!`, 'success');
   };
 
   const deleteProduct = (id: string) => {
     const prod = products.find(p => p.id === id);
-    setProducts(prev => prev.filter(p => p.id !== id));
-    api.deleteProduct(id).catch(() => {});
+    setProducts(prev => {
+      const next = prev.filter(p => p.id !== id);
+      saveLocal('weldor_products', next);
+      return next;
+    });
+    api.deleteProduct(id).catch(e => console.warn('Product delete API error:', e));
     addAuditLog('PRODUCT_DELETED', 'products', id, `Deleted product ${prod?.name || id}`);
     showNotification(`Product removed from catalog.`, 'warning');
   };
@@ -878,23 +1026,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Category CRUD
   const addCategory = (c: Omit<ProductCategory, 'id'>) => {
     const newCat: ProductCategory = { ...c, id: `cat-${Date.now()}` };
-    setCategories(prev => [...prev, newCat]);
-    api.createCategory(newCat).catch(() => {});
+    setCategories(prev => {
+      const next = [...prev, newCat];
+      saveLocal('weldor_categories', next);
+      return next;
+    });
+    api.createCategory(newCat).catch(e => console.warn('Category create API error:', e));
     addAuditLog('CATEGORY_CREATED', 'products', newCat.id, `Created category ${newCat.name}`);
     showNotification(`Category "${newCat.name}" created successfully!`, 'success');
   };
 
   const updateCategory = (id: string, updatedFields: Partial<ProductCategory>) => {
-    setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updatedFields } : c));
-    api.updateCategory(id, updatedFields).catch(() => {});
+    setCategories(prev => {
+      const next = prev.map(c => c.id === id ? { ...c, ...updatedFields } : c);
+      saveLocal('weldor_categories', next);
+      return next;
+    });
+    api.updateCategory(id, updatedFields).catch(e => console.warn('Category update API error:', e));
     addAuditLog('CATEGORY_UPDATED', 'products', id, `Updated category details for ID ${id}`);
     showNotification(`Category updated successfully!`, 'success');
   };
 
   const deleteCategory = (id: string) => {
     const cat = categories.find(c => c.id === id);
-    setCategories(prev => prev.filter(c => c.id !== id));
-    api.deleteCategory(id).catch(() => {});
+    setCategories(prev => {
+      const next = prev.filter(c => c.id !== id);
+      saveLocal('weldor_categories', next);
+      return next;
+    });
+    api.deleteCategory(id).catch(e => console.warn('Category delete API error:', e));
     addAuditLog('CATEGORY_DELETED', 'products', id, `Deleted category ${cat?.name || id}`);
     showNotification(`Category removed.`, 'warning');
   };
@@ -902,22 +1062,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Gallery Media CRUD
   const addGalleryMedia = (item: Omit<GalleryMedia, 'id'>) => {
     const newItem: GalleryMedia = { ...item, id: `gal-${Date.now()}`, createdAt: new Date().toISOString() };
-    setGalleryMedia(prev => [newItem, ...prev]);
-    api.createGallery(newItem).catch(() => {});
+    setGalleryMedia(prev => {
+      const next = [newItem, ...prev];
+      saveLocal('weldor_gallery', next);
+      return next;
+    });
+    api.createGallery(newItem).catch(e => console.warn('Gallery create API error:', e));
     addAuditLog('GALLERY_ADDED', 'cms', newItem.id, `Added gallery item ${newItem.title}`);
     showNotification(`Media asset "${newItem.title}" added to gallery!`, 'success');
   };
 
   const updateGalleryMedia = (id: string, updatedFields: Partial<GalleryMedia>) => {
-    setGalleryMedia(prev => prev.map(m => m.id === id ? { ...m, ...updatedFields } : m));
-    api.updateGallery(id, updatedFields).catch(() => {});
+    setGalleryMedia(prev => {
+      const next = prev.map(m => m.id === id ? { ...m, ...updatedFields } : m);
+      saveLocal('weldor_gallery', next);
+      return next;
+    });
+    api.updateGallery(id, updatedFields).catch(e => console.warn('Gallery update API error:', e));
     addAuditLog('GALLERY_UPDATED', 'cms', id, `Updated gallery item ID ${id}`);
     showNotification(`Media asset updated successfully!`, 'success');
   };
 
   const deleteGalleryMedia = (id: string) => {
-    setGalleryMedia(prev => prev.filter(m => m.id !== id));
-    api.deleteGallery(id).catch(() => {});
+    setGalleryMedia(prev => {
+      const next = prev.filter(m => m.id !== id);
+      saveLocal('weldor_gallery', next);
+      return next;
+    });
+    api.deleteGallery(id).catch(e => console.warn('Gallery delete API error:', e));
     addAuditLog('GALLERY_DELETED', 'cms', id, `Deleted gallery item ${id}`);
     showNotification(`Media asset deleted.`, 'warning');
   };
@@ -930,23 +1102,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString(),
       displayOrder: banner.displayOrder || banners.length + 1
     };
-    setBanners(prev => [...prev, newBanner]);
-    api.createBanner(newBanner).catch(() => {});
+    setBanners(prev => {
+      const next = [...prev, newBanner];
+      saveLocal('weldor_banners', next);
+      return next;
+    });
+    api.createBanner(newBanner).catch(e => console.warn('Banner create API error:', e));
     addAuditLog('BANNER_CREATED', 'cms', newBanner.id, `Created hero banner slide "${newBanner.title}" with effect ${newBanner.transitionEffect}`);
     showNotification(`Hero banner slide "${newBanner.title}" created successfully!`, 'success');
   };
 
   const updateBanner = (id: string, updatedFields: Partial<HeroBanner>) => {
-    setBanners(prev => prev.map(b => b.id === id ? { ...b, ...updatedFields } : b));
-    api.updateBanner(id, updatedFields).catch(() => {});
+    setBanners(prev => {
+      const next = prev.map(b => b.id === id ? { ...b, ...updatedFields } : b);
+      saveLocal('weldor_banners', next);
+      return next;
+    });
+    api.updateBanner(id, updatedFields).catch(e => console.warn('Banner update API error:', e));
     addAuditLog('BANNER_UPDATED', 'cms', id, `Updated hero banner slide ID ${id}`);
     showNotification(`Hero banner slide updated successfully!`, 'success');
   };
 
   const deleteBanner = (id: string) => {
     const banner = banners.find(b => b.id === id);
-    setBanners(prev => prev.filter(b => b.id !== id));
-    api.deleteBanner(id).catch(() => {});
+    setBanners(prev => {
+      const next = prev.filter(b => b.id !== id);
+      saveLocal('weldor_banners', next);
+      return next;
+    });
+    api.deleteBanner(id).catch(e => console.warn('Banner delete API error:', e));
     addAuditLog('BANNER_DELETED', 'cms', id, `Deleted hero banner slide "${banner?.title || id}"`);
     showNotification(`Hero banner slide deleted.`, 'warning');
   };
@@ -954,54 +1138,72 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const reorderBanners = (bannerIds: string[]) => {
     setBanners(prev => {
       const bannerMap = new Map(prev.map(b => [b.id, b]));
-      return bannerIds.map((id, index) => {
+      const next = bannerIds.map((id, index) => {
         const item = bannerMap.get(id);
         return item ? { ...item, displayOrder: index + 1 } : null;
       }).filter(Boolean) as HeroBanner[];
+      saveLocal('weldor_banners', next);
+      return next;
     });
-    api.reorderBanners(bannerIds).catch(() => {});
+    api.reorderBanners(bannerIds).catch(e => console.warn('Banner reorder API error:', e));
     addAuditLog('BANNERS_REORDERED', 'cms', 'hero-slider', `Reordered hero slider sequence`);
     showNotification(`Banner display sequence reordered!`, 'success');
   };
 
   const toggleBannerStatus = (id: string) => {
-    setBanners(prev => prev.map(b => {
-      if (b.id === id) {
-        const nextState = !b.active;
-        api.updateBanner(id, { active: nextState }).catch(() => {});
-        addAuditLog('BANNER_STATUS_TOGGLED', 'cms', id, `Toggled banner active status to ${nextState}`);
-        showNotification(`Banner ${nextState ? 'Activated' : 'Deactivated'}.`, nextState ? 'success' : 'info');
-        return { ...b, active: nextState };
-      }
-      return b;
-    }));
+    setBanners(prev => {
+      const next = prev.map(b => {
+        if (b.id === id) {
+          const nextState = !b.active;
+          api.updateBanner(id, { active: nextState }).catch(() => {});
+          addAuditLog('BANNER_STATUS_TOGGLED', 'cms', id, `Toggled banner active status to ${nextState}`);
+          showNotification(`Banner ${nextState ? 'Activated' : 'Deactivated'}.`, nextState ? 'success' : 'info');
+          return { ...b, active: nextState };
+        }
+        return b;
+      });
+      saveLocal('weldor_banners', next);
+      return next;
+    });
   };
 
   // Exhibition CRUD
   const addExhibition = (expo: Omit<Exhibition, 'id'>) => {
     const newExpo: Exhibition = { ...expo, id: `expo-${Date.now()}` };
-    setExhibitions(prev => [newExpo, ...prev]);
-    api.createExhibition(newExpo).catch(() => {});
+    setExhibitions(prev => {
+      const next = [newExpo, ...prev];
+      saveLocal('weldor_exhibitions', next);
+      return next;
+    });
+    api.createExhibition(newExpo).catch(e => console.warn('Exhibition create API error:', e));
     addAuditLog('EXHIBITION_CREATED', 'exhibitions', newExpo.id, `Created exhibition ${newExpo.title}`);
     showNotification(`Exhibition event "${newExpo.title}" published!`, 'success');
   };
 
   const updateExhibition = (id: string, updatedExpo: Partial<Exhibition>) => {
-    setExhibitions(prev => prev.map(expo => {
-      if (expo.id === id) {
-        return { ...expo, ...updatedExpo };
-      }
-      return expo;
-    }));
-    api.updateExhibition(id, updatedExpo).catch(() => {});
+    setExhibitions(prev => {
+      const next = prev.map(expo => {
+        if (expo.id === id) {
+          return { ...expo, ...updatedExpo };
+        }
+        return expo;
+      });
+      saveLocal('weldor_exhibitions', next);
+      return next;
+    });
+    api.updateExhibition(id, updatedExpo).catch(e => console.warn('Exhibition update API error:', e));
     addAuditLog('EXHIBITION_UPDATED', 'exhibitions', id, `Updated exhibition details for ${id}`);
     showNotification(`Exhibition updated successfully!`, 'success');
   };
 
   const deleteExhibition = (id: string) => {
     const target = exhibitions.find(e => e.id === id);
-    setExhibitions(prev => prev.filter(expo => expo.id !== id));
-    api.deleteExhibition(id).catch(() => {});
+    setExhibitions(prev => {
+      const next = prev.filter(expo => expo.id !== id);
+      saveLocal('weldor_exhibitions', next);
+      return next;
+    });
+    api.deleteExhibition(id).catch(e => console.warn('Exhibition delete API error:', e));
     addAuditLog('EXHIBITION_DELETED', 'exhibitions', id, `Deleted exhibition: ${target?.title || id}`);
     showNotification(`Exhibition deleted successfully!`, 'info');
   };
@@ -1012,18 +1214,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     newStage: Order['stage'], 
     dispatchDetails?: { courierTrackingNo?: string; courierPartner?: string; dispatchDate?: string }
   ) => {
-    setOrders(prev => prev.map(ord => {
-      if (ord.id === orderId) {
-        return {
-          ...ord,
-          stage: newStage,
-          ...(dispatchDetails?.courierTrackingNo ? { courierTrackingNo: dispatchDetails.courierTrackingNo } : {}),
-          ...(dispatchDetails?.courierPartner ? { courierPartner: dispatchDetails.courierPartner } : {}),
-          ...(dispatchDetails?.dispatchDate ? { dispatchDate: dispatchDetails.dispatchDate } : {}),
-        };
-      }
-      return ord;
-    }));
+    setOrders(prev => {
+      const next = prev.map(ord => {
+        if (ord.id === orderId) {
+          return {
+            ...ord,
+            stage: newStage,
+            ...(dispatchDetails?.courierTrackingNo ? { courierTrackingNo: dispatchDetails.courierTrackingNo } : {}),
+            ...(dispatchDetails?.courierPartner ? { courierPartner: dispatchDetails.courierPartner } : {}),
+            ...(dispatchDetails?.dispatchDate ? { dispatchDate: dispatchDetails.dispatchDate } : {}),
+          };
+        }
+        return ord;
+      });
+      saveLocal('weldor_orders', next);
+      return next;
+    });
     api.updateOrder(orderId, { stage: newStage, ...dispatchDetails }).catch(() => {});
     addAuditLog('ORDER_STAGE_UPDATED', 'orders', orderId, `Updated order ${orderId} stage to ${newStage}`);
     showNotification(`Order stage updated to "${newStage}"!`, 'success');
@@ -1044,26 +1250,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateLeadStage = (leadId: string, newStage: LeadStage, lostReason?: string) => {
-    setLeads(prev => prev.map(lead => {
-      if (lead.id === leadId) {
-        const updatedActivity = {
-          id: `act-${Date.now()}`,
-          leadId,
-          timestamp: new Date().toISOString(),
-          type: 'Status_Change' as const,
-          performedBy: `${currentEmployee.name} (${currentRole.name})`,
-          description: `Changed stage from ${lead.stage} to ${newStage}${lostReason ? `. Lost Reason: ${lostReason}` : ''}`,
-        };
-        return {
-          ...lead,
-          stage: newStage,
-          lostReason: lostReason || lead.lostReason,
-          updatedAt: new Date().toISOString(),
-          activities: [updatedActivity, ...lead.activities],
-        };
-      }
-      return lead;
-    }));
+    setLeads(prev => {
+      const next = prev.map(lead => {
+        if (lead.id === leadId) {
+          const updatedActivity = {
+            id: `act-${Date.now()}`,
+            leadId,
+            timestamp: new Date().toISOString(),
+            type: 'Status_Change' as const,
+            performedBy: `${currentEmployee.name} (${currentRole.name})`,
+            description: `Changed stage from ${lead.stage} to ${newStage}${lostReason ? `. Lost Reason: ${lostReason}` : ''}`,
+          };
+          return {
+            ...lead,
+            stage: newStage,
+            lostReason: lostReason || lead.lostReason,
+            updatedAt: new Date().toISOString(),
+            activities: [updatedActivity, ...lead.activities],
+          };
+        }
+        return lead;
+      });
+      saveLocal('weldor_leads', next);
+      return next;
+    });
     api.updateLead(leadId, { stage: newStage, lostReason }).catch(() => {});
     addAuditLog('LEAD_STAGE_UPDATED', 'leads', leadId, `Updated lead stage to ${newStage}`);
     showNotification(`Lead stage updated to ${newStage.replace(/_/g, ' ')}`, 'success');
@@ -1072,26 +1282,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const assignLead = (leadId: string, employeeId: string) => {
     const targetEmp = employees.find(e => e.id === employeeId);
     if (!targetEmp) return;
-    setLeads(prev => prev.map(lead => {
-      if (lead.id === leadId) {
-        const updatedActivity = {
-          id: `act-${Date.now()}`,
-          leadId,
-          timestamp: new Date().toISOString(),
-          type: 'Status_Change' as const,
-          performedBy: currentEmployee.name,
-          description: `Reassigned lead to ${targetEmp.name} (${targetEmp.department})`,
-        };
-        return {
-          ...lead,
-          assignedEmployeeId: targetEmp.id,
-          assignedEmployeeName: targetEmp.name,
-          updatedAt: new Date().toISOString(),
-          activities: [updatedActivity, ...lead.activities],
-        };
-      }
-      return lead;
-    }));
+    setLeads(prev => {
+      const next = prev.map(lead => {
+        if (lead.id === leadId) {
+          const updatedActivity = {
+            id: `act-${Date.now()}`,
+            leadId,
+            timestamp: new Date().toISOString(),
+            type: 'Status_Change' as const,
+            performedBy: currentEmployee.name,
+            description: `Reassigned lead to ${targetEmp.name} (${targetEmp.department})`,
+          };
+          return {
+            ...lead,
+            assignedEmployeeId: targetEmp.id,
+            assignedEmployeeName: targetEmp.name,
+            updatedAt: new Date().toISOString(),
+            activities: [updatedActivity, ...lead.activities],
+          };
+        }
+        return lead;
+      });
+      saveLocal('weldor_leads', next);
+      return next;
+    });
     api.updateLead(leadId, { assignedEmployeeId: targetEmp.id, assignedEmployeeName: targetEmp.name }).catch(() => {});
     addAuditLog('LEAD_REASSIGNED', 'leads', leadId, `Reassigned lead to ${targetEmp.name}`);
     showNotification(`Lead assigned to ${targetEmp.name}`, 'info');
@@ -1141,7 +1355,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ],
     };
 
-    setLeads(prev => [newLead, ...prev]);
+    setLeads(prev => {
+      const next = [newLead, ...prev];
+      saveLocal('weldor_leads', next);
+      return next;
+    });
     api.submitPublicRFQ(rfqData).catch(() => {});
 
     const newRfq: RFQRequirement = {
@@ -1163,7 +1381,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'Pending Review',
       createdAt: new Date().toISOString(),
     };
-    setRfqs(prev => [newRfq, ...prev]);
+    setRfqs(prev => {
+      const next = [newRfq, ...prev];
+      saveLocal('weldor_rfqs', next);
+      return next;
+    });
 
     addAuditLog('PUBLIC_RFQ_SUBMITTED', 'crm', newLead.id, `Received public RFQ from ${rfqData.companyName} (${rfqData.email}) with ${rfqData.drawingFileName || 'specs'}`);
     showNotification(`RFQ Submitted! Lead ID: ${leadNumber}. Assigned to Sales Manager with 2-hour SLA.`, 'success');
@@ -1186,7 +1408,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString(),
     };
 
-    setSamples(prev => [newSample, ...prev]);
+    setSamples(prev => {
+      const next = [newSample, ...prev];
+      saveLocal('weldor_samples', next);
+      return next;
+    });
     try {
       const res = await api.createSample(newSample);
       if (res?.data?.id) {
@@ -1201,14 +1427,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateSampleStage = (sampleId: string, stage: SampleRequest['stage']) => {
-    setSamples(prev => prev.map(s => s.id === sampleId ? { ...s, stage } : s));
+    setSamples(prev => {
+      const next = prev.map(s => s.id === sampleId ? { ...s, stage } : s);
+      saveLocal('weldor_samples', next);
+      return next;
+    });
     api.updateSample(sampleId, { stage }).catch(() => {});
     addAuditLog('SAMPLE_STAGE_UPDATED', 'samples', sampleId, `Updated sample ${sampleId} stage to ${stage}`);
     showNotification(`Sample status updated to ${stage}`, 'success');
   };
 
   const deleteSampleRequest = (sampleId: string) => {
-    setSamples(prev => prev.filter(s => s.id !== sampleId));
+    setSamples(prev => {
+      const next = prev.filter(s => s.id !== sampleId);
+      saveLocal('weldor_samples', next);
+      return next;
+    });
     api.deleteSample(sampleId).catch(() => {});
     addAuditLog('SAMPLE_DELETED', 'samples', sampleId, `Deleted sample ${sampleId}`);
     showNotification('Sample prototype removed from records.', 'warning');
@@ -1233,7 +1467,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       completionDate: data.completionDate || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
     };
 
-    setTrials(prev => [newTrial, ...prev]);
+    setTrials(prev => {
+      const next = [newTrial, ...prev];
+      saveLocal('weldor_trials', next);
+      return next;
+    });
     try {
       const res = await api.createTrial(newTrial);
       if (res?.data?.id) {
@@ -1248,14 +1486,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateTrialStatus = (trialId: string, status: TechnicalTrial['status'], failureReason?: string) => {
-    setTrials(prev => prev.map(t => t.id === trialId ? { ...t, status, failureReason } : t));
+    setTrials(prev => {
+      const next = prev.map(t => t.id === trialId ? { ...t, status, failureReason } : t);
+      saveLocal('weldor_trials', next);
+      return next;
+    });
     api.updateTrial(trialId, { status, failureReason }).catch(() => {});
     addAuditLog('TRIAL_STATUS_UPDATED', 'trials', trialId, `Updated trial ${trialId} status to ${status}`);
     showNotification(`Technical Trial status updated to ${status}`, 'success');
   };
 
   const deleteTechnicalTrial = (trialId: string) => {
-    setTrials(prev => prev.filter(t => t.id !== trialId));
+    setTrials(prev => {
+      const next = prev.filter(t => t.id !== trialId);
+      saveLocal('weldor_trials', next);
+      return next;
+    });
     api.deleteTrial(trialId).catch(() => {});
     addAuditLog('TRIAL_DELETED', 'trials', trialId, `Deleted trial ${trialId}`);
     showNotification('Technical Trial removed from workspace.', 'warning');
@@ -1292,7 +1538,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       sentAt: requiresApproval ? undefined : new Date().toISOString(),
     };
 
-    setQuotations(prev => [newQuotation, ...prev]);
+    setQuotations(prev => {
+      const next = [newQuotation, ...prev];
+      saveLocal('weldor_quotations', next);
+      return next;
+    });
     api.createQuotation(newQuotation).catch(() => {});
 
     if (lead) {
@@ -1305,17 +1555,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const approveQuotation = (quotationId: string, notes?: string) => {
-    setQuotations(prev => prev.map(q => {
-      if (q.id === quotationId) {
-        return {
-          ...q,
-          status: 'Approved',
-          approvalNotes: notes || `Approved by ${currentEmployee.name} (${currentRole.name})`,
-          sentAt: new Date().toISOString(),
-        };
-      }
-      return q;
-    }));
+    setQuotations(prev => {
+      const next = prev.map(q => {
+        if (q.id === quotationId) {
+          return {
+            ...q,
+            status: 'Approved' as const,
+            approvalNotes: notes || `Approved by ${currentEmployee.name} (${currentRole.name})`,
+            sentAt: new Date().toISOString(),
+          };
+        }
+        return q;
+      });
+      saveLocal('weldor_quotations', next);
+      return next;
+    });
 
     api.updateQuotation(quotationId, {
       status: 'Approved',
@@ -1356,7 +1610,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString(),
     };
 
-    setOrders(prev => [newOrder, ...prev]);
+    setOrders(prev => {
+      const next = [newOrder, ...prev];
+      saveLocal('weldor_orders', next);
+      return next;
+    });
     api.createOrder(newOrder).catch(() => {});
 
     if (quote) {
@@ -1369,23 +1627,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteOrder = (orderId: string) => {
-    setOrders(prev => prev.filter(o => o.id !== orderId));
+    setOrders(prev => {
+      const next = prev.filter(o => o.id !== orderId);
+      saveLocal('weldor_orders', next);
+      return next;
+    });
     api.deleteOrder(orderId).catch(() => {});
     addAuditLog('ORDER_DELETED', 'orders', orderId, `Deleted order ${orderId}`);
     showNotification('Order removed from registry.', 'warning');
   };
 
   const rejectQuotation = (quotationId: string, reason?: string) => {
-    setQuotations(prev => prev.map(q => {
-      if (q.id === quotationId) {
-        return {
-          ...q,
-          status: 'Rejected',
-          approvalNotes: reason || `Marked as Rejected / Revision Requested by ${currentEmployee.name}`,
-        };
-      }
-      return q;
-    }));
+    setQuotations(prev => {
+      const next = prev.map(q => {
+        if (q.id === quotationId) {
+          return {
+            ...q,
+            status: 'Rejected' as const,
+            approvalNotes: reason || `Marked as Rejected / Revision Requested by ${currentEmployee.name}`,
+          };
+        }
+        return q;
+      });
+      saveLocal('weldor_quotations', next);
+      return next;
+    });
     api.updateQuotation(quotationId, {
       status: 'Rejected',
       approvalNotes: reason || `Marked as Rejected / Revision Requested by ${currentEmployee.name}`,
@@ -1395,14 +1661,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteQuotation = (quotationId: string) => {
-    setQuotations(prev => prev.filter(q => q.id !== quotationId));
+    setQuotations(prev => {
+      const next = prev.filter(q => q.id !== quotationId);
+      saveLocal('weldor_quotations', next);
+      return next;
+    });
     api.deleteQuotation(quotationId).catch(() => {});
     addAuditLog('QUOTATION_DELETED', 'quotations', quotationId, `Deleted quotation ${quotationId}`);
     showNotification('Quotation permanently removed.', 'warning');
   };
 
   const deleteLead = (leadId: string) => {
-    setLeads(prev => prev.filter(l => l.id !== leadId));
+    setLeads(prev => {
+      const next = prev.filter(l => l.id !== leadId);
+      saveLocal('weldor_leads', next);
+      return next;
+    });
     api.deleteLead(leadId).catch(() => {});
     addAuditLog('LEAD_DELETED', 'leads', leadId, `Deleted lead ${leadId}`);
     showNotification('Lead removed from CRM pipeline.', 'warning');

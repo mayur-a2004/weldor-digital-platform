@@ -111,22 +111,54 @@ const writeToFile = (collection, data) => {
   }
 };
 
-// Universal Database Interface (MongoDB + Local Fallback)
+// Universal Database Interface (MongoDB Atlas + Local Fallback)
+export const ensureDbConnected = async () => {
+  if (isMongoConnected && mongoose.connection.readyState === 1) {
+    return true;
+  }
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    return false;
+  }
+  try {
+    if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(uri, {
+        serverSelectionTimeoutMS: 5000,
+        connectTimeoutMS: 10000,
+      });
+    }
+    isMongoConnected = mongoose.connection.readyState === 1;
+    return isMongoConnected;
+  } catch (err) {
+    isMongoConnected = false;
+    return false;
+  }
+};
+
 export const db = {
   isMongoActive: () => isMongoConnected,
+  ensureConnected: ensureDbConnected,
 
   get: async (collection, defaultData = []) => {
+    await ensureDbConnected().catch(() => {});
     const Model = COLLECTION_MODELS[collection];
 
     if (isMongoConnected && Model) {
       try {
         const docs = await Model.find({}).lean();
-        if (docs && docs.length > 0) {
-          // Format docs to strip MongoDB _id if needed
-          const cleanDocs = docs.map(d => {
-            const { _id, __v, ...rest } = d;
-            return { id: rest.id || _id?.toString(), ...rest };
-          });
+        const cleanDocs = (docs || []).map(d => {
+          const { _id, __v, ...rest } = d;
+          return { id: rest.id || _id?.toString(), ...rest };
+        });
+
+        if (collection === 'settings') {
+          const settingDoc = cleanDocs.find(d => d.id === 'settings-main') || cleanDocs[0];
+          if (settingDoc) {
+            inMemoryStore.set(collection, settingDoc);
+            return settingDoc;
+          }
+        } else {
+          // Valid MongoDB query executed: Even if array is empty (user deleted all items), return cleanDocs!
           inMemoryStore.set(collection, cleanDocs);
           return cleanDocs;
         }
@@ -145,15 +177,24 @@ export const db = {
   },
 
   set: async (collection, data) => {
+    await ensureDbConnected().catch(() => {});
     inMemoryStore.set(collection, data);
     writeToFile(collection, data);
 
     const Model = COLLECTION_MODELS[collection];
-    if (isMongoConnected && Model && Array.isArray(data)) {
+    if (isMongoConnected && Model) {
       try {
-        await Model.deleteMany({});
-        if (data.length > 0) {
-          await Model.insertMany(data, { ordered: false });
+        if (Array.isArray(data)) {
+          await Model.deleteMany({});
+          if (data.length > 0) {
+            await Model.insertMany(data, { ordered: false });
+          }
+        } else if (data && typeof data === 'object') {
+          await Model.findOneAndUpdate(
+            { id: `${collection}-main` },
+            { $set: { id: `${collection}-main`, ...data } },
+            { upsert: true }
+          );
         }
       } catch (err) {
         console.warn(`MongoDB set sync error on ${collection}:`, err.message);
@@ -163,6 +204,7 @@ export const db = {
   },
 
   insert: async (collection, item) => {
+    await ensureDbConnected().catch(() => {});
     const newItem = {
       ...item,
       id: item.id || `${collection.slice(0, 4)}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -191,11 +233,27 @@ export const db = {
   },
 
   update: async (collection, id, updates) => {
+    await ensureDbConnected().catch(() => {});
     const items = await db.get(collection, []);
     if (!Array.isArray(items)) return null;
 
     const index = items.findIndex((i) => i.id === id);
-    if (index === -1) return null;
+    if (index === -1) {
+      // If not in current array, also check MongoDB directly
+      const Model = COLLECTION_MODELS[collection];
+      if (isMongoConnected && Model) {
+        try {
+          const query = { $or: [{ id }, ...(mongoose.isValidObjectId(id) ? [{ _id: id }] : [])] };
+          const existing = await Model.findOne(query).lean();
+          if (existing) {
+            const updated = { ...existing, ...updates, id: existing.id || id, updatedAt: new Date().toISOString() };
+            await Model.findOneAndUpdate(query, { $set: updated }, { upsert: true });
+            return updated;
+          }
+        } catch (e) {}
+      }
+      return null;
+    }
 
     const updatedItem = {
       ...items[index],
@@ -212,7 +270,8 @@ export const db = {
     const Model = COLLECTION_MODELS[collection];
     if (isMongoConnected && Model) {
       try {
-        await Model.findOneAndUpdate({ id }, { $set: updatedItem }, { upsert: true });
+        const query = { $or: [{ id }, ...(mongoose.isValidObjectId(id) ? [{ _id: id }] : [])] };
+        await Model.findOneAndUpdate(query, { $set: updatedItem }, { upsert: true });
       } catch (err) {
         console.warn(`MongoDB update error on ${collection}:`, err.message);
       }
@@ -222,6 +281,7 @@ export const db = {
   },
 
   delete: async (collection, id) => {
+    await ensureDbConnected().catch(() => {});
     const items = await db.get(collection, []);
     if (!Array.isArray(items)) return false;
 
@@ -233,7 +293,8 @@ export const db = {
     const Model = COLLECTION_MODELS[collection];
     if (isMongoConnected && Model) {
       try {
-        await Model.deleteOne({ id });
+        const query = { $or: [{ id }, ...(mongoose.isValidObjectId(id) ? [{ _id: id }] : [])] };
+        await Model.deleteOne(query);
       } catch (err) {
         console.warn(`MongoDB delete error on ${collection}:`, err.message);
       }
@@ -243,6 +304,7 @@ export const db = {
   },
 
   bulkInsert: async (collection, newItems) => {
+    await ensureDbConnected().catch(() => {});
     const items = await db.get(collection, []);
     const list = Array.isArray(items) ? items : [];
 
@@ -270,6 +332,7 @@ export const db = {
   },
 
   clearAll: async () => {
+    await ensureDbConnected().catch(() => {});
     inMemoryStore.clear();
     for (const [key, Model] of Object.entries(COLLECTION_MODELS)) {
       writeToFile(key, []);

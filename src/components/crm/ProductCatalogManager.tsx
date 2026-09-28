@@ -316,23 +316,32 @@ export const ProductCatalogManager: React.FC = () => {
     }));
   };
 
-  // Helper for File Upload Simulation (Images, Videos, PDFs, CAD)
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, targetField: 'image' | 'gallery' | 'videoUrl' | 'catalogPdfUrl' | 'cadDrawingUrl') => {
+  // Helper for Real File Upload (Cloudinary CDN / Server API with fallback)
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, targetField: 'image' | 'gallery' | 'videoUrl' | 'catalogPdfUrl' | 'cadDrawingUrl') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Create object URL for local instant visual preview
-    const objectUrl = URL.createObjectURL(file);
+    showNotification(`Uploading "${file.name}"...`, 'info');
+    let uploadedUrl = '';
+    try {
+      const res = await api.uploadFile(file);
+      if (res?.success && (res?.data?.cdnUrl || res?.data?.url)) {
+        uploadedUrl = res.data.cdnUrl || res.data.url;
+      }
+    } catch (err) {
+      console.warn('Upload error, fallback:', err);
+    }
+    const finalUrl = uploadedUrl || URL.createObjectURL(file);
 
     if (targetField === 'gallery') {
-      setFormData(prev => ({ ...prev, gallery: [...prev.gallery, objectUrl] }));
-      showNotification(`Added "${file.name}" to gallery photos!`, 'info');
+      setFormData(prev => ({ ...prev, gallery: [...prev.gallery, finalUrl] }));
+      showNotification(`Added "${file.name}" to gallery!`, 'success');
     } else if (targetField === 'image') {
-      setFormData(prev => ({ ...prev, image: objectUrl, gallery: prev.gallery.includes(objectUrl) ? prev.gallery : [objectUrl, ...prev.gallery] }));
-      showNotification(`Main thumbnail updated to "${file.name}"!`, 'info');
+      setFormData(prev => ({ ...prev, image: finalUrl, gallery: prev.gallery.includes(finalUrl) ? prev.gallery : [finalUrl, ...prev.gallery] }));
+      showNotification(`Thumbnail updated to "${file.name}"!`, 'success');
     } else {
-      setFormData(prev => ({ ...prev, [targetField]: objectUrl }));
-      showNotification(`Uploaded asset "${file.name}" successfully!`, 'info');
+      setFormData(prev => ({ ...prev, [targetField]: finalUrl }));
+      showNotification(`Uploaded "${file.name}" successfully!`, 'success');
     }
   };
 

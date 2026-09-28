@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { api } from '../../services/api';
 import { 
   Layers, 
   Plus, 
@@ -156,12 +157,22 @@ export const CategoryManager: React.FC = () => {
     setFormData(prev => ({ ...prev, seoKeywords: prev.seoKeywords.filter(item => item !== kw) }));
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, targetField: 'image' | 'bannerImage') => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, targetField: 'image' | 'bannerImage') => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const objectUrl = URL.createObjectURL(file);
-    setFormData(prev => ({ ...prev, [targetField]: objectUrl }));
-    showNotification(`Uploaded ${targetField === 'image' ? 'Thumbnail' : 'Banner'} file successfully!`, 'info');
+    showNotification(`Uploading ${file.name}...`, 'info');
+    let uploadedUrl = '';
+    try {
+      const res = await api.uploadFile(file);
+      if (res?.success && (res?.data?.cdnUrl || res?.data?.url)) {
+        uploadedUrl = res.data.cdnUrl || res.data.url;
+      }
+    } catch (err) {
+      console.warn('Upload error:', err);
+    }
+    const finalUrl = uploadedUrl || URL.createObjectURL(file);
+    setFormData(prev => ({ ...prev, [targetField]: finalUrl }));
+    showNotification(`Uploaded ${targetField === 'image' ? 'Thumbnail' : 'Banner'} successfully!`, 'success');
   };
 
   const availableIcons = [

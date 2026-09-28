@@ -174,6 +174,26 @@ router.post('/attendance', async (req, res) => {
   }
 });
 
+router.put('/attendance/:id', async (req, res) => {
+  try {
+    const updated = await db.update('attendances', req.params.id, req.body);
+    if (!updated) return res.status(404).json({ success: false, message: 'Attendance record not found' });
+    res.json({ success: true, message: 'Attendance record updated', data: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update attendance', error: err.message });
+  }
+});
+
+router.delete('/attendance/:id', async (req, res) => {
+  try {
+    const deleted = await db.delete('attendances', req.params.id);
+    if (!deleted) return res.status(404).json({ success: false, message: 'Attendance record not found' });
+    res.json({ success: true, message: 'Attendance record deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to delete attendance', error: err.message });
+  }
+});
+
 router.get('/leaves', async (req, res) => {
   try {
     let leaves = await db.get('leaves', []);
@@ -200,6 +220,16 @@ router.put('/leaves/:id', async (req, res) => {
     res.json({ success: true, message: 'Leave status updated', data: updated });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to update leave', error: err.message });
+  }
+});
+
+router.delete('/leaves/:id', async (req, res) => {
+  try {
+    const deleted = await db.delete('leaves', req.params.id);
+    if (!deleted) return res.status(404).json({ success: false, message: 'Leave request not found' });
+    res.json({ success: true, message: 'Leave request deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to delete leave', error: err.message });
   }
 });
 

@@ -130,7 +130,23 @@ const DEFAULT_SELLER_INFO = {
   branch: 'Dared Industrial Estate Branch, Jamnagar'
 };
 
-const INITIAL_QUOTES: CommercialQuotationData[] = [];
+const loadQuotes = (): CommercialQuotationData[] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('weldor_commercial_quotes');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+  }
+  return [];
+};
+
+const saveQuotes = (data: CommercialQuotationData[]) => {
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('weldor_commercial_quotes', JSON.stringify(data));
+    } catch (e) {}
+  }
+};
 
 export const QuotationBuilder: React.FC = () => {
   const { 
@@ -144,7 +160,7 @@ export const QuotationBuilder: React.FC = () => {
     currentRole 
   } = useApp();
   
-  const [quotesList, setQuotesList] = useState<CommercialQuotationData[]>(INITIAL_QUOTES);
+  const [quotesList, setQuotesList] = useState<CommercialQuotationData[]>(() => loadQuotes());
   const [activePDFQuotation, setActivePDFQuotation] = useState<CommercialQuotationData | null>(null);
   const [filterMode, setFilterMode] = useState<'active' | 'approved' | 'sent' | 'rejected' | 'all'>('active');
   const [searchQuery, setSearchQuery] = useState('');
@@ -361,7 +377,11 @@ export const QuotationBuilder: React.FC = () => {
       expiryDate: expiry
     };
 
-    setQuotesList(prev => [newQuote, ...prev]);
+    setQuotesList(prev => {
+      const next = [newQuote, ...prev];
+      saveQuotes(next);
+      return next;
+    });
     setIsCreateQuoteModalOpen(false);
     setActivePDFQuotation(newQuote);
     showNotification(`Formal Quotation ${newQuoteNumber} generated successfully!`, 'success');
@@ -553,7 +573,11 @@ export const QuotationBuilder: React.FC = () => {
                     <button
                       onClick={() => {
                         if (window.confirm(`Are you sure you want to delete quotation ${quote.quotationNumber}?`)) {
-                          setQuotesList(prev => prev.filter(q => q.id !== quote.id));
+                          setQuotesList(prev => {
+                            const next = prev.filter(q => q.id !== quote.id);
+                            saveQuotes(next);
+                            return next;
+                          });
                           showNotification(`Quotation deleted`, 'info');
                         }
                       }}
