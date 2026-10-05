@@ -18,21 +18,37 @@ import {
   Sparkles,
   Share2
 } from 'lucide-react';
+import { OFFICIAL_WELDOR_EXHIBITIONS } from '../../config/catalogData';
 
 export const ExhibitionLandingPage: React.FC = () => {
   const { exhibitions, selectedExpoSlug, addPublicRFQLead, setActiveView, showNotification } = useApp();
 
-  const activeExpo = exhibitions.find(e => e.qrSlug === selectedExpoSlug) || exhibitions[0];
+  const expoList = (exhibitions && exhibitions.length > 0) ? exhibitions : OFFICIAL_WELDOR_EXHIBITIONS;
+  const activeExpo = expoList.find(e => e.qrSlug === selectedExpoSlug) || expoList[0] || OFFICIAL_WELDOR_EXHIBITIONS[0];
 
   const [companyName, setCompanyName] = useState('L&T Heavy Engineering');
   const [contactName, setContactName] = useState('Ramesh Kulkarni');
   const [email, setEmail] = useState('r.kulkarni@lntecc.com');
   const [phone, setPhone] = useState('+91 98900 12345');
-  const [selectedProduct, setSelectedProduct] = useState(activeExpo?.showcasedProducts?.[0] || 'ISO 15552 Pneumatic Cylinder');
-  const [notes, setNotes] = useState(`Enquiry submitted via QR code scan at Booth ${activeExpo.boothNumber}, ${activeExpo.hallNumber}.`);
+  const [selectedProduct, setSelectedProduct] = useState(activeExpo?.showcasedProducts?.[0] || 'WLD-MIG-36KD Heavy-Duty Torch');
+  const [notes, setNotes] = useState(`Enquiry submitted via QR code scan at Booth ${activeExpo?.boothNumber || 'E-28'}, ${activeExpo?.hallNumber || 'Hall 4'}.`);
   const [submitted, setSubmitted] = useState<string | null>(null);
   const [activeMediaTab, setActiveMediaTab] = useState<'photos' | 'videos'>('photos');
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
+
+  if (!activeExpo) {
+    return (
+      <div className="py-20 bg-[#FAF9F6] min-h-screen text-slate-900 flex items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-2xl border border-slate-200 shadow-md max-w-md">
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Exhibition Details Unavailable</h2>
+          <p className="text-xs text-slate-600 mb-4">Please return to our exhibitions catalog to choose an active event.</p>
+          <button onClick={() => setActiveView('public-exhibitions')} className="btn-primary text-xs py-2 px-4">
+            View All Exhibitions
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleExpoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +67,7 @@ export const ExhibitionLandingPage: React.FC = () => {
     setSubmitted(leadNumber);
   };
 
-  const allPhotos = [activeExpo.bannerImage, ...(activeExpo.galleryImages || [])];
+  const allPhotos = [activeExpo.bannerImage, ...(activeExpo.galleryImages || [])].filter(Boolean);
 
   return (
     <div className="py-12 bg-[#FAF9F6] min-h-screen text-slate-900">
@@ -191,6 +207,7 @@ export const ExhibitionLandingPage: React.FC = () => {
                   <img
                     src={allPhotos[activePhotoIdx] || allPhotos[0]}
                     alt="Booth Showcase"
+                    onError={(e) => { e.currentTarget.src = '/catalog_pages/page_4.png'; }}
                     className="w-full h-full object-cover"
                   />
                   <span className="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-xs text-white text-xs font-mono px-3 py-1 rounded">
@@ -208,7 +225,7 @@ export const ExhibitionLandingPage: React.FC = () => {
                         activePhotoIdx === idx ? 'border-orange-600 ring-2 ring-orange-400' : 'border-slate-200 opacity-70 hover:opacity-100'
                       }`}
                     >
-                      <img src={img} alt="Thumb" className="w-20 h-14 object-cover" />
+                      <img src={img} alt="Thumb" onError={(e) => { e.currentTarget.src = '/catalog_pages/page_4.png'; }} className="w-20 h-14 object-cover" />
                     </button>
                   ))}
                 </div>

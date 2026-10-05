@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { api } from '../../services/api';
 import { 
   FolderKanban, 
   Image as ImageIcon, 
@@ -11,7 +12,10 @@ import {
   ArrowDown, 
   Tv, 
   X,
-  UploadCloud
+  UploadCloud,
+  Loader2,
+  Upload,
+  CheckCircle2
 } from 'lucide-react';
 import type { HeroBanner, BannerTransitionEffect, BannerOverlayTheme } from '../../types';
 
@@ -31,34 +35,59 @@ export const CMSManager: React.FC = () => {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<HeroBanner | null>(null);
+  const [isUploadingBg, setIsUploadingBg] = useState(false);
+  const [isUploadingProduct, setIsUploadingProduct] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState<Omit<HeroBanner, 'id'>>({
-    badge: 'DIGITAL B2B SALES & MANUFACTURING PLATFORM',
-    title: 'Precision Hydraulic Valves.',
-    highlightText: 'Engineered for High-Pressure Performance.',
-    subtitle: 'ISO 9001:2015 & AS9100D Certified Manufacturing',
-    description: 'Ultra-precision fluid control manifolds and heavy-duty cylinders built for extreme industrial operating conditions.',
-    bgImageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1920',
-    productImageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=800',
-    productSku: 'WEL-PNC-15552-HD',
-    productName: 'ISO 15552 Heavy-Duty Pneumatic Cylinder',
+    badge: 'EARTH METAL INDUSTRIES • WELDOR® BRAND',
+    title: 'Creating The Best Welding Experience',
+    highlightText: '',
+    subtitle: 'Heavy-Duty MIG, TIG & Plasma Cutting Torches',
+    description: 'Precision-engineered welding and cutting torches manufactured at our Jamnagar plant for peak arc stability, operator comfort, and extreme industrial durability.',
+    bgImageUrl: '/images/banners/hero_welding_plant.jpg',
+    productImageUrl: '',
+    productSku: 'WLD-MIG-36KD',
+    productName: '36KD Heavy-Duty MIG Welding Torch (320A)',
     transitionEffect: 'zoom',
     overlayTheme: 'dark-glass',
-    primaryBtnText: 'Explore Product Catalog',
+    primaryBtnText: 'Explore Welding Catalog',
     primaryBtnAction: 'public-products',
-    secondaryBtnText: 'Upload CAD Drawing',
+    secondaryBtnText: 'Request Technical RFQ',
     secondaryBtnAction: 'public-rfq',
     stats: [
-      { label: 'Engineering Legacy', value: '40+ Years' },
-      { label: 'Peak Pressure', value: '700 Bar' },
-      { label: 'Global Exports', value: '25+ Countries' },
+      { label: 'Arc Stability', value: '100% Tested' },
+      { label: 'Torch Duty Cycle', value: '60% @ 350A' },
+      { label: 'Global Standards', value: 'ISO 9001:2015' },
     ],
-    features: ['100% Pressure Tested', '±0.005mm CNC Precision', '2-Hour CAD Response'],
+    features: ['100% Leak & Arc Tested', 'Heavy Forged Brass Construction', 'Direct Factory Pricing'],
     active: true,
     displayOrder: banners.length + 1,
     autoplayDurationSec: 6,
   });
+
+  const handleFileUpload = async (file: File, field: 'bgImageUrl' | 'productImageUrl') => {
+    if (field === 'bgImageUrl') setIsUploadingBg(true);
+    else setIsUploadingProduct(true);
+
+    showNotification(`Uploading ${file.name} to Cloudinary CDN...`, 'info');
+    try {
+      const res = await api.uploadFile(file, 'weldor-cms');
+      if (res?.success && (res?.data?.cdnUrl || res?.data?.url)) {
+        const uploadedUrl = res.data.cdnUrl || res.data.url;
+        setFormData(prev => ({ ...prev, [field]: uploadedUrl }));
+        showNotification(`${field === 'bgImageUrl' ? 'Hero Background' : 'Product Graphic'} uploaded successfully to Cloudinary!`, 'success');
+      } else {
+        showNotification(res?.message || `Upload failed for ${file.name}. Please check Cloudinary connection.`, 'warning');
+      }
+    } catch (err: any) {
+      console.error('CMS upload error:', err);
+      showNotification(`Upload error: ${err?.message || 'Server error'}`, 'warning');
+    } finally {
+      if (field === 'bgImageUrl') setIsUploadingBg(false);
+      else setIsUploadingProduct(false);
+    }
+  };
 
   // Media Library State
   const [mediaItems, setMediaItems] = useState([
@@ -79,27 +108,27 @@ export const CMSManager: React.FC = () => {
   const openAddModal = () => {
     setEditingBanner(null);
     setFormData({
-      badge: 'DIGITAL B2B SALES & MANUFACTURING PLATFORM',
-      title: 'Precision Components.',
-      highlightText: 'Engineered for Industrial Performance.',
-      subtitle: 'ISO 9001:2015 & AS9100D Certified Manufacturing',
-      description: 'Weldor Industries manufactures heavy-duty ISO pneumatic cylinders, 700 Bar hydraulic valves, and custom 5-axis CNC components.',
-      bgImageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1920',
-      productImageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=800',
-      productSku: 'WEL-PNC-15552-HD',
-      productName: 'ISO 15552 Heavy-Duty Pneumatic Cylinder',
+      badge: 'EARTH METAL INDUSTRIES • WELDOR® BRAND',
+      title: 'Creating The Best Welding Experience',
+      highlightText: '',
+      subtitle: 'Heavy-Duty MIG, TIG & Plasma Cutting Torches',
+      description: 'Precision-engineered welding and cutting torches manufactured at our Jamnagar plant for peak arc stability, operator comfort, and extreme industrial durability.',
+      bgImageUrl: '/images/banners/hero_welding_plant.jpg',
+      productImageUrl: '',
+      productSku: 'WLD-MIG-36KD',
+      productName: '36KD Heavy-Duty MIG Welding Torch (320A)',
       transitionEffect: 'zoom',
       overlayTheme: 'dark-glass',
-      primaryBtnText: 'Explore Product Catalog',
+      primaryBtnText: 'Explore Welding Catalog',
       primaryBtnAction: 'public-products',
-      secondaryBtnText: 'Upload CAD Drawing',
+      secondaryBtnText: 'Request Technical RFQ',
       secondaryBtnAction: 'public-rfq',
       stats: [
-        { label: 'Engineering Legacy', value: '40+ Years' },
-        { label: 'Peak Pressure', value: '700 Bar' },
-        { label: 'Global Exports', value: '25+ Countries' },
+        { label: 'Arc Stability', value: '100% Tested' },
+        { label: 'Torch Duty Cycle', value: '60% @ 350A' },
+        { label: 'Global Standards', value: 'ISO 9001:2015' },
       ],
-      features: ['100% Pressure Tested', '±0.005mm CNC Precision', '2-Hour CAD Response'],
+      features: ['100% Leak & Arc Tested', 'Heavy Forged Brass Construction', 'Direct Factory Pricing'],
       active: true,
       displayOrder: banners.length + 1,
       autoplayDurationSec: 6,
@@ -115,7 +144,7 @@ export const CMSManager: React.FC = () => {
       highlightText: banner.highlightText || '',
       subtitle: banner.subtitle,
       description: banner.description,
-      bgImageUrl: banner.bgImageUrl,
+      bgImageUrl: banner.bgImageUrl || '',
       productImageUrl: banner.productImageUrl || '',
       productSku: banner.productSku || '',
       productName: banner.productName || '',
@@ -140,15 +169,19 @@ export const CMSManager: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim() || !formData.bgImageUrl.trim()) {
+    const title = (formData.title || '').trim();
+    const bgImageUrl = (formData.bgImageUrl || '').trim();
+    if (!title || !bgImageUrl) {
       showNotification('Please provide a banner title and background image URL.', 'warning');
       return;
     }
 
     if (editingBanner) {
-      updateBanner(editingBanner.id, formData);
+      updateBanner(editingBanner.id, { ...formData, title, bgImageUrl });
+      showNotification(`Banner slide "${title}" updated successfully!`, 'success');
     } else {
-      addBanner(formData);
+      addBanner({ ...formData, title, bgImageUrl });
+      showNotification(`New Hero banner slide "${title}" published!`, 'success');
     }
     setIsModalOpen(false);
   };
@@ -535,7 +568,7 @@ export const CMSManager: React.FC = () => {
             </div>
 
             {/* Modal Form Body */}
-            <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+            <form onSubmit={handleSubmit} noValidate className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
               
               {/* Top Banner Tag & Heading */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -677,91 +710,152 @@ export const CMSManager: React.FC = () => {
 
               {/* Background & 3D Product Image URLs / File Upload */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+                {/* Background HD Image */}
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <label className="font-bold text-slate-700 font-mono uppercase tracking-wider block">
-                      Background HD Image *
+                    <label className="font-bold text-slate-700 font-mono text-xs uppercase tracking-wider flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5 text-orange-600" /> Background HD Image *
                     </label>
-                    <label className="text-[10.5px] font-mono font-bold text-orange-600 hover:text-orange-700 bg-orange-50 px-2 py-0.5 rounded cursor-pointer border border-orange-200">
-                      📁 Upload File
+                    <label className="text-[10px] font-mono font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 px-2 py-0.5 rounded cursor-pointer transition-colors flex items-center gap-1">
+                      {isUploadingBg ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                      <span>{isUploadingBg ? 'Uploading...' : 'Upload File'}</span>
                       <input
                         type="file"
                         accept="image/*"
+                        disabled={isUploadingBg}
                         className="hidden"
                         onChange={e => {
                           const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = () => {
-                              if (typeof reader.result === 'string') {
-                                setFormData(prev => ({ ...prev, bgImageUrl: reader.result as string }));
-                                showNotification(`Background image loaded from device!`, 'success');
-                              }
-                            };
-                            reader.readAsDataURL(file);
-                          }
+                          if (file) handleFileUpload(file, 'bgImageUrl');
+                          e.target.value = '';
                         }}
                       />
                     </label>
                   </div>
+
+                  {formData.bgImageUrl ? (
+                    <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-black/5 h-28">
+                      <img src={formData.bgImageUrl} alt="BG Preview" className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, bgImageUrl: '' }))}
+                        className="absolute top-1.5 right-1.5 p-1 bg-red-600 text-white rounded-full opacity-80 hover:opacity-100 transition-opacity"
+                        title="Remove image"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                      <span className="absolute bottom-1 right-2 bg-black/70 text-white text-[9px] font-mono px-1.5 py-0.5 rounded">
+                        Live Preview
+                      </span>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-slate-200 rounded-xl hover:border-orange-400 bg-white cursor-pointer transition-colors p-2 text-center">
+                      {isUploadingBg ? (
+                        <div className="flex flex-col items-center gap-1 text-orange-600">
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span className="text-[10px] font-mono">Uploading to Cloudinary CDN...</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1 text-slate-400">
+                          <UploadCloud className="w-5 h-5 text-slate-400" />
+                          <span className="text-[11px] font-mono text-slate-600 font-semibold">Click to upload HD background</span>
+                          <span className="text-[9px] font-mono text-slate-400">1920x1080 recommended (Auto CDN)</span>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={isUploadingBg}
+                        className="hidden"
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (file) handleFileUpload(file, 'bgImageUrl');
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
+                  )}
+
                   <input 
                     type="text"
                     required
                     value={formData.bgImageUrl}
                     onChange={e => setFormData({ ...formData, bgImageUrl: e.target.value })}
-                    placeholder="Paste URL or upload image file above..."
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:border-orange-600 focus:outline-hidden bg-slate-50 text-slate-900 font-mono text-xs"
+                    placeholder="Or paste HD image URL directly..."
+                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 focus:border-orange-600 focus:outline-hidden bg-white text-slate-900 font-mono text-xs"
                   />
-                  {formData.bgImageUrl && (
-                    <div className="relative group">
-                      <img src={formData.bgImageUrl} alt="BG Preview" className="h-28 w-full object-cover rounded-xl border border-slate-200 shadow-2xs" />
-                      <span className="absolute bottom-1 right-2 bg-black/70 text-white text-[9px] font-mono px-1.5 py-0.5 rounded">
-                        Live Preview
-                      </span>
-                    </div>
-                  )}
                 </div>
 
-                <div className="space-y-2">
+                {/* 3D Floating Product Image */}
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <label className="font-bold text-slate-700 font-mono uppercase tracking-wider block">
-                      3D Floating Product Image
+                    <label className="font-bold text-slate-700 font-mono text-xs uppercase tracking-wider flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5 text-blue-600" /> 3D Floating Product PNG
                     </label>
-                    <label className="text-[10.5px] font-mono font-bold text-orange-600 hover:text-orange-700 bg-orange-50 px-2 py-0.5 rounded cursor-pointer border border-orange-200">
-                      📁 Upload PNG
+                    <label className="text-[10px] font-mono font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2 py-0.5 rounded cursor-pointer transition-colors flex items-center gap-1">
+                      {isUploadingProduct ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                      <span>{isUploadingProduct ? 'Uploading...' : 'Upload PNG'}</span>
                       <input
                         type="file"
                         accept="image/*"
+                        disabled={isUploadingProduct}
                         className="hidden"
                         onChange={e => {
                           const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = () => {
-                              if (typeof reader.result === 'string') {
-                                setFormData(prev => ({ ...prev, productImageUrl: reader.result as string }));
-                                showNotification(`Product graphic loaded from device!`, 'success');
-                              }
-                            };
-                            reader.readAsDataURL(file);
-                          }
+                          if (file) handleFileUpload(file, 'productImageUrl');
+                          e.target.value = '';
                         }}
                       />
                     </label>
                   </div>
+
+                  {formData.productImageUrl ? (
+                    <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-white h-28 flex items-center justify-center p-2">
+                      <img src={formData.productImageUrl} alt="Product Preview" className="h-full w-auto object-contain" />
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, productImageUrl: '' }))}
+                        className="absolute top-1.5 right-1.5 p-1 bg-red-600 text-white rounded-full opacity-80 hover:opacity-100 transition-opacity"
+                        title="Remove product graphic"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-slate-200 rounded-xl hover:border-blue-400 bg-white cursor-pointer transition-colors p-2 text-center">
+                      {isUploadingProduct ? (
+                        <div className="flex flex-col items-center gap-1 text-blue-600">
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span className="text-[10px] font-mono">Uploading to Cloudinary CDN...</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1 text-slate-400">
+                          <UploadCloud className="w-5 h-5 text-slate-400" />
+                          <span className="text-[11px] font-mono text-slate-600 font-semibold">Click to upload product PNG</span>
+                          <span className="text-[9px] font-mono text-slate-400">Transparent PNG recommended</span>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={isUploadingProduct}
+                        className="hidden"
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (file) handleFileUpload(file, 'productImageUrl');
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
+                  )}
+
                   <input 
                     type="text"
                     value={formData.productImageUrl}
                     onChange={e => setFormData({ ...formData, productImageUrl: e.target.value })}
-                    placeholder="Paste PNG/URL or upload image file above..."
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:border-orange-600 focus:outline-hidden bg-slate-50 text-slate-900 font-mono text-xs"
+                    placeholder="Or paste PNG URL directly..."
+                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 focus:border-blue-600 focus:outline-hidden bg-white text-slate-900 font-mono text-xs"
                   />
-
-                  {formData.productImageUrl && (
-                    <div className="relative group">
-                      <img src={formData.productImageUrl} alt="Product Preview" className="h-20 w-auto object-contain bg-slate-100 rounded-xl p-1 border border-slate-200" />
-                    </div>
-                  )}
 
                   <div className="pt-1 flex items-center gap-2">
                     <input 
@@ -854,9 +948,10 @@ export const CMSManager: React.FC = () => {
 
                 <button
                   type="submit"
-                  className="btn-primary text-xs py-2 px-6 shadow-md"
+                  className="btn-primary text-xs py-2.5 px-6 font-bold shadow-md flex items-center gap-2 cursor-pointer"
                 >
-                  {editingBanner ? 'Save & Update Slide' : 'Create & Publish Banner'}
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{editingBanner ? 'Save & Update Slide' : 'Create & Publish Banner'}</span>
                 </button>
               </div>
 

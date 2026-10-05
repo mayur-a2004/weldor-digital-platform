@@ -16,6 +16,7 @@ import {
   Tag,
   Download
 } from 'lucide-react';
+import { getProductCardTheme } from '../../utils/productCardTheme';
 
 export const PublicProductCatalog: React.FC = () => {
   const { 
@@ -273,27 +274,41 @@ export const PublicProductCatalog: React.FC = () => {
                 {filteredProducts.map(p => {
                   const isCompared = compareList.some(item => item.id === p.id);
                   const totalPhotos = 1 + (p.gallery?.length || 0);
+                  const theme = getProductCardTheme(p.category);
 
                   return (
                     <div 
                       key={p.id}
                       onClick={() => setSelectedProduct(p)}
-                      className="english-card rounded-xl overflow-hidden flex flex-col justify-between group hover:border-orange-400 cursor-pointer shadow-sm hover:shadow-md transition-all"
+                      className={`group relative ${theme.cardBg} rounded-2xl border ${theme.border} overflow-hidden flex flex-col justify-between cursor-pointer shadow-xs hover:-translate-y-1 hover:shadow-xl transition-all duration-300`}
                     >
+                      {/* Subtle Glowing Top Accent Strip */}
+                      <div className={`h-1 w-full bg-gradient-to-r ${theme.accentBar} opacity-80 group-hover:opacity-100 transition-opacity duration-300 absolute top-0 left-0 z-10`} />
+
                       <div>
-                        {/* Thumbnail & Badges */}
-                        <div className="relative h-48 bg-slate-100 overflow-hidden border-b border-slate-200">
-                          <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        {/* Thumbnail & Ambient Radial Glow Canvas */}
+                        <div className={`relative h-52 ${theme.canvasBg} overflow-hidden border-b ${theme.canvasBorder} flex items-center justify-center p-5`}>
+                          {/* Radial Spotlight Glow */}
+                          <div className={`absolute w-32 h-32 rounded-full bg-gradient-to-tr ${theme.glow} blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-700`} />
+
+                          <img 
+                            src={p.image} 
+                            alt={p.name} 
+                            onError={(e) => {
+                              e.currentTarget.src = '/catalog_pages/page_4.png';
+                            }}
+                            className="relative z-1 max-h-full max-w-full object-contain group-hover:scale-108 transition-transform duration-500 drop-shadow-xs" 
+                          />
                           
                           {/* SKU & Brand */}
-                          <span className="absolute top-3 left-3 bg-white/95 backdrop-blur px-2 py-0.5 rounded text-[11px] font-mono text-orange-700 font-bold border border-orange-200 shadow-sm">
+                          <span className="absolute top-3 left-3 z-2 bg-white/95 backdrop-blur-xs px-2 py-0.5 rounded text-[11px] font-mono text-slate-800 font-bold border border-slate-200/90 shadow-2xs">
                             {p.sku}
                           </span>
 
                           {/* Media count pills */}
-                          <div className="absolute bottom-2 left-2 flex items-center gap-1.5">
+                          <div className="absolute bottom-2 left-2 z-2 flex items-center gap-1.5">
                             {totalPhotos > 1 && (
-                              <span className="bg-slate-900/80 backdrop-blur text-white text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded flex items-center gap-1 shadow-sm">
+                              <span className="bg-slate-900/85 backdrop-blur text-white text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded flex items-center gap-1 shadow-sm">
                                 <Images className="w-3 h-3" /> {totalPhotos}
                               </span>
                             )}
@@ -315,8 +330,8 @@ export const PublicProductCatalog: React.FC = () => {
                               toggleCompare(p);
                             }}
                             title="Compare Product"
-                            className={`absolute top-3 right-3 p-1.5 rounded text-xs backdrop-blur shadow-sm ${
-                              isCompared ? 'bg-orange-600 text-white font-bold' : 'bg-white/90 text-slate-700 hover:bg-white border border-slate-200'
+                            className={`absolute top-3 right-3 z-2 p-1.5 rounded-lg text-xs backdrop-blur shadow-2xs transition-all ${
+                              isCompared ? 'bg-orange-600 text-white font-bold' : 'bg-white/90 text-slate-500 hover:text-slate-900 hover:bg-white border border-slate-200/90'
                             }`}
                           >
                             <Scale className="w-3.5 h-3.5" />
@@ -324,47 +339,54 @@ export const PublicProductCatalog: React.FC = () => {
                         </div>
 
                         {/* Details */}
-                        <div className="p-4 space-y-2">
-                          <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 font-bold uppercase">
-                            <span>{p.category}</span>
-                            {p.subCategory && <span className="text-orange-600 font-normal">/ {p.subCategory}</span>}
+                        <div className="p-4 sm:p-5 space-y-2">
+                          <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 font-bold uppercase gap-2">
+                            <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${theme.badgeBg} truncate`}>
+                              {p.category}
+                            </span>
+                            {p.subCategory && <span className="text-slate-500 font-normal truncate">/ {p.subCategory}</span>}
                           </div>
 
-                          <h3 className="text-base font-bold text-slate-900 font-heading group-hover:text-orange-600 transition-colors line-clamp-1">
+                          <h3 className={`text-base font-bold text-slate-900 font-heading ${theme.accentText} transition-colors line-clamp-1`}>
                             {p.name}
                           </h3>
 
                           {/* Pricing & MOQ */}
-                          {(p.priceUSD || p.priceINR) && (
+                          {(p.priceINR || p.priceUSD) && (
                             <div className="flex items-baseline gap-2 pt-0.5">
-                              {p.priceUSD && <span className="text-sm font-extrabold font-mono text-slate-900">${p.priceUSD}</span>}
-                              {p.priceINR && <span className="text-xs font-bold font-mono text-slate-600">₹{p.priceINR}</span>}
+                              <span className="text-sm font-extrabold font-mono text-slate-900">
+                                ₹{(p.priceINR || (p.priceUSD ? p.priceUSD * 85 : 0)).toLocaleString('en-IN')}
+                              </span>
                               {p.minOrderQty && <span className="text-[10px] font-mono text-slate-500">MOQ: {p.minOrderQty}</span>}
                             </div>
                           )}
 
                           {/* Bullet point or tagline */}
                           <p className="text-xs text-slate-600 line-clamp-2">
-                            {p.bulletPoints && p.bulletPoints[0] ? `• ${p.bulletPoints[0]}` : p.tagline}
+                            {Array.isArray(p.bulletPoints) && p.bulletPoints[0] ? `• ${p.bulletPoints[0]}` : p.tagline}
                           </p>
 
-                          <div className="pt-2 flex flex-wrap gap-1">
-                            {p.specifications.slice(0, 2).map((s, i) => (
-                              <span key={i} className="tech-badge text-[10px]">{s.label}: {s.value}</span>
-                            ))}
-                          </div>
+                          {Array.isArray(p.specifications) && p.specifications.length > 0 && (
+                            <div className={`pt-2 mt-2 border-t border-black/5 ${theme.specBg} rounded-lg p-2 flex flex-wrap gap-1.5 backdrop-blur-xs`}>
+                              {p.specifications.slice(0, 2).map((s, i) => (
+                                <span key={i} className="text-[10px] font-mono text-slate-700 bg-white/80 px-2 py-0.5 rounded border border-slate-200/80">
+                                  <strong>{s.label}:</strong> {s.value}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      <div className="p-4 pt-0 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 mt-3">
+                      <div className={`px-4 sm:px-5 py-3 border-t ${theme.footerBg} flex flex-wrap items-center justify-between gap-2`}>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedProduct(p);
                           }}
-                          className="text-xs font-bold text-orange-700 hover:text-orange-800 flex items-center gap-1 font-mono"
+                          className="text-xs font-bold text-slate-700 hover:text-slate-900 flex items-center gap-1 font-mono transition-colors"
                         >
-                          <Eye className="w-3.5 h-3.5 text-orange-600" /> Specs
+                          <Eye className="w-3.5 h-3.5 text-slate-500" /> Specs & 3D
                         </button>
 
                         <div className="flex items-center gap-1.5">
@@ -385,9 +407,9 @@ export const PublicProductCatalog: React.FC = () => {
                               setSelectedProduct(p);
                               setActiveView('public-rfq');
                             }}
-                            className="px-3 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-sm"
+                            className={`px-3 py-1.5 rounded-lg ${theme.btnBg} text-white text-xs font-mono font-bold shadow-2xs hover:shadow-xs transition-all cursor-pointer`}
                           >
-                            Quote
+                            Get Quote
                           </button>
                         </div>
                       </div>
@@ -399,7 +421,14 @@ export const PublicProductCatalog: React.FC = () => {
               <div className="space-y-4">
                 {filteredProducts.map(p => (
                   <div key={p.id} onClick={() => setSelectedProduct(p)} className="english-card p-4 rounded-xl flex flex-col md:flex-row items-center gap-6 cursor-pointer hover:border-orange-400">
-                    <img src={p.image} alt={p.name} className="w-32 h-24 object-cover rounded-lg bg-slate-100 border border-slate-200 shrink-0" />
+                    <img 
+                      src={p.image} 
+                      alt={p.name} 
+                      onError={(e) => {
+                        e.currentTarget.src = '/catalog_pages/page_4.png';
+                      }}
+                      className="w-32 h-24 object-cover rounded-lg bg-slate-100 border border-slate-200 shrink-0" 
+                    />
                     
                     <div className="flex-1 space-y-1 text-left">
                       <div className="flex items-center gap-2">
@@ -412,7 +441,11 @@ export const PublicProductCatalog: React.FC = () => {
                       
                       {/* Price & Lead time */}
                       <div className="flex items-center gap-4 text-xs font-mono pt-1">
-                        {p.priceUSD && <span className="font-bold text-slate-900">${p.priceUSD} / ₹{p.priceINR}</span>}
+                        {(p.priceINR || p.priceUSD) && (
+                          <span className="font-bold text-slate-900">
+                            ₹{(p.priceINR || (p.priceUSD ? p.priceUSD * 85 : 0)).toLocaleString('en-IN')}
+                          </span>
+                        )}
                         {p.standardLeadTimeDays && <span className="text-slate-500">Lead Time: {p.standardLeadTimeDays} days</span>}
                       </div>
                     </div>

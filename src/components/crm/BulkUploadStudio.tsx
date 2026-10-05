@@ -22,6 +22,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import type { Product, ProductCategory, GalleryMedia } from '../../types';
+import * as XLSX from 'xlsx';
 
 export const BulkUploadStudio: React.FC = () => {
   const { 
@@ -131,94 +132,111 @@ export const BulkUploadStudio: React.FC = () => {
       '"hydraulic valve; 700 bar; high pressure solenoid"'
     ];
 
-    const csvContent = [headers.join(','), sample1.join(','), sample2.join(',')].join('\n');
+    const csvContent = '\uFEFF' + [headers.join(','), sample1.join(','), sample2.join(',')].join('\r\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'weldor_bulk_products_template.csv';
+    link.setAttribute('download', 'weldor_bulk_products_template.csv');
+    document.body.appendChild(link);
     link.click();
-    showNotification('Product CSV template downloaded successfully!', 'success');
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 100);
+    showNotification('Product CSV template downloaded successfully as weldor_bulk_products_template.csv!', 'success');
   };
 
-  const handleProductCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const parseFileToLines = async (file: File): Promise<string[]> => {
+    const fileName = file.name.toLowerCase();
+    const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.ods') || 
+                    file.type.includes('spreadsheet') || file.type.includes('excel');
+    if (isExcel) {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      if (!sheetName) throw new Error('No sheets found in Excel file');
+      const sheet = workbook.Sheets[sheetName];
+      const csv = XLSX.utils.sheet_to_csv(sheet, { blankrows: false });
+      return csv.split(/\r?\n/).filter(l => l.trim().length > 0);
+    }
+    const text = await file.text();
+    return text.split(/\r?\n/).filter(l => l.trim().length > 0);
+  };
+
+  const handleProductCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setProductFileName(file.name);
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const text = event.target?.result as string;
-        const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
-        if (lines.length < 2) throw new Error('File has no product rows');
+    try {
+      const lines = await parseFileToLines(file);
+      if (lines.length < 2) throw new Error('File has no product rows');
 
-        const parseLine = (line: string) => {
-          const res: string[] = [];
-          let cur = '';
-          let inQ = false;
-          for (let i = 0; i < line.length; i++) {
-            const ch = line[i];
-            if (ch === '"') {
-              if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
-              else { inQ = !inQ; }
-            } else if (ch === ',' && !inQ) {
-              res.push(cur.trim());
-              cur = '';
-            } else {
-              cur += ch;
-            }
+      const parseLine = (line: string) => {
+        const res: string[] = [];
+        let cur = '';
+        let inQ = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') {
+            if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
+            else { inQ = !inQ; }
+          } else if (ch === ',' && !inQ) {
+            res.push(cur.trim());
+            cur = '';
+          } else {
+            cur += ch;
           }
-          res.push(cur.trim());
-          return res;
-        };
-
-        const parsed: Partial<Product>[] = [];
-        for (let i = 1; i < lines.length; i++) {
-          const cols = parseLine(lines[i]);
-          if (!cols[0] || !cols[1]) continue;
-
-          const specsList = (cols[15] || '').split('|').filter(Boolean).map(item => {
-            const [l, v] = item.split(':');
-            return { label: (l || 'Spec').trim(), value: (v || '').trim() };
-          });
-
-          const bulletsList = (cols[14] || '').split(';').map(b => b.trim()).filter(Boolean);
-          const keywordsList = (cols[16] || '').split(';').map(k => k.trim()).filter(Boolean);
-          const matchedCat = categories.find(c => c.name.toLowerCase() === (cols[3] || '').toLowerCase()) || categories[0];
-
-          parsed.push({
-            name: cols[0].replace(/^"|"$/g, ''),
-            sku: cols[1].replace(/^"|"$/g, ''),
-            modelNumber: (cols[2] || '').replace(/^"|"$/g, ''),
-            category: cols[3] || matchedCat?.name || 'Pneumatic Automation Components',
-            categoryId: matchedCat?.id || 'cat-pnc-01',
-            subCategory: cols[4] || 'Standard Series',
-            tagline: (cols[5] || cols[0]).replace(/^"|"$/g, ''),
-            description: (cols[6] || cols[0]).replace(/^"|"$/g, ''),
-            priceUSD: Number(cols[7]) || 100,
-            priceINR: Number(cols[8]) || 8000,
-            minOrderQty: Number(cols[9]) || 1,
-            standardLeadTimeDays: Number(cols[10]) || 5,
-            inStock: cols[11]?.toLowerCase() === 'true' || cols[11] === '1',
-            featured: cols[12]?.toLowerCase() === 'true' || cols[12] === '1',
-            image: cols[13]?.replace(/^"|"$/g, '') || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=800',
-            gallery: [cols[13]?.replace(/^"|"$/g, '') || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=800'],
-            bulletPoints: bulletsList.length > 0 ? bulletsList : ['Precision engineered industrial component.', '100% inspected.'],
-            specifications: specsList.length > 0 ? specsList : [{ label: 'Rating', value: 'Industrial ISO' }],
-            seoKeywords: keywordsList.length > 0 ? keywordsList : ['industrial', 'precision component'],
-            status: 'Active',
-            certifications: ['ISO 9001:2015', 'CE Mark']
-          });
         }
+        res.push(cur.trim());
+        return res;
+      };
 
-        setProductParsedRows(parsed);
-        showNotification(`Parsed ${parsed.length} products! Click "Commit to Database" below.`, 'info');
-      } catch (err: any) {
-        showNotification(err.message || 'Failed to parse CSV', 'warning');
+      const parsed: Partial<Product>[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = parseLine(lines[i]);
+        if (!cols[0] || !cols[1]) continue;
+
+        const specsList = (cols[15] || '').split('|').filter(Boolean).map(item => {
+          const [l, v] = item.split(':');
+          return { label: (l || 'Spec').trim(), value: (v || '').trim() };
+        });
+
+        const bulletsList = (cols[14] || '').split(';').map(b => b.trim()).filter(Boolean);
+        const keywordsList = (cols[16] || '').split(';').map(k => k.trim()).filter(Boolean);
+        const matchedCat = categories.find(c => c.name.toLowerCase() === (cols[3] || '').toLowerCase()) || categories[0];
+
+        parsed.push({
+          name: cols[0].replace(/^"|"$/g, ''),
+          sku: cols[1].replace(/^"|"$/g, ''),
+          modelNumber: (cols[2] || '').replace(/^"|"$/g, ''),
+          category: cols[3] || matchedCat?.name || 'Pneumatic Automation Components',
+          categoryId: matchedCat?.id || 'cat-pnc-01',
+          subCategory: cols[4] || 'Standard Series',
+          tagline: (cols[5] || cols[0]).replace(/^"|"$/g, ''),
+          description: (cols[6] || cols[0]).replace(/^"|"$/g, ''),
+          priceUSD: Number(cols[7]) || 100,
+          priceINR: Number(cols[8]) || 8000,
+          minOrderQty: Number(cols[9]) || 1,
+          standardLeadTimeDays: Number(cols[10]) || 5,
+          inStock: cols[11]?.toLowerCase() === 'true' || cols[11] === '1',
+          featured: cols[12]?.toLowerCase() === 'true' || cols[12] === '1',
+          image: cols[13]?.replace(/^"|"$/g, '') || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=800',
+          gallery: [cols[13]?.replace(/^"|"$/g, '') || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=800'],
+          bulletPoints: bulletsList.length > 0 ? bulletsList : ['Precision engineered industrial component.', '100% inspected.'],
+          specifications: specsList.length > 0 ? specsList : [{ label: 'Rating', value: 'Industrial ISO' }],
+          seoKeywords: keywordsList.length > 0 ? keywordsList : ['industrial', 'precision component'],
+          status: 'Active',
+          certifications: ['ISO 9001:2015', 'CE Mark']
+        });
       }
-    };
-    reader.readAsText(file);
+
+      setProductParsedRows(parsed);
+      showNotification(`Parsed ${parsed.length} products! Click "Commit to Database" below.`, 'info');
+    } catch (err: any) {
+      showNotification(err.message || 'Failed to parse Excel/CSV', 'warning');
+    }
   };
 
   const handleCommitBulkProducts = async () => {
@@ -252,53 +270,53 @@ export const BulkUploadStudio: React.FC = () => {
     const row2 = ['"High-Pressure Hydraulic Systems"', '"hydraulic-systems"', '"700 Bar hydraulic cylinders, powerpacks and manifolds"', '"Droplets"', '"Hydraulic Cylinders; 700 Bar Valves; Manifold Blocks"', '"hydraulics; 700 bar"', 'true'];
     const row3 = ['"Industrial Brass & Precision CNC Parts"', '"precision-cnc-parts"', '"Custom CNC turned brass components and hydraulic fittings"', '"Cpu"', '"Brass Fittings; CNC Flanges; Custom Turned Pins"', '"cnc machining; brass fittings"', 'true'];
 
-    const csvContent = [headers.join(','), row1.join(','), row2.join(','), row3.join(',')].join('\n');
+    const csvContent = '\uFEFF' + [headers.join(','), row1.join(','), row2.join(','), row3.join(',')].join('\r\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'weldor_bulk_categories_template.csv';
+    link.setAttribute('download', 'weldor_bulk_categories_template.csv');
+    document.body.appendChild(link);
     link.click();
-    showNotification('Category CSV template downloaded!', 'success');
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 100);
+    showNotification('Category CSV template downloaded as weldor_bulk_categories_template.csv!', 'success');
   };
 
-  const handleCategoryCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCategoryCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setCategoryFileName(file.name);
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const text = event.target?.result as string;
-        const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
-        if (lines.length < 2) throw new Error('File has no category rows');
+    try {
+      const lines = await parseFileToLines(file);
+      if (lines.length < 2) throw new Error('File has no category rows');
 
-        const parsed: Partial<ProductCategory>[] = [];
-        for (let i = 1; i < lines.length; i++) {
-          const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-          if (!cols[0]) continue;
+      const parsed: Partial<ProductCategory>[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+        if (!cols[0]) continue;
 
-          parsed.push({
-            name: cols[0],
-            slug: cols[1] || cols[0].toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            description: cols[2] || cols[0],
-            iconName: cols[3] || 'Box',
-            image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800',
-            bannerImage: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1600',
-            subCategories: (cols[4] || '').split(';').map(s => s.trim()).filter(Boolean),
-            seoKeywords: (cols[5] || '').split(';').map(s => s.trim()).filter(Boolean),
-            featured: cols[6]?.toLowerCase() === 'true' || cols[6] === '1'
-          });
-        }
-
-        setCategoryParsedRows(parsed);
-        showNotification(`Parsed ${parsed.length} categories! Click commit to save.`, 'info');
-      } catch (err: any) {
-        showNotification(err.message || 'Failed to parse categories CSV', 'warning');
+        parsed.push({
+          name: cols[0],
+          slug: cols[1] || cols[0].toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          description: cols[2] || cols[0],
+          iconName: cols[3] || 'Box',
+          image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800',
+          bannerImage: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1600',
+          subCategories: (cols[4] || '').split(';').map(s => s.trim()).filter(Boolean),
+          seoKeywords: (cols[5] || '').split(';').map(s => s.trim()).filter(Boolean),
+          featured: cols[6]?.toLowerCase() === 'true' || cols[6] === '1'
+        });
       }
-    };
-    reader.readAsText(file);
+
+      setCategoryParsedRows(parsed);
+      showNotification(`Parsed ${parsed.length} categories! Click commit to save.`, 'info');
+    } catch (err: any) {
+      showNotification(err.message || 'Failed to parse categories Excel/CSV', 'warning');
+    }
   };
 
   const handleCommitBulkCategories = () => {
@@ -519,7 +537,7 @@ export const BulkUploadStudio: React.FC = () => {
           <div className="border-2 border-dashed border-orange-200 bg-orange-50/20 hover:bg-orange-50/40 transition-colors rounded-2xl p-8 text-center relative cursor-pointer">
             <input
               type="file"
-              accept=".csv,text/csv"
+              accept=".csv,.xlsx,.xls,.tsv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
               onChange={handleProductCSVUpload}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             />
@@ -557,7 +575,6 @@ export const BulkUploadStudio: React.FC = () => {
                       <th className="p-2.5">PRODUCT NAME</th>
                       <th className="p-2.5 font-mono">SKU</th>
                       <th className="p-2.5">CATEGORY</th>
-                      <th className="p-2.5 text-right">PRICE (USD)</th>
                       <th className="p-2.5 text-right">PRICE (INR)</th>
                       <th className="p-2.5 text-center">HOME SHOWCASE</th>
                     </tr>
@@ -571,8 +588,7 @@ export const BulkUploadStudio: React.FC = () => {
                         </td>
                         <td className="p-2.5 font-mono text-orange-700 font-bold">{p.sku}</td>
                         <td className="p-2.5 text-slate-600">{p.category}</td>
-                        <td className="p-2.5 text-right font-mono font-bold">${p.priceUSD}</td>
-                        <td className="p-2.5 text-right font-mono font-bold">₹{p.priceINR}</td>
+                        <td className="p-2.5 text-right font-mono font-bold text-emerald-700">₹{(p.priceINR || (p.priceUSD ? Math.round(p.priceUSD * 85) : 0)).toLocaleString('en-IN')}</td>
                         <td className="p-2.5 text-center">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${p.featured ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-600'}`}>
                             {p.featured ? '⭐ Top 12 Home' : 'Catalog Only'}
@@ -612,7 +628,7 @@ export const BulkUploadStudio: React.FC = () => {
           <div className="border-2 border-dashed border-purple-200 bg-purple-50/20 hover:bg-purple-50/40 transition-colors rounded-2xl p-8 text-center relative cursor-pointer">
             <input
               type="file"
-              accept=".csv,text/csv"
+              accept=".csv,.xlsx,.xls,.tsv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
               onChange={handleCategoryCSVUpload}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             />

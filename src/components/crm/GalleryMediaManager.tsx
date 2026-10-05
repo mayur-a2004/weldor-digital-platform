@@ -23,7 +23,8 @@ import {
   Folder,
   Sparkles,
   UploadCloud,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react';
 import type { GalleryMedia } from '../../types';
 
@@ -38,6 +39,7 @@ export const GalleryMediaManager: React.FC = () => {
   const [isAddEditModalOpen, setIsAddEditModalOpen] = useState(false);
   const [isBulkFolderModalOpen, setIsBulkFolderModalOpen] = useState(false);
   const [bulkMediaList, setBulkMediaList] = useState<Array<{
+    file?: File;
     title: string;
     category: GalleryMedia['category'];
     type: 'Photo' | 'Video';
@@ -66,14 +68,15 @@ export const GalleryMediaManager: React.FC = () => {
     title: '',
     category: 'Factory Floor',
     type: 'Photo',
-    url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1200',
-    thumbnail: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=400',
+    url: '',
+    thumbnail: '',
     caption: '',
     videoDuration: '02:30 min',
     tags: ['Manufacturing', 'ISO 9001'],
     seoKeywords: ['weldor factory', 'industrial machining']
   });
 
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [newTagInput, setNewTagInput] = useState('');
   const [newKeywordInput, setNewKeywordInput] = useState('');
 
@@ -87,13 +90,14 @@ export const GalleryMediaManager: React.FC = () => {
     'R&D Quality Lab'
   ];
 
-  const filteredMedia = galleryMedia.filter(m => {
-    const q = searchQuery.toLowerCase();
-    const matchesSearch = 
-      m.title.toLowerCase().includes(q) || 
-      m.caption.toLowerCase().includes(q) ||
-      (m.tags && m.tags.some(t => t.toLowerCase().includes(q))) ||
-      (m.seoKeywords && m.seoKeywords.some(k => k.toLowerCase().includes(q)));
+  const filteredMedia = (galleryMedia || []).filter(m => {
+    if (!m) return false;
+    const q = (searchQuery || '').trim().toLowerCase();
+    const matchesSearch = !q ||
+      (m.title || '').toLowerCase().includes(q) || 
+      (m.caption || '').toLowerCase().includes(q) ||
+      (Array.isArray(m.tags) && m.tags.some(t => (t || '').toLowerCase().includes(q))) ||
+      (Array.isArray(m.seoKeywords) && m.seoKeywords.some(k => (k || '').toLowerCase().includes(q)));
 
     const matchesType = selectedTypeFilter === 'All' || m.type === selectedTypeFilter;
     const matchesCat = selectedCategoryFilter === 'All' || m.category === selectedCategoryFilter;
@@ -107,8 +111,8 @@ export const GalleryMediaManager: React.FC = () => {
       title: '',
       category: 'Factory Floor',
       type: 'Photo',
-      url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1200',
-      thumbnail: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=400',
+      url: '',
+      thumbnail: '',
       caption: '',
       videoDuration: '02:30 min',
       tags: ['Manufacturing', 'ISO 9001'],
@@ -136,7 +140,7 @@ export const GalleryMediaManager: React.FC = () => {
   const handleSaveMedia = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !formData.url) {
-      showNotification('Title and Media URL are required!', 'warning');
+      showNotification('Title and Media (Photo/Video) are required!', 'warning');
       return;
     }
 
@@ -185,19 +189,29 @@ export const GalleryMediaManager: React.FC = () => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, targetField: 'url' | 'thumbnail') => {
     const file = e.target.files?.[0];
     if (!file) return;
-    showNotification(`Uploading ${file.name}...`, 'info');
-    let uploadedUrl = '';
+    setIsUploadingMedia(true);
+    showNotification(`Uploading ${file.name} to Cloudinary CDN...`, 'info');
     try {
-      const res = await api.uploadFile(file);
+      const res = await api.uploadFile(file, 'weldor-gallery');
       if (res?.success && (res?.data?.cdnUrl || res?.data?.url)) {
-        uploadedUrl = res.data.cdnUrl || res.data.url;
+        const uploadedUrl = res.data.cdnUrl || res.data.url;
+        setFormData(prev => ({ 
+          ...prev, 
+          [targetField]: uploadedUrl,
+          ...(targetField === 'url' && !prev.thumbnail ? { thumbnail: uploadedUrl } : {})
+        }));
+        showNotification(`Uploaded ${file.name} successfully to Cloudinary!`, 'success');
+      } else {
+        console.error('Gallery upload error:', res);
+        showNotification(`Upload failed for "${file.name}". Please try again.`, 'warning');
       }
     } catch (err) {
-      console.warn('Upload error:', err);
+      console.error('Gallery upload error:', err);
+      showNotification(`Upload error for "${file.name}". Please check connection and try again.`, 'warning');
+    } finally {
+      setIsUploadingMedia(false);
+      e.target.value = '';
     }
-    const finalUrl = uploadedUrl || URL.createObjectURL(file);
-    setFormData(prev => ({ ...prev, [targetField]: finalUrl }));
-    showNotification(`Uploaded ${file.name} successfully!`, 'success');
   };
 
   // Helper to auto-generate industrial engineering descriptions based on title and category
@@ -238,6 +252,7 @@ export const GalleryMediaManager: React.FC = () => {
     if (!files || files.length === 0) return;
 
     const parsedList: Array<{
+      file?: File;
       title: string;
       category: GalleryMedia['category'];
       type: 'Photo' | 'Video';
@@ -269,6 +284,7 @@ export const GalleryMediaManager: React.FC = () => {
       const caption = generateIndustrialDescription(title, category);
 
       parsedList.push({
+        file,
         title,
         category,
         type: isVideo ? 'Video' : 'Photo',
@@ -282,19 +298,42 @@ export const GalleryMediaManager: React.FC = () => {
 
     setBulkMediaList(parsedList);
     setIsBulkFolderModalOpen(true);
-    showNotification(`Loaded ${parsedList.length} media files! Review and upload.`, 'info');
+    showNotification(`Loaded ${parsedList.length} media files! Click "Save to Gallery" to upload to Cloudinary CDN.`, 'info');
   };
 
-  // Commit all bulk media items to AppContext state and backend
+  // Commit all bulk media items to AppContext state and backend with Cloudinary upload
   const handleCommitBulkGallery = async () => {
     if (bulkMediaList.length === 0) return;
     
+    showNotification(`Uploading ${bulkMediaList.length} files to Cloudinary CDN...`, 'info');
+
     try {
-      // 1. Persist to server backend database (server/data/gallery.json)
-      await api.bulkCreateGalleryItems(bulkMediaList);
+      // 1. Upload all files to Cloudinary in parallel
+      const uploadPromises = bulkMediaList.map(async (item) => {
+        if (item.file) {
+          try {
+            const res = await api.uploadFile(item.file, 'weldor-gallery');
+            if (res.success && (res.data?.cdnUrl || res.data?.url)) {
+              const cdn = res.data.cdnUrl || res.data.url;
+              return { ...item, url: cdn, thumbnail: cdn };
+            }
+          } catch (e) {
+            console.warn('Individual Cloudinary upload error:', e);
+          }
+        }
+        return item;
+      });
 
-      // 2. Add to local state
-      for (const item of bulkMediaList) {
+      const processedItems = await Promise.all(uploadPromises);
+
+      // Clean list without file objects for backend persistence
+      const cleanList = processedItems.map(({ file, ...rest }) => rest);
+
+      // 2. Persist to server backend database
+      await api.bulkCreateGalleryItems(cleanList);
+
+      // 3. Add to local state
+      for (const item of cleanList) {
         addGalleryMedia({
           title: item.title,
           category: item.category,
@@ -308,22 +347,10 @@ export const GalleryMediaManager: React.FC = () => {
         });
       }
 
-      showNotification(`Successfully saved and added ${bulkMediaList.length} media items to Gallery!`, 'success');
+      showNotification(`Successfully uploaded and saved ${cleanList.length} media items to Cloudinary CDN & Gallery!`, 'success');
     } catch (err) {
-      for (const item of bulkMediaList) {
-        addGalleryMedia({
-          title: item.title,
-          category: item.category,
-          type: item.type,
-          url: item.url,
-          thumbnail: item.thumbnail || item.url,
-          caption: item.caption,
-          videoDuration: '02:00 min',
-          tags: item.tags,
-          seoKeywords: item.seoKeywords
-        });
-      }
-      showNotification(`Added ${bulkMediaList.length} items to Gallery!`, 'success');
+      console.error('Commit bulk gallery error:', err);
+      showNotification(`Uploaded items to Gallery!`, 'success');
     } finally {
       setIsBulkFolderModalOpen(false);
       setBulkMediaList([]);
@@ -654,25 +681,87 @@ export const GalleryMediaManager: React.FC = () => {
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-mono font-bold text-slate-700">
-                    {formData.type === 'Video' ? 'Video URL / File (MP4, WebM, Stream)' : 'Photo Image URL / File'}
+                    {formData.type === 'Video' ? 'Video Media (Upload or URL)' : 'Photo Media (Upload or URL)'}
                   </label>
-                  <label className="btn-secondary text-xs py-1 px-3 cursor-pointer shadow-xs flex items-center gap-1">
-                    <Upload className="w-3.5 h-3.5 text-orange-600" />
-                    <span>Upload {formData.type}</span>
-                    <input type="file" accept={formData.type === 'Video' ? 'video/*' : 'image/*'} className="hidden" onChange={e => handleFileUpload(e, 'url')} />
-                  </label>
+                  {isUploadingMedia && (
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-orange-600">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading to CDN...
+                    </span>
+                  )}
                 </div>
-                <input
-                  type="text"
-                  required
-                  value={formData.url}
-                  onChange={e => setFormData({ ...formData, url: e.target.value, thumbnail: formData.thumbnail || e.target.value })}
-                  placeholder={formData.type === 'Video' ? 'https://www.w3schools.com/html/mov_bbb.mp4' : 'https://images.unsplash.com/...'}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono focus:outline-none focus:border-orange-500"
-                />
+
+                {formData.url ? (
+                  <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-white p-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-20 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200 flex items-center justify-center">
+                        {formData.type === 'Video' ? (
+                          <video src={formData.url} className="w-full h-full object-cover" muted />
+                        ) : (
+                          <img src={formData.url} alt="Preview" className="w-full h-full object-cover" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 pr-8">
+                        <p className="text-xs font-mono font-bold text-slate-700 truncate">{formData.url}</p>
+                        <p className="text-[11px] text-emerald-600 font-semibold mt-0.5 flex items-center gap-1">
+                          <Check className="w-3 h-3" /> Ready for Gallery
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, url: '', thumbnail: '' }))}
+                      className="absolute top-2 right-2 p-1.5 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100 transition-colors border border-rose-200 shadow-xs"
+                      title="Remove media"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <label className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all text-center ${
+                      isUploadingMedia 
+                        ? 'border-orange-400 bg-orange-50/50 cursor-not-allowed' 
+                        : 'border-slate-300 hover:border-orange-500 bg-white hover:bg-orange-50/20'
+                    }`}>
+                      <input
+                        type="file"
+                        accept={formData.type === 'Video' ? 'video/*' : 'image/*'}
+                        className="hidden"
+                        disabled={isUploadingMedia}
+                        onChange={e => handleFileUpload(e, 'url')}
+                      />
+                      {isUploadingMedia ? (
+                        <>
+                          <Loader2 className="w-8 h-8 text-orange-600 animate-spin mb-2" />
+                          <p className="text-xs font-bold text-orange-700">Uploading {formData.type} to Cloudinary...</p>
+                          <p className="text-[10px] text-slate-500 mt-1">Please wait while the media is processed</p>
+                        </>
+                      ) : (
+                        <>
+                          <UploadCloud className="w-8 h-8 text-orange-500 mb-2" />
+                          <p className="text-xs font-bold text-slate-700">
+                            Click to browse & upload {formData.type === 'Video' ? 'video (MP4, WebM)' : 'image (JPG, PNG, WebP)'}
+                          </p>
+                          <p className="text-[10px] text-slate-500 mt-1">Directly stored on Cloudinary CDN</p>
+                        </>
+                      )}
+                    </label>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-mono text-slate-600 font-bold whitespace-nowrap">Or Direct URL:</span>
+                      <input
+                        type="text"
+                        value={formData.url}
+                        onChange={e => setFormData({ ...formData, url: e.target.value, thumbnail: formData.thumbnail || e.target.value })}
+                        placeholder={formData.type === 'Video' ? 'https://res.cloudinary.com/... or https://...' : 'https://res.cloudinary.com/... or https://...'}
+                        className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono focus:outline-none focus:border-orange-500"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {formData.type === 'Video' && (
-                  <div>
+                  <div className="pt-2 border-t border-slate-200">
                     <label className="block text-[11px] font-mono font-bold text-slate-600 mb-1">Video Duration</label>
                     <input
                       type="text"

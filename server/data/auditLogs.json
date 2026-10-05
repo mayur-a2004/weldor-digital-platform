@@ -1,28 +1,78 @@
 [
   {
-    "id": "aud-1790576071455",
-    "timestamp": "2026-09-28T06:14:31.474Z",
+    "id": "aud-1790854266731",
+    "timestamp": "2026-10-01T11:31:06.776Z",
     "userName": "Super Admin",
     "userRole": "Super Admin",
-    "action": "PRODUCT_UPDATED",
-    "module": "products",
-    "targetId": "prod-weldor-01",
+    "action": "BANNER_UPDATED",
+    "module": "cms",
+    "targetId": "ban-weldor-02",
     "ipAddress": "192.168.1.15",
-    "details": "Updated product details for ID prod-weldor-01",
-    "createdAt": "2026-09-28T06:14:31.474Z",
-    "updatedAt": "2026-09-28T06:14:31.474Z"
+    "details": "Updated hero banner slide ID ban-weldor-02",
+    "createdAt": "2026-10-01T11:31:06.776Z",
+    "updatedAt": "2026-10-01T11:31:06.776Z"
   },
   {
-    "id": "aud-1790576052873",
-    "createdAt": "2026-09-28T06:14:13.174Z",
-    "updatedAt": "2026-09-28T06:14:13.174Z",
-    "timestamp": "2026-09-28T06:14:13.174Z",
+    "id": "aud-1790851812299",
+    "createdAt": "2026-10-01T10:50:12.928Z",
+    "updatedAt": "2026-10-01T10:50:12.928Z",
+    "timestamp": "2026-10-01T10:50:12.928Z",
     "userName": "Super Admin",
     "userRole": "Super Admin",
-    "action": "PRODUCT_UPDATED",
+    "action": "PRODUCT_DELETED",
     "module": "products",
-    "targetId": "prod-weldor-01",
+    "targetId": "prod_5",
     "ipAddress": "192.168.1.15",
-    "details": "Updated product details for ID prod-weldor-01"
+    "details": "Deleted product Industrial Landing Fire Hydrant Valve (Oblique Type)"
+  },
+  {
+    "id": "aud-1790851806615",
+    "createdAt": "2026-10-01T10:50:07.266Z",
+    "updatedAt": "2026-10-01T10:50:07.266Z",
+    "timestamp": "2026-10-01T10:50:07.266Z",
+    "userName": "Super Admin",
+    "userRole": "Super Admin",
+    "action": "PRODUCT_DELETED",
+    "module": "products",
+    "targetId": "prod-1790851654050",
+    "ipAddress": "192.168.1.15",
+    "details": "Deleted product NEW MYURdwdw"
+  },
+  {
+    "id": "aud-1790851654052",
+    "createdAt": "2026-10-01T10:47:34.675Z",
+    "updatedAt": "2026-10-01T10:47:34.675Z",
+    "timestamp": "2026-10-01T10:47:34.675Z",
+    "userName": "Super Admin",
+    "userRole": "Super Admin",
+    "action": "PRODUCT_CREATED",
+    "module": "products",
+    "targetId": "prod-1790851654050",
+    "ipAddress": "192.168.1.15",
+    "details": "Created product NEW MYURdwdw (WEL-8856)"
+  },
+  {
+    "id": "audi-1790851611174-293",
+    "createdAt": "2026-10-01T10:46:51.174Z",
+    "updatedAt": "2026-10-01T10:46:51.174Z",
+    "action": "USER_LOGIN",
+    "module": "auth",
+    "targetId": "emp-root-superadmin",
+    "performedBy": "Super Admin (Super Admin)",
+    "details": "User logged in from Google Chrome (Workstation).",
+    "timestamp": "2026-10-01T10:46:50.103Z"
+  },
+  {
+    "id": "aud-1790850903806",
+    "createdAt": "2026-10-01T10:35:04.208Z",
+    "updatedAt": "2026-10-01T10:35:04.208Z",
+    "timestamp": "2026-10-01T10:35:04.208Z",
+    "userName": "Super Admin",
+    "userRole": "Super Admin",
+    "action": "GALLERY_DELETED",
+    "module": "cms",
+    "targetId": "gal-1790792046142",
+    "ipAddress": "192.168.1.15",
+    "details": "Deleted gallery item gal-1790792046142"
   }
 ]

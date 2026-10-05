@@ -57,26 +57,27 @@ app.use('/uploads', (req, res, next) => {
   }
 }));
 
-// API Routes
-app.use('/api/products', productsRouter);
-app.use('/api/categories', categoriesRouter);
-app.use('/api/exhibitions', exhibitionsRouter);
-app.use('/api/banners', bannersRouter);
-app.use('/api/gallery', galleryRouter);
-app.use('/api/crm', crmRouter);
-app.use('/api/hrms', hrmsRouter);
-app.use('/api/settings', settingsRouter);
-app.use('/api/upload', uploadRouter);
-app.use('/api/auth', authRouter);
+// API Router (supports both /api/* and direct serverless rewrites)
+const apiRouter = express.Router();
+apiRouter.use('/products', productsRouter);
+apiRouter.use('/categories', categoriesRouter);
+apiRouter.use('/exhibitions', exhibitionsRouter);
+apiRouter.use('/banners', bannersRouter);
+apiRouter.use('/gallery', galleryRouter);
+apiRouter.use('/crm', crmRouter);
+apiRouter.use('/hrms', hrmsRouter);
+apiRouter.use('/settings', settingsRouter);
+apiRouter.use('/upload', uploadRouter);
+apiRouter.use('/auth', authRouter);
 
 // Reset / Clear database endpoint
-app.post('/api/clear-database', (req, res) => {
+apiRouter.post('/clear-database', (req, res) => {
   db.clearAll();
   res.json({ success: true, message: 'All database collections have been completely cleared.' });
 });
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+apiRouter.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
     service: 'Weldor Industries Clean Production Backend API',
@@ -86,5 +87,8 @@ app.get('/api/health', (req, res) => {
     dataState: 'live_ready',
   });
 });
+
+app.use('/api', apiRouter);
+app.use(apiRouter);
 
 export default app;

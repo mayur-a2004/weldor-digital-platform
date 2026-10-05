@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -17,12 +17,13 @@
   --amber-gold: #C2410C; /* Warm Copper Accent */
   --amber-dark: #9A3412;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-heading: 'Outfit', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-heading: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 /* Base resets & smooth scrolling */
 html {
+  overflow-x: clip;
   scroll-behavior: smooth;
   background-color: var(--bg-light);
   color: var(--text-primary);
@@ -36,7 +37,15 @@ body {
   background-color: var(--bg-light);
   color: var(--text-primary);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+/* Sticky Header Guarantee */
+.site-sticky-header {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
 }
 
 /* 4K TV & Ultra-wide screen container extension */
@@ -426,3 +435,81 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .animate-fade-in-right {
   animation: fadeInRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* ==========================================================================
+   PRINT / PDF EXPORT ENGINE STYLES (ISO AUDIT & FINANCIAL LEDGERS)
+   ========================================================================== */
+@media print {
+  /* Base reset for crisp print rendering */
+  *, *::before, *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide website layout headers, sidebars, interactive buttons and nav */
+  header,
+  nav,
+  aside,
+  .print\:hidden,
+  .no-print {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .print\:block {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  /* Specific modal container isolation */
+  .print-isolated-modal {
+    position: static !important;
+    inset: auto !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    overflow: visible !important;
+  }
+
+  /* Page margins & orientation setup */
+  @page {
+    size: auto;
+    margin: 8mm 8mm 8mm 8mm;
+  }
+
+  /* Page break rules for clean tables */
+  tr, .print-avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tfoot {
+    display: table-footer-group !important;
+  }
+
+  /* Ensure text is high contrast dark for printers */
+  .text-slate-900, .text-slate-800, .text-slate-700 {
+    color: #000000 !important;
+  }
+}
+

@@ -1,6 +1,8 @@
 [
   {
     "id": "emp-root-superadmin",
+    "createdAt": "2026-09-19T07:23:02.304Z",
+    "updatedAt": "2026-09-30T18:59:32.357Z",
     "employeeId": "WEL-1001",
     "employeeCode": "WLD-001",
     "name": "Super Admin",
@@ -16,7 +18,7 @@
     "reportingManager": "Board of Directors",
     "email": "admin@weldorindustries.com",
     "password": "Weldor@2026",
-    "phone": "+91 98250 11223",
+    "phone": "+91 87800 98088",
     "bankDetails": {
       "bankName": "State Bank of India",
       "accountNumber": "30123456789",
@@ -31,10 +33,6 @@
       "specialAllowance": 20000,
       "conveyanceAllowance": 3000,
       "medicalAllowance": 3000,
-      "pfDeductionEmployee": 12000,
-      "pfDeductionEmployer": 12000,
-      "professionalTax": 200,
-      "tdsTax": 15000,
       "grossMonthlySalary": 186000,
       "netMonthlySalary": 158800,
       "annualCTC": 2376000
@@ -54,7 +52,8 @@
       "state": "Gujarat",
       "pincode": "360021"
     },
-    "createdAt": "2026-09-19T07:23:02.304Z",
-    "updatedAt": "2026-09-24T16:10:00.000Z"
+    "activeSessionToken": "weldor_sess_cd9c65ddcf9be8a9811ced8b2a2a1b33d6cd4b88f03bb3ed_1790794772300",
+    "lastLoginAt": "2026-09-30T18:59:32.300Z",
+    "lastLoginDevice": "Google Chrome (Workstation)"
   }
 ]

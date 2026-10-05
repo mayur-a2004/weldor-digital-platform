@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Play, Eye, Maximize2, Download, Video as VideoIcon, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Play, Eye, Maximize2, Download, Video as VideoIcon, Image as ImageIcon, Sparkles, X } from 'lucide-react';
 import { GalleryMedia } from '../../types';
+import { OFFICIAL_WELDOR_GALLERY } from '../../config/catalogData';
 
 export const GalleryPage: React.FC = () => {
   const { galleryMedia, showNotification } = useApp();
@@ -9,10 +10,29 @@ export const GalleryPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [activeMediaItem, setActiveMediaItem] = useState<GalleryMedia | null>(null);
 
-  // Dynamic unique categories from galleryMedia
-  const uniqueCategories = ['All', ...Array.from(new Set(galleryMedia.map(m => m.category)))];
+  // Escape key handler & scroll lock for gallery modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveMediaItem(null);
+      }
+    };
+    if (activeMediaItem) {
+      window.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [activeMediaItem]);
 
-  const filteredItems = galleryMedia.filter(item => {
+  const mediaList = (galleryMedia && galleryMedia.length > 0) ? galleryMedia : OFFICIAL_WELDOR_GALLERY;
+
+  // Dynamic unique categories from mediaList
+  const uniqueCategories = ['All', ...Array.from(new Set(mediaList.map(m => m.category)))];
+
+  const filteredItems = mediaList.filter(item => {
     const matchesType = selectedType === 'All' || item.type === selectedType;
     const matchesCat = selectedCategory === 'All' || item.category === selectedCategory;
     return matchesType && matchesCat;
@@ -49,7 +69,7 @@ export const GalleryPage: React.FC = () => {
                     : 'text-slate-700 hover:text-slate-900'
                 }`}
               >
-                All Media ({galleryMedia.length})
+                All Media ({mediaList.length})
               </button>
               <button
                 onClick={() => setSelectedType('Photo')}
@@ -59,7 +79,7 @@ export const GalleryPage: React.FC = () => {
                     : 'text-slate-700 hover:text-slate-900'
                 }`}
               >
-                <ImageIcon className="w-3.5 h-3.5" /> Photos ({galleryMedia.filter(m => m.type === 'Photo').length})
+                <ImageIcon className="w-3.5 h-3.5" /> Photos ({mediaList.filter(m => m.type === 'Photo').length})
               </button>
               <button
                 onClick={() => setSelectedType('Video')}
@@ -69,12 +89,12 @@ export const GalleryPage: React.FC = () => {
                     : 'text-slate-700 hover:text-slate-900'
                 }`}
               >
-                <VideoIcon className="w-3.5 h-3.5" /> Videos ({galleryMedia.filter(m => m.type === 'Video').length})
+                <VideoIcon className="w-3.5 h-3.5" /> Videos ({mediaList.filter(m => m.type === 'Video').length})
               </button>
             </div>
 
             <span className="text-xs font-mono text-slate-500 font-bold">
-              Showing {filteredItems.length} of {galleryMedia.length} Assets
+              Showing {filteredItems.length} of {mediaList.length} Assets
             </span>
           </div>
 
@@ -122,6 +142,7 @@ export const GalleryPage: React.FC = () => {
                     <img 
                       src={item.thumbnail || item.url} 
                       alt={item.title} 
+                      onError={(e) => { e.currentTarget.src = '/catalog_pages/page_4.png'; }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-transparent opacity-80" />
@@ -187,17 +208,39 @@ export const GalleryPage: React.FC = () => {
 
       {/* Lightbox / Video Modal Player */}
       {activeMediaItem && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-300 rounded-3xl max-w-4xl w-full p-6 sm:p-8 relative shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 z-[100] bg-slate-950/85 backdrop-blur-md overflow-y-auto p-3 sm:p-6 md:p-8 flex justify-center items-start animate-fadeIn"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActiveMediaItem(null);
+          }}
+        >
+          {/* Fixed Floating Screen Close Button (Always visible on screen, never scrolls away) */}
+          <button 
+            type="button"
+            onClick={() => setActiveMediaItem(null)}
+            aria-label="Close Media Viewer"
+            title="Close Modal (Esc)"
+            className="fixed top-3 right-3 sm:top-6 sm:right-6 z-[120] p-2.5 sm:px-4 sm:py-2.5 rounded-full bg-slate-900/95 hover:bg-rose-600 text-white shadow-2xl border border-slate-700 hover:border-rose-500 transition-all flex items-center gap-2 cursor-pointer group"
+          >
+            <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-200" />
+            <span className="text-xs font-mono font-bold hidden sm:inline">CLOSE</span>
+          </button>
+
+          {/* Modal Container Box */}
+          <div className="bg-white border border-slate-300 rounded-3xl max-w-4xl w-full p-6 sm:p-8 relative shadow-2xl space-y-4 my-4 sm:my-8">
             
+            {/* Modal In-Card Close Button */}
             <button 
+              type="button"
               onClick={() => setActiveMediaItem(null)}
-              className="absolute top-5 right-5 z-20 p-2.5 rounded-full bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200"
+              aria-label="Close Modal"
+              title="Close (Esc)"
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20 p-2 sm:p-2.5 rounded-full bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-rose-700 border border-slate-200 transition-colors shadow-xs cursor-pointer"
             >
-              ✕
+              <X className="w-5 h-5" />
             </button>
 
-            <div className="space-y-1">
+            <div className="space-y-1 pr-12">
               <span className="tech-label">{activeMediaItem.category} • {activeMediaItem.type}</span>
               <h2 className="text-2xl font-extrabold text-slate-900 font-heading">
                 {activeMediaItem.title}
@@ -209,7 +252,7 @@ export const GalleryPage: React.FC = () => {
               {activeMediaItem.type === 'Video' ? (
                 <video src={activeMediaItem.url} controls autoPlay className="w-full h-full max-h-[60vh] object-contain" />
               ) : (
-                <img src={activeMediaItem.url} alt={activeMediaItem.title} className="w-full h-full max-h-[60vh] object-contain" />
+                <img src={activeMediaItem.url} alt={activeMediaItem.title} onError={(e) => { e.currentTarget.src = '/catalog_pages/page_4.png'; }} className="w-full h-full max-h-[60vh] object-contain" />
               )}
             </div>
 

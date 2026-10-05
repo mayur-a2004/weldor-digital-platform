@@ -13,17 +13,112 @@ import {
   CheckCircle2, 
   FileText,
   Sliders,
-  DollarSign
+  IndianRupee
 } from 'lucide-react';
 
 export const CompanySettingsManager: React.FC = () => {
   const { companySettings, updateCompanySettings, hasPermission } = useApp();
 
-  const [formData, setFormData] = useState<CompanySettings>({ ...companySettings });
+  const [formData, setFormData] = useState<CompanySettings>(() => ({
+    companyName: companySettings?.companyName || 'Weldor by Earth Metal Industries',
+    brandName: companySettings?.brandName || 'WELDOR',
+    legalName: companySettings?.legalEntityName || companySettings?.legalName || 'Earth Metal Industries',
+    legalEntityName: companySettings?.legalEntityName || companySettings?.legalName || 'Earth Metal Industries',
+    cinNumber: companySettings?.cinNumber || 'U29299GJ2005PTC045890',
+    gstin: companySettings?.gstinNumber || companySettings?.gstin || '24AABCE1234F1Z5',
+    gstinNumber: companySettings?.gstinNumber || companySettings?.gstin || '24AABCE1234F1Z5',
+    panNumber: companySettings?.panNumber || 'AABCE1234F',
+    iecCode: companySettings?.iecCode || '0812345678',
+    msmeRegistrationNo: companySettings?.msmeRegistrationNo || 'UDYAM-GJ-15-0012345',
+    registeredOffice: companySettings?.registeredOffice || 'Plot No. 588, G.I.D.C. Phase 2, Dared, Jamnagar – 361004, Gujarat, India',
+    factoryPlantAddress: companySettings?.factoryPlantAddress || 'Plot No. 588, G.I.D.C. Phase 2, Dared, Jamnagar – 361004, Gujarat, India',
+    registeredOfficeAddress: companySettings?.registeredOfficeAddress || {
+      addressLine1: 'Plot No. 588, G.I.D.C. Phase 2',
+      addressLine2: 'Dared',
+      city: 'Jamnagar',
+      state: 'Gujarat',
+      country: 'India',
+      pincode: '361004'
+    },
+    primaryEmail: companySettings?.supportEmail || companySettings?.primaryEmail || 'brm@weldorindustries.com',
+    supportEmail: companySettings?.supportEmail || companySettings?.primaryEmail || 'brm@weldorindustries.com',
+    primaryPhone: companySettings?.salesPhone || companySettings?.primaryPhone || '+91-87800 98088',
+    salesPhone: companySettings?.salesPhone || companySettings?.primaryPhone || '+91-87800 98088',
+    websiteUrl: companySettings?.websiteUrl || 'https://weldorindustries.com',
+    fiscalYear: companySettings?.fiscalYear || '2026-2027',
+    bankAccounts: companySettings?.bankAccounts || [],
+    primaryBank: companySettings?.primaryBank || {
+      bankName: 'HDFC Bank Ltd',
+      accountName: 'Earth Metal Industries',
+      accountNumber: '50200012345678',
+      ifscCode: 'HDFC0001234',
+      branch: 'Dared GIDC, Jamnagar'
+    },
+    defaultTerms: companySettings?.defaultTerms || {
+      paymentTerms: '50% Advance against Proforma, Balance before Dispatch',
+      deliveryTerms: 'Ex-Factory Jamnagar / Ready Dispatch within 7-10 Business Days',
+      validityDays: 30,
+      warrantyTerms: '12 Months replacement warranty against manufacturing defects',
+      packagingTerms: 'Export Standard Heavy-Duty Wooden Case with VCI Bag',
+      inspectionTerms: '100% In-House Hydrostatic & Flame Test with EN 10204 3.1 MTC',
+      generalTerms: '1. GST @ 18% Extra as applicable.\n2. Freight, Transit Insurance, and Octroi extra at actuals.\n3. Goods once sold will not be taken back unless approved.\n4. All disputes are subject to Jamnagar (Gujarat) jurisdiction only.'
+    },
+    slaSettings: companySettings?.slaSettings || {
+      leadResponseHours: 2,
+      quoteApprovalThresholdUSD: 50000,
+      autoAssignSalesLead: true,
+      enableWhatsAppNotifications: true,
+      enablePayrollReminderDays: 5
+    }
+  }));
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateCompanySettings(formData);
+  React.useEffect(() => {
+    if (companySettings) {
+      setFormData(prev => ({
+        ...prev,
+        ...companySettings,
+        companyName: companySettings.companyName || prev.companyName,
+        legalEntityName: companySettings.legalEntityName || companySettings.legalName || prev.legalEntityName,
+        legalName: companySettings.legalEntityName || companySettings.legalName || prev.legalName,
+        gstinNumber: companySettings.gstinNumber || companySettings.gstin || prev.gstinNumber,
+        gstin: companySettings.gstinNumber || companySettings.gstin || prev.gstin,
+        panNumber: companySettings.panNumber || prev.panNumber,
+        cinNumber: companySettings.cinNumber || prev.cinNumber,
+        iecCode: companySettings.iecCode || prev.iecCode,
+        registeredOffice: companySettings.registeredOffice || prev.registeredOffice,
+        factoryPlantAddress: companySettings.factoryPlantAddress || prev.factoryPlantAddress,
+        supportEmail: companySettings.supportEmail || companySettings.primaryEmail || prev.supportEmail,
+        primaryEmail: companySettings.supportEmail || companySettings.primaryEmail || prev.primaryEmail,
+        salesPhone: companySettings.salesPhone || companySettings.primaryPhone || prev.salesPhone,
+        primaryPhone: companySettings.salesPhone || companySettings.primaryPhone || prev.primaryPhone,
+        fiscalYear: companySettings.fiscalYear || prev.fiscalYear,
+        primaryBank: {
+          ...prev.primaryBank,
+          ...(companySettings.primaryBank || {}),
+          bankName: companySettings.primaryBank?.bankName || prev.primaryBank?.bankName,
+          accountName: companySettings.primaryBank?.accountName || companySettings.legalEntityName || prev.primaryBank?.accountName,
+          accountNumber: companySettings.primaryBank?.accountNumber || prev.primaryBank?.accountNumber,
+          ifscCode: companySettings.primaryBank?.ifscCode || prev.primaryBank?.ifscCode,
+          branch: companySettings.primaryBank?.branch || prev.primaryBank?.branch,
+        }
+      }));
+    }
+  }, [companySettings]);
+
+  const handleSave = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleanData: CompanySettings = {
+      ...formData,
+      legalName: formData.legalEntityName || formData.legalName,
+      legalEntityName: formData.legalEntityName || formData.legalName,
+      gstin: formData.gstinNumber || formData.gstin,
+      gstinNumber: formData.gstinNumber || formData.gstin,
+      primaryEmail: formData.supportEmail || formData.primaryEmail,
+      supportEmail: formData.supportEmail || formData.primaryEmail,
+      primaryPhone: formData.salesPhone || formData.primaryPhone,
+      salesPhone: formData.salesPhone || formData.primaryPhone,
+    };
+    updateCompanySettings(cleanData);
   };
 
   return (
@@ -255,12 +350,122 @@ export const CompanySettingsManager: React.FC = () => {
               <label className="block font-bold text-slate-700 mb-1">Bank Branch Address</label>
               <input
                 type="text"
-                value={formData.primaryBank.branch}
+                value={formData.primaryBank?.branch || ''}
                 onChange={e => setFormData(prev => ({
                   ...prev,
-                  primaryBank: { ...prev.primaryBank, branch: e.target.value }
+                  primaryBank: { ...(prev.primaryBank || {} as any), branch: e.target.value }
                 }))}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 4: Standard Terms & Conditions (Auto-fills Invoices & Quotations) */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+          <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+            <FileText className="w-5 h-5 text-orange-600" />
+            <div>
+              <h3 className="font-bold text-base text-slate-900">Standard Commercial Terms & Conditions</h3>
+              <p className="text-xs text-slate-500">These will be automatically pre-filled in every new Quotation and Tax Invoice so you do not have to retype them every time.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Default Payment Terms</label>
+              <input
+                type="text"
+                value={formData.defaultTerms?.paymentTerms || ''}
+                onChange={e => setFormData(prev => ({
+                  ...prev,
+                  defaultTerms: { ...(prev.defaultTerms || {}), paymentTerms: e.target.value }
+                }))}
+                placeholder="e.g. 50% Advance against Proforma, Balance before Dispatch"
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 font-medium focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Default Delivery & Dispatch Terms</label>
+              <input
+                type="text"
+                value={formData.defaultTerms?.deliveryTerms || ''}
+                onChange={e => setFormData(prev => ({
+                  ...prev,
+                  defaultTerms: { ...(prev.defaultTerms || {}), deliveryTerms: e.target.value }
+                }))}
+                placeholder="e.g. Ex-Factory Jamnagar / Ready Dispatch in 7-10 Business Days"
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 font-medium focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Quotation Validity (Days)</label>
+              <input
+                type="number"
+                value={formData.defaultTerms?.validityDays || 30}
+                onChange={e => setFormData(prev => ({
+                  ...prev,
+                  defaultTerms: { ...(prev.defaultTerms || {}), validityDays: Number(e.target.value) || 30 }
+                }))}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 font-medium focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Warranty & Replacement Terms</label>
+              <input
+                type="text"
+                value={formData.defaultTerms?.warrantyTerms || ''}
+                onChange={e => setFormData(prev => ({
+                  ...prev,
+                  defaultTerms: { ...(prev.defaultTerms || {}), warrantyTerms: e.target.value }
+                }))}
+                placeholder="e.g. 12 Months replacement warranty against manufacturing defects"
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 font-medium focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Standard Packaging Details</label>
+              <input
+                type="text"
+                value={formData.defaultTerms?.packagingTerms || ''}
+                onChange={e => setFormData(prev => ({
+                  ...prev,
+                  defaultTerms: { ...(prev.defaultTerms || {}), packagingTerms: e.target.value }
+                }))}
+                placeholder="e.g. Export Standard Heavy-Duty Wooden Case with VCI Bag"
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 font-medium focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Testing & QA Inspection Terms</label>
+              <input
+                type="text"
+                value={formData.defaultTerms?.inspectionTerms || ''}
+                onChange={e => setFormData(prev => ({
+                  ...prev,
+                  defaultTerms: { ...(prev.defaultTerms || {}), inspectionTerms: e.target.value }
+                }))}
+                placeholder="e.g. 100% In-House Hydrostatic & Flame Test with EN 10204 3.1 MTC"
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 font-medium focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block font-bold text-slate-700 mb-1">General Statutory / Legal Terms (Printed on Bills & Invoices)</label>
+              <textarea
+                rows={4}
+                value={formData.defaultTerms?.generalTerms || ''}
+                onChange={e => setFormData(prev => ({
+                  ...prev,
+                  defaultTerms: { ...(prev.defaultTerms || {}), generalTerms: e.target.value }
+                }))}
+                placeholder="1. GST @ 18% Extra as applicable.&#10;2. Freight and Transit insurance extra at actuals.&#10;3. Goods once sold will not be taken back unless approved.&#10;4. Subject to Jamnagar (Gujarat) jurisdiction only."
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 font-sans focus:ring-2 focus:ring-orange-500 focus:outline-none"
               />
             </div>
           </div>

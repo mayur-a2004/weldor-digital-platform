@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
-  DollarSign, 
+  IndianRupee, 
   TrendingUp, 
   Users, 
   FileText, 
@@ -137,7 +137,7 @@ export const CRMDashboard: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-xs text-slate-900">{lead.companyName}</span>
                     <span className="text-[10px] font-mono bg-slate-100 text-slate-600 px-1.5 rounded font-semibold">
-                      ${lead.estimatedValueUSD.toLocaleString()} USD
+                      ₹{Math.round((lead.estimatedValueUSD || 0) * 85).toLocaleString('en-IN')}
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-500 font-mono mt-0.5">{lead.contactName} • {lead.contactPhone}</p>
@@ -213,10 +213,10 @@ export const CRMDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-mono font-bold text-slate-400 uppercase">Confirmed Revenue</span>
             <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
-              <DollarSign className="w-5 h-5" />
+              <IndianRupee className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-2xl font-extrabold font-mono text-slate-900">${totalWonValueUSD.toLocaleString()} USD</p>
+          <p className="text-2xl font-extrabold font-mono text-slate-900">₹{Math.round((totalWonValueUSD || 0) * 85).toLocaleString('en-IN')}</p>
           <p className="text-[11px] text-emerald-700 font-mono font-bold flex items-center gap-1">
             <TrendingUp className="w-3.5 h-3.5" /> +18.4% vs last quarter
           </p>
@@ -304,10 +304,10 @@ export const CRMDashboard: React.FC = () => {
 
           <div className="p-4 rounded-xl bg-emerald-50/60 border border-emerald-200 space-y-1">
             <p className="text-[11px] font-mono font-bold text-emerald-600 uppercase">Total Converted Sales</p>
-            <h4 className="text-2xl font-extrabold text-emerald-800 font-mono">${(totalWonValueUSD || 0).toLocaleString()} USD</h4>
+            <h4 className="text-2xl font-extrabold text-emerald-800 font-mono">₹{Math.round((totalWonValueUSD || 0) * 85).toLocaleString('en-IN')}</h4>
             <div className="flex items-center justify-between text-xs text-emerald-700 pt-1 font-mono">
-              <span>₹{((totalWonValueUSD || 0) * 84).toLocaleString()} INR</span>
-              <span className="font-bold">{orders.length} Confirmed POs</span>
+              <span>{orders.length} Confirmed POs</span>
+              <span className="font-bold">INR</span>
             </div>
           </div>
 
@@ -350,7 +350,7 @@ export const CRMDashboard: React.FC = () => {
                   <th className="py-3 px-4">Procurement Classification</th>
                   <th className="py-3 px-4 text-center">Reorder Frequency</th>
                   <th className="py-3 px-4 text-right">Cumulative Volume</th>
-                  <th className="py-3 px-4 text-right">Account Value (USD)</th>
+                  <th className="py-3 px-4 text-right">Account Value (₹)</th>
                   <th className="py-3 px-4 text-center">Action</th>
                 </tr>
               </thead>
@@ -380,7 +380,7 @@ export const CRMDashboard: React.FC = () => {
                     450 Units
                   </td>
                   <td className="py-3 px-4 text-right font-mono font-extrabold text-slate-900">
-                    $38,250 USD
+                    ₹32,51,250
                   </td>
                   <td className="py-3 px-4 text-center">
                     <button
@@ -416,7 +416,7 @@ export const CRMDashboard: React.FC = () => {
                     1,200 Units
                   </td>
                   <td className="py-3 px-4 text-right font-mono font-extrabold text-slate-900">
-                    $26,400 USD
+                    ₹22,44,000
                   </td>
                   <td className="py-3 px-4 text-center">
                     <button
@@ -452,7 +452,7 @@ export const CRMDashboard: React.FC = () => {
                     12 Prototype Units
                   </td>
                   <td className="py-3 px-4 text-right font-mono font-extrabold text-slate-900">
-                    $18,600 USD
+                    ₹15,81,000
                   </td>
                   <td className="py-3 px-4 text-center">
                     <button
@@ -488,7 +488,7 @@ export const CRMDashboard: React.FC = () => {
                     5,000 Pcs
                   </td>
                   <td className="py-3 px-4 text-right font-mono font-extrabold text-slate-900">
-                    $14,200 USD
+                    ₹12,07,000
                   </td>
                   <td className="py-3 px-4 text-center">
                     <button

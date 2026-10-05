@@ -258,12 +258,15 @@ export const RBACManager: React.FC = () => {
   };
 
   // Filtered Employees list
-  const filteredEmployees = employees.filter(emp => {
-    const matchesSearch = 
-      emp.name.toLowerCase().includes(searchEmployeeQuery.toLowerCase()) ||
-      emp.email.toLowerCase().includes(searchEmployeeQuery.toLowerCase()) ||
-      (emp.designation && emp.designation.toLowerCase().includes(searchEmployeeQuery.toLowerCase())) ||
-      (emp.employeeCode && emp.employeeCode.toLowerCase().includes(searchEmployeeQuery.toLowerCase()));
+  const filteredEmployees = (employees || []).filter(emp => {
+    if (!emp) return false;
+    const q = (searchEmployeeQuery || '').trim().toLowerCase();
+    const matchesSearch = !q ||
+      (emp.name || '').toLowerCase().includes(q) ||
+      (emp.email || '').toLowerCase().includes(q) ||
+      (emp.designation && emp.designation.toLowerCase().includes(q)) ||
+      (emp.employeeCode && emp.employeeCode.toLowerCase().includes(q)) ||
+      (emp.employeeId && emp.employeeId.toLowerCase().includes(q));
 
     const matchesDept = departmentFilter === 'All' || emp.department === departmentFilter;
 

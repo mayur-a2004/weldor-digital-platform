@@ -33,6 +33,7 @@ export type CRMModule =
   | 'companies'
   | 'contacts'
   | 'products'
+  | 'inventory'
   | 'rfqs'
   | 'samples'
   | 'quotations'
@@ -239,6 +240,21 @@ export interface CompanySettings {
     ifscCode: string;
     branch: string;
   };
+  state?: string;
+  stateCode?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  ifscCode?: string;
+  bankBranch?: string;
+  defaultTerms?: {
+    paymentTerms?: string;
+    deliveryTerms?: string;
+    validityDays?: number;
+    warrantyTerms?: string;
+    packagingTerms?: string;
+    inspectionTerms?: string;
+    generalTerms?: string;
+  };
   slaSettings?: {
     leadResponseHours?: number;
     quoteApprovalThresholdUSD?: number;
@@ -262,6 +278,8 @@ export interface ProductCategory {
   seoKeywords?: string[];
   seoMetaTitle?: string;
   seoMetaDescription?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProductSpecification {
@@ -305,6 +323,8 @@ export interface Product {
   seoMetaTitle?: string;
   seoMetaDescription?: string;
   status?: 'Active' | 'Draft' | 'Archived';
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type LeadSource = 
@@ -481,23 +501,42 @@ export interface Quotation {
 }
 
 export interface OrderItem {
-  productId: string;
+  productId?: string;
   productName: string;
   sku: string;
   quantity: number;
+  unit?: string;
   unitPriceUSD: number;
   totalPriceUSD: number;
+  hsnCode?: string;
 }
 
 export interface Order {
   id: string;
   orderNumber: string;
   quotationId: string;
+  quotationNumber?: string;
   leadId: string;
   companyName: string;
   contactName: string;
+  gstin?: string;
+  state?: string;
+  stateCode?: string;
+  billingAddress?: string;
+  shippingAddress?: string;
+  email?: string;
+  phone?: string;
+  buyer?: any;
   items: OrderItem[];
   totalValueUSD: number;
+  grandTotalINR?: number;
+  taxableTotalUSD?: number;
+  totalTaxUSD?: number;
+  freightCostUSD?: number;
+  packagingCostUSD?: number;
+  courierPartner?: string;
+  courierTrackingNo?: string;
+  dispatchDate?: string;
   stage: 'Confirmed' | 'In Production' | 'QC Inspection' | 'Ready for Dispatch' | 'Dispatched' | 'Delivered';
   expectedDeliveryDate: string;
   isRepeatOrder: boolean;
@@ -609,4 +648,39 @@ export interface AuditLog {
   targetId: string;
   ipAddress: string;
   details: string;
+}
+
+export interface InventoryStockLog {
+  id: string;
+  itemId: string;
+  timestamp: string;
+  changeType: 'INWARD' | 'DISPATCH' | 'ADJUSTMENT_DAMAGE' | 'ADJUSTMENT_AUDIT';
+  deltaQuantity: number;
+  remainingStock: number;
+  reason: string;
+  performedBy: string;
+  referenceNumber?: string;
+}
+
+export type InventoryUnit = 'PCS' | 'KG' | 'MTR' | 'BOX' | 'SET' | 'ROLL' | 'PACK';
+
+export interface InventoryItem {
+  id: string;
+  sku: string;
+  name: string;
+  category: string;
+  hsnCode: string;
+  unit: InventoryUnit;
+  unitPriceINR: number;
+  unitPriceUSD: number;
+  costPriceINR?: number;
+  gstRatePct: number;
+  currentStock: number;
+  minStockAlert: number;
+  isPublic: boolean; // false = Internal B2B Spares / Consumables (hidden from website), true = Public Website Product
+  warehouseLocation?: string;
+  status: 'In Stock' | 'Low Stock' | 'Out of Stock';
+  lastUpdated: string;
+  supplierName?: string;
+  description?: string;
 }

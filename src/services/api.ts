@@ -401,6 +401,57 @@ export const api = {
       return { success: false };
     }
   },
+
+  // --- Invoices ---
+  getInvoices: async () => {
+    try {
+      const res = await fetch(`${API_BASE}/crm/invoices`);
+      return await res.json();
+    } catch (e) {
+      return { success: false, data: [] };
+    }
+  },
+  createInvoice: async (data: any) => {
+    try {
+      const res = await fetch(`${API_BASE}/crm/invoices`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false, data };
+    }
+  },
+  updateInvoice: async (id: string, data: any) => {
+    try {
+      const res = await fetch(`${API_BASE}/crm/invoices/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false, data };
+    }
+  },
+  deleteInvoice: async (id: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/crm/invoices/${id}`, { method: 'DELETE' });
+      return await res.json();
+    } catch (e) {
+      return { success: false };
+    }
+  },
+  getReportsSummary: async (params?: { period?: string; startDate?: string; endDate?: string; type?: string }) => {
+    try {
+      const q = new URLSearchParams(params as any || {}).toString();
+      const res = await fetch(`${API_BASE}/crm/reports/summary?${q}`);
+      return await res.json();
+    } catch (e) {
+      return { success: false, metrics: {}, data: {} };
+    }
+  },
   // --- RFQs ---
   getRfqs: async () => {
     try {
@@ -772,32 +823,139 @@ export const api = {
     }
   },
 
-  // --- Upload Engine (Cloudinary CDN Optimized) ---
-  uploadFile: async (file: File) => {
+  // --- Upload Engine (Dual Direct Cloudinary + Vercel Fallback) ---
+  uploadFile: async (file: File, folder?: string) => {
+    const targetFolder = folder || 'weldor-products';
+
+    // 1. Client-Side Image Compression for large files (> 2MB)
+    let fileToUpload = file;
+    if (typeof window !== 'undefined' && file.type.startsWith('image/') && file.size > 2 * 1024 * 1024) {
+      try {
+        fileToUpload = await new Promise<File>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              let w = img.width;
+              let h = img.height;
+              const maxDim = 1920;
+              if (w > maxDim || h > maxDim) {
+                if (w > h) {
+                  h = Math.round((h * maxDim) / w);
+                  w = maxDim;
+                } else {
+                  w = Math.round((w * maxDim) / h);
+                  h = maxDim;
+                }
+              }
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                ctx.drawImage(img, 0, 0, w, h);
+                canvas.toBlob(
+                  (blob) => {
+                    if (blob && blob.size < file.size) {
+                      resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
+                    } else {
+                      resolve(file);
+                    }
+                  },
+                  'image/jpeg',
+                  0.85
+                );
+              } else {
+                resolve(file);
+              }
+            };
+            img.onerror = () => resolve(file);
+            img.src = e.target?.result as string;
+          };
+          reader.onerror = () => resolve(file);
+          reader.readAsDataURL(file);
+        });
+      } catch (err) {
+        fileToUpload = file;
+      }
+    }
+
+    // 2. Try Direct Cloudinary Signed Upload first (bypasses Vercel 4.5MB limit entirely)
+    try {
+      const signRes = await fetch(`${API_BASE}/upload/sign?folder=${encodeURIComponent(targetFolder)}`);
+      if (signRes.ok) {
+        const signData = await signRes.json();
+        if (signData.success && signData.signature && signData.uploadUrl) {
+          const directForm = new FormData();
+          directForm.append('file', fileToUpload);
+          directForm.append('api_key', signData.apiKey);
+          directForm.append('timestamp', String(signData.timestamp));
+          directForm.append('signature', signData.signature);
+          directForm.append('folder', signData.folder);
+
+          const cloudRes = await fetch(signData.uploadUrl, {
+            method: 'POST',
+            body: directForm,
+          });
+
+          if (cloudRes.ok) {
+            const cloudJson = await cloudRes.json();
+            const secureUrl = cloudJson.secure_url || cloudJson.url;
+            return {
+              success: true,
+              message: 'File uploaded directly to Cloudinary CDN',
+              data: {
+                originalName: file.name,
+                filename: cloudJson.public_id,
+                sizeBytes: cloudJson.bytes || fileToUpload.size,
+                mimetype: file.type,
+                url: secureUrl,
+                cdnUrl: secureUrl,
+                publicId: cloudJson.public_id,
+                format: cloudJson.format,
+                isCdnOptimized: true,
+              },
+            };
+          }
+        }
+      }
+    } catch (directErr) {
+      console.warn('Direct Cloudinary upload attempt failed, falling back to server route:', directErr);
+    }
+
+    // 3. Fallback to Express backend server route (/api/upload)
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', fileToUpload);
+      formData.append('folder', targetFolder);
       const res = await fetch(`${API_BASE}/upload`, {
         method: 'POST',
         body: formData,
       });
       return await res.json();
-    } catch (e) {
-      return { success: false, message: 'Upload failed' };
+    } catch (e: any) {
+      return { success: false, message: 'Upload failed', error: e?.message };
     }
   },
-  uploadBulkFiles: async (files: File[]) => {
+  uploadBulkFiles: async (files: File[], folder?: string) => {
     try {
-      const formData = new FormData();
-      files.forEach(f => formData.append('files', f));
-      const res = await fetch(`${API_BASE}/upload/bulk`, {
-        method: 'POST',
-        body: formData,
-      });
-      return await res.json();
-    } catch (e) {
-      return { success: false, message: 'Bulk upload failed' };
+      // Upload each file using the robust uploadFile engine in parallel
+      const results = await Promise.all(
+        files.map(file => api.uploadFile(file, folder))
+      );
+      const successful = results.filter(r => r.success && (r.data?.cdnUrl || r.data?.url)).map(r => r.data);
+      return {
+        success: successful.length > 0,
+        message: `Successfully uploaded ${successful.length} of ${files.length} files to Cloudinary!`,
+        count: successful.length,
+        data: successful,
+      };
+    } catch (e: any) {
+      return { success: false, message: 'Bulk upload failed', error: e?.message };
     }
+  },
+  uploadFiles: async (files: File[], folder?: string) => {
+    return api.uploadBulkFiles(files, folder);
   },
 
   // --- Authentication & Session Management ---

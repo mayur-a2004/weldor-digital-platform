@@ -1,4 +1,4 @@
-import { Product, ProductCategory, HeroBanner, GalleryMedia } from '../types';
+import { Product, ProductCategory, HeroBanner, GalleryMedia, Exhibition } from '../types';
 
 export const OFFICIAL_WELDOR_CATEGORIES: ProductCategory[] = [
   {
@@ -680,12 +680,12 @@ export const OFFICIAL_WELDOR_PRODUCTS: Product[] = [
 export const OFFICIAL_WELDOR_BANNERS: HeroBanner[] = [
   {
     id: "ban-weldor-01",
-    badge: "EARTH METAL INDUSTRIES — WELDOR BRAND",
-    title: "Precision In Every Spark.",
-    highlightText: "High-Performance MIG, TIG & Plasma Cutting Torches.",
-    subtitle: "ISO 9001:2015 Certified OEM & Global Exporter | Make in India",
-    description: "Manufactured at our Jamnagar engineering plant, Weldor delivers heavy-duty 24KD/36KD MIG torches, 700 Bar & 300 Bar gas pressure regulators, and precision CNC cutting torches.",
-    bgImageUrl: "/catalog_pages/page_1.png",
+    badge: "EARTH METAL INDUSTRIES • WELDOR® BRAND",
+    title: "Creating The Best Welding Experience",
+    highlightText: "",
+    subtitle: "Heavy-Duty MIG, TIG & Plasma Cutting Torches",
+    description: "Precision-engineered welding and cutting torches manufactured at our Jamnagar plant for peak arc stability, operator comfort, and extreme industrial durability.",
+    bgImageUrl: "/images/banners/hero_welding_plant.jpg",
     productImageUrl: "/catalog_pages/page_4.png",
     productSku: "WLD-MIG-36KD",
     productName: "36KD Heavy-Duty MIG Welding Torch (320A)",
@@ -693,12 +693,12 @@ export const OFFICIAL_WELDOR_BANNERS: HeroBanner[] = [
     overlayTheme: "dark-glass",
     primaryBtnText: "Explore Welding Catalog",
     primaryBtnAction: "public-products",
-    secondaryBtnText: "Download PDF Catalog",
+    secondaryBtnText: "Request Technical RFQ",
     secondaryBtnAction: "public-rfq",
     stats: [
-      { label: "Cutting Capacity", value: "Up to 300mm" },
-      { label: "Max Pressure", value: "300 Bar" },
-      { label: "Export Quality", value: "100% Tested" }
+      { label: "Arc Stability", value: "100% Tested" },
+      { label: "Torch Duty Cycle", value: "60% @ 350A" },
+      { label: "Global Standards", value: "ISO 9001:2015" }
     ],
     features: ["100% Leak & Arc Tested", "Heavy Forged Brass Construction", "Direct Factory Pricing"],
     active: true,
@@ -708,19 +708,19 @@ export const OFFICIAL_WELDOR_BANNERS: HeroBanner[] = [
   {
     id: "ban-weldor-02",
     badge: "FORGED BRASS INDUSTRIAL REGULATORS",
-    title: "300 Bar High-Pressure Gas Regulators.",
-    highlightText: "Engineered for Extreme Safety & Precision Flow.",
-    subtitle: "Oxygen, Acetylene, Argon/CO2 Flowmeters, Nitrogen & LPG",
-    description: "Heavy forged brass dual-gauge gas pressure regulators with stainless steel diaphragms designed for heavy industrial cutting, TIG shielding, and heating applications.",
-    bgImageUrl: "/catalog_pages/page_9.png",
+    title: "Precision Engineered For Heavy Fabrication",
+    highlightText: "",
+    subtitle: "High-Pressure Gas Regulators & Oxy-Fuel Cutting Systems",
+    description: "Forged brass 300 Bar gas pressure regulators, flashback arrestors, and precision CNC cutting nozzles built to ISO 9001:2015 safety standards.",
+    bgImageUrl: "/images/banners/hero_welding_torch.jpg",
     productImageUrl: "/catalog_pages/page_9.png",
     productSku: "WLD-REG-O2-300B",
     productName: "Forged Brass Oxygen Regulator (300 Bar)",
     transitionEffect: "kenburns",
-    overlayTheme: "orange-tech",
+    overlayTheme: "dark-glass",
     primaryBtnText: "View Gas Regulators",
     primaryBtnAction: "public-products",
-    secondaryBtnText: "Request Price Quotation",
+    secondaryBtnText: "Download Specifications",
     secondaryBtnAction: "public-rfq",
     stats: [
       { label: "Inlet Rating", value: "300 Bar" },
@@ -806,6 +806,143 @@ export const OFFICIAL_WELDOR_GALLERY: GalleryMedia[] = [
     caption: "Premium hafnium core plasma electrodes and PNME/ANME three-seat cutting nozzles.",
     tags: ["Plasma Electrodes", "PNME Tips", "Factory Production"],
     createdAt: "2026-09-25"
+  },
+  {
+    id: "gal-07",
+    title: "Zeiss Contura CMM 3D Quality Inspection Lab",
+    category: "R&D Quality Lab",
+    type: "Photo",
+    mediaTypeGroup: "photo",
+    url: "/images/quality_inspection_lab.jpg",
+    thumbnail: "/images/quality_inspection_lab.jpg",
+    caption: "In-house Zeiss CMM coordinate measuring probe testing critical component tolerances to ±0.005mm.",
+    tags: ["Zeiss CMM", "Metrology", "Quality Control", "ISO 9001"],
+    createdAt: "2026-10-01"
+  },
+  {
+    id: "gal-08",
+    title: "Earth Metal Industries Jamnagar Plant Campus",
+    category: "Factory Floor",
+    type: "Photo",
+    mediaTypeGroup: "photo",
+    url: "/images/banners/hero_welding_plant.jpg",
+    thumbnail: "/images/banners/hero_welding_plant.jpg",
+    caption: "Modern manufacturing facility in GIDC Jamnagar producing precision brass components and welding systems.",
+    tags: ["Factory Floor", "Jamnagar", "Make In India"],
+    createdAt: "2026-10-01"
   }
 ];
+
+export const OFFICIAL_WELDOR_EXHIBITIONS: Exhibition[] = [
+  {
+    id: "expo-01",
+    title: "INDIA WELDING & FABRICATION EXPO 2026",
+    subtitle: "Live Automated Torch & High-Pressure Gas Flow Demos",
+    location: "Bombay Exhibition Centre (NESCO)",
+    fullAddress: "Western Express Highway, Goregaon East, Mumbai, Maharashtra 400063",
+    city: "Mumbai",
+    country: "India",
+    startDate: "2026-11-20",
+    endDate: "2026-11-23",
+    hallNumber: "Hall 4",
+    boothNumber: "Stall E-28",
+    description: "Join Weldor by Earth Metal Industries at India's premier welding technology expo. Experience live demonstrations of our 36KD/500A robotic torches, CNC plasma torches, and forged brass 300 Bar gas pressure regulators.",
+    keyHighlights: [
+      "Live Automated MIG Welding",
+      "300 Bar Gas Pressure Testing Demos",
+      "OEM B2B Technical Consultations"
+    ],
+    bannerImage: "/images/banners/hero_welding_plant.jpg",
+    galleryImages: [
+      "/images/banners/hero_welding_plant.jpg",
+      "/images/banners/hero_welding_torch.jpg",
+      "/catalog_pages/page_4.png"
+    ],
+    videoUrls: [
+      "https://www.w3schools.com/html/mov_bbb.mp4"
+    ],
+    brochurePdfUrl: "/catalog/Weldor_Welding_Product_Catalog.pdf",
+    showcasedCategoryIds: [
+      "cat-wel-01",
+      "cat-cut-02",
+      "cat-reg-03"
+    ],
+    qrSlug: "india-welding-expo-2026",
+    leadsCapturedCount: 148,
+    featured: true,
+    status: "Upcoming"
+  },
+  {
+    id: "expo-02",
+    title: "IMTEX FORMING & WELDING 2027",
+    subtitle: "South Asia Largest Metal Forming & Automation Exhibition",
+    location: "Bangalore International Exhibition Centre (BIEC)",
+    fullAddress: "10th Mile, Tumkur Road, Madavara Post, Bengaluru, Karnataka 562123",
+    city: "Bengaluru",
+    country: "India",
+    startDate: "2027-01-21",
+    endDate: "2027-01-26",
+    hallNumber: "Hall 5",
+    boothNumber: "Stall B-114",
+    description: "Showcasing next-generation 500A water-cooled torches, CNC plasma cutting gantries, and customized OEM brass manifolds for aerospace and defence manufacturing.",
+    keyHighlights: [
+      "High-Torque Arc Stability Tests",
+      "Heavy-Duty 300 Bar Regulators",
+      "Prototype Sample Trial Bookings"
+    ],
+    bannerImage: "/images/banners/hero_welding_torch.jpg",
+    galleryImages: [
+      "/images/banners/hero_welding_torch.jpg",
+      "/images/quality_inspection_lab.jpg",
+      "/catalog_pages/page_6.png"
+    ],
+    videoUrls: [
+      "https://www.w3schools.com/html/mov_bbb.mp4"
+    ],
+    brochurePdfUrl: "/catalog/Weldor_Welding_Product_Catalog.pdf",
+    showcasedCategoryIds: [
+      "cat-wel-01",
+      "cat-con-04"
+    ],
+    qrSlug: "imtex-forming-2027",
+    leadsCapturedCount: 215,
+    featured: true,
+    status: "Upcoming"
+  },
+  {
+    id: "expo-03",
+    title: "SCHWEISSEN & SCHNEIDEN (International Welding Fair)",
+    subtitle: "World Leading Trade Fair for Joining, Cutting & Surfacing",
+    location: "Messe Essen",
+    fullAddress: "Messeplatz 1, 45131 Essen, Germany",
+    city: "Essen",
+    country: "Germany",
+    startDate: "2025-09-15",
+    endDate: "2025-09-19",
+    hallNumber: "Hall 3",
+    boothNumber: "Stand 3C42",
+    description: "Global European showcase of Weldor export-grade heavy-duty 24KD & 36KD torches and 300 Bar gas pressure regulators manufactured to ISO 9001:2015 standards in Jamnagar.",
+    keyHighlights: [
+      "European Distributor Partnerships Signed",
+      "Extreme Safety Leak Tests",
+      "Global OEM Quality Recognition"
+    ],
+    bannerImage: "/images/quality_inspection_lab.jpg",
+    galleryImages: [
+      "/images/quality_inspection_lab.jpg",
+      "/catalog_pages/page_9.png"
+    ],
+    videoUrls: [],
+    brochurePdfUrl: "/catalog/Weldor_Welding_Product_Catalog.pdf",
+    showcasedCategoryIds: [
+      "cat-wel-01",
+      "cat-reg-03"
+    ],
+    qrSlug: "schweissen-schneiden-essen",
+    leadsCapturedCount: 312,
+    featured: true,
+    status: "Past Exhibition"
+  }
+];
+
 

@@ -19,16 +19,166 @@ import {
 import type { Order } from '../../types';
 
 export const OrdersManager: React.FC = () => {
-  const { orders, updateOrderStage, deleteOrder, showNotification, currentEmployee } = useApp();
+  const { 
+    orders, 
+    updateOrderStage, 
+    deleteOrder, 
+    showNotification, 
+    currentEmployee,
+    invoices,
+    addInvoice,
+    setActiveView,
+    companySettings
+  } = useApp();
 
   const [selectedOrderForInvoice, setSelectedOrderForInvoice] = useState<Order | null>(null);
   const [selectedOrderForDispatch, setSelectedOrderForDispatch] = useState<Order | null>(null);
+  const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
+  const [isSubmittingDispatch, setIsSubmittingDispatch] = useState(false);
+  const [confirmDeleteOrderId, setConfirmDeleteOrderId] = useState<string | null>(null);
 
   const [dispatchForm, setDispatchForm] = useState({
     courierPartner: 'DHL Express Industrial Freight',
     courierTrackingNo: 'WEL-DHL-9982410',
     dispatchDate: new Date().toISOString().split('T')[0],
   });
+
+  const handleGenerateInvoice = async (ord: Order) => {
+    if (isGeneratingInvoice) return;
+
+    // Check if an invoice already exists for this order to prevent duplicate invoices
+    const existing = (invoices || []).find(inv => 
+      inv && (inv.orderId === ord.id || (inv as any).orderNumber === ord.orderNumber || (inv.quotationRef && inv.quotationRef === ord.orderNumber))
+    );
+    if (existing) {
+      showNotification(`Tax Invoice ${existing.invoiceNumber} is already generated for Order ${ord.orderNumber}! Navigating to Billing...`, 'info');
+      setActiveView('crm-invoices');
+      return;
+    }
+
+    setIsGeneratingInvoice(true);
+    try {
+      const invNumber = `WEL-INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const totalUSD = ord.totalValueUSD || 15000;
+      const taxableUSD = Math.round(totalUSD / 1.18);
+      const taxUSD = totalUSD - taxableUSD;
+
+      const newInvoice: any = {
+        id: `inv-${Date.now()}`,
+        invoiceNumber: invNumber,
+        orderId: ord.id,
+        orderNumber: ord.orderNumber,
+        quotationRef: ord.orderNumber,
+        poNumber: `PO-${ord.orderNumber.replace(/[^0-9]/g, '') || Math.floor(1000 + Math.random() * 9000)}`,
+        poDate: new Date().toISOString().slice(0, 10),
+        companyName: ord.companyName,
+        contactPerson: ord.contactName,
+        seller: {
+          companyName: companySettings?.legalEntityName || companySettings?.legalName || companySettings?.companyName || '',
+          address: (() => {
+            let addr = '';
+            if (companySettings?.factoryPlantAddress) return companySettings.factoryPlantAddress;
+            if (typeof companySettings?.registeredOfficeAddress === 'string') return companySettings.registeredOfficeAddress;
+            if (companySettings?.registeredOfficeAddress?.addressLine1) {
+              const parts = [companySettings.registeredOfficeAddress.addressLine1, companySettings.registeredOfficeAddress.addressLine2, companySettings.registeredOfficeAddress.city, companySettings.registeredOfficeAddress.state].filter(Boolean);
+              addr = parts.join(', ');
+              if (companySettings.registeredOfficeAddress.pincode) addr += ` - ${companySettings.registeredOfficeAddress.pincode}`;
+              return addr;
+            }
+            return companySettings?.registeredOffice || '';
+          })(),
+          gstin: companySettings?.gstinNumber || companySettings?.gstin || '',
+          pan: companySettings?.panNumber || '',
+          state: companySettings?.state || (typeof companySettings?.registeredOfficeAddress === 'object' ? companySettings?.registeredOfficeAddress?.state : '') || '',
+          stateCode: companySettings?.stateCode || '',
+          email: companySettings?.supportEmail || companySettings?.primaryEmail || '',
+          phone: companySettings?.salesPhone || companySettings?.primaryPhone || '',
+          bankName: companySettings?.primaryBank?.bankName || companySettings?.bankName || '',
+          accountNo: companySettings?.primaryBank?.accountNumber || (companySettings?.primaryBank as any)?.accountNo || companySettings?.bankAccountNumber || '',
+          ifscCode: (companySettings?.primaryBank?.ifscCode || companySettings?.ifscCode || '').toUpperCase(),
+          branch: companySettings?.primaryBank?.branch || companySettings?.bankBranch || ''
+        },
+        buyer: {
+          companyName: ord.companyName || 'Buyer Company',
+          contactName: ord.contactName || 'Procurement Incharge',
+          billingAddress: (ord as any).billingAddress || 'Industrial Area, India',
+          shippingAddress: (ord as any).shippingAddress || (ord as any).billingAddress || 'Factory Gate, India',
+          gstin: (ord as any).gstin || '',
+          pan: (ord as any).pan || '',
+          state: (ord as any).state || '',
+          stateCode: (ord as any).stateCode || '',
+          email: (ord as any).email || 'procurement@client.com',
+          phone: (ord as any).phone || '+91 98250 99881'
+        },
+        taxType: 'INTER_STATE',
+        gstRatePct: 18,
+        agent: {
+          hasAgent: false,
+          agentName: '',
+          agentPhone: '',
+          commissionType: 'PERCENT',
+          commissionRate: 0,
+          commissionAmountUSD: 0
+        },
+        items: ord.items && ord.items.length > 0 ? ord.items.map((it: any, i: number) => ({
+          id: `item-${Date.now()}-${i}`,
+          description: it.productName || it.description || `Industrial Component #${i + 1}`,
+          sku: it.sku || `WLD-ORD-${i + 1}`,
+          hsnCode: it.hsnCode || '8481.80.30',
+          quantity: it.quantity || 1,
+          unit: it.unit || 'PCS',
+          unitPriceUSD: it.unitPriceUSD || taxableUSD,
+          discountPct: it.discountPct || 0,
+          taxableAmountUSD: it.taxableAmountUSD || taxableUSD,
+          cgstAmountUSD: 0,
+          sgstAmountUSD: 0,
+          igstAmountUSD: taxUSD,
+          totalUSD: totalUSD
+        })) : [
+          {
+            id: `item-${Date.now()}`,
+            description: `Industrial Precision Components Order ${ord.orderNumber}`,
+            sku: 'WLD-ORD-01',
+            hsnCode: '8481.80.30',
+            quantity: 1,
+            unit: 'SET',
+            unitPriceUSD: taxableUSD,
+            discountPct: 0,
+            taxableAmountUSD: taxableUSD,
+            cgstAmountUSD: 0,
+            sgstAmountUSD: 0,
+            igstAmountUSD: taxUSD,
+            totalUSD: totalUSD
+          }
+        ],
+        paymentTerms: companySettings?.defaultTerms?.paymentTerms || '30% Advance, 70% against Shipping Documents',
+        deliveryTerms: companySettings?.defaultTerms?.deliveryTerms || 'Ex-Factory Weldor Plant / FOB',
+        dispatchThrough: 'Industrial Road Logistics',
+        destination: 'Client Factory Gate',
+        subtotalUSD: taxableUSD,
+        totalDiscountUSD: 0,
+        taxableTotalUSD: taxableUSD,
+        cgstTotalUSD: 0,
+        sgstTotalUSD: 0,
+        igstTotalUSD: taxUSD,
+        totalTaxUSD: taxUSD,
+        freightCostUSD: 0,
+        packagingCostUSD: 0,
+        grandTotalUSD: totalUSD,
+        grandTotalINR: Math.round(totalUSD * 85),
+        paymentStatus: 'Pending Payment',
+        status: 'Pending Payment',
+        issueDate: new Date().toISOString().slice(0, 10),
+        dueDate: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+        createdAt: new Date().toISOString()
+      };
+      await addInvoice(newInvoice);
+      showNotification(`Tax Invoice ${invNumber} generated and saved to Billing System!`, 'success');
+      setActiveView('crm-invoices');
+    } finally {
+      setIsGeneratingInvoice(false);
+    }
+  };
 
   const orderStages: Order['stage'][] = [
     'Confirmed',
@@ -41,28 +191,64 @@ export const OrdersManager: React.FC = () => {
 
   const handleDispatchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedOrderForDispatch) return;
+    if (!selectedOrderForDispatch || isSubmittingDispatch) return;
 
-    updateOrderStage(selectedOrderForDispatch.id, 'Dispatched', {
-      courierPartner: dispatchForm.courierPartner,
-      courierTrackingNo: dispatchForm.courierTrackingNo,
-      dispatchDate: dispatchForm.dispatchDate,
-    });
+    setIsSubmittingDispatch(true);
+    try {
+      updateOrderStage(selectedOrderForDispatch.id, 'Dispatched', {
+        courierPartner: dispatchForm.courierPartner,
+        courierTrackingNo: dispatchForm.courierTrackingNo,
+        dispatchDate: dispatchForm.dispatchDate,
+      });
 
-    setSelectedOrderForDispatch(null);
-    showNotification(`Dispatch manifest & tracking recorded for ${selectedOrderForDispatch.orderNumber}`, 'success');
+      setSelectedOrderForDispatch(null);
+      showNotification(`Dispatch manifest & tracking recorded for ${selectedOrderForDispatch.orderNumber}`, 'success');
+    } finally {
+      setIsSubmittingDispatch(false);
+    }
   };
 
   const [filterMode, setFilterMode] = useState<'active' | 'completed' | 'all'>('active');
 
-  const filteredOrders = orders.filter(ord => {
-    if (filterMode === 'active') return ord.stage !== 'Delivered' && (ord.stage as string) !== 'Cancelled';
-    if (filterMode === 'completed') return ord.stage === 'Delivered';
-    return true;
-  });
+  // Strictly deduplicate orders by ID, orderNumber, quotationId, and content signature
+  const dedupedOrders = React.useMemo(() => {
+    const seenIds = new Set<string>();
+    const seenNumbers = new Set<string>();
+    const seenQuoteIds = new Set<string>();
+    const seenSignatures = new Set<string>();
+    const deduped: Order[] = [];
 
-  const activeOrdersCount = orders.filter(o => o.stage !== 'Delivered' && (o.stage as string) !== 'Cancelled').length;
-  const completedOrdersCount = orders.filter(o => o.stage === 'Delivered').length;
+    for (const ord of (orders || [])) {
+      if (!ord || !ord.id) continue;
+      const num = (ord.orderNumber || '').trim().toUpperCase();
+      const qId = (ord.quotationId || '').trim();
+      const sig = `${(ord.companyName || '').trim()}_${ord.totalValueUSD}_${(ord.items || []).length}`;
+
+      if (seenIds.has(ord.id)) continue;
+      if (num && seenNumbers.has(num)) continue;
+      if (qId && seenQuoteIds.has(qId)) continue;
+      if (sig && seenSignatures.has(sig)) continue;
+
+      seenIds.add(ord.id);
+      if (num) seenNumbers.add(num);
+      if (qId) seenQuoteIds.add(qId);
+      seenSignatures.add(sig);
+      deduped.push(ord);
+    }
+    return deduped;
+  }, [orders]);
+
+  const filteredOrders = React.useMemo(() => {
+    return dedupedOrders.filter(ord => {
+      if (filterMode === 'active') return ord.stage !== 'Delivered' && (ord.stage as string) !== 'Cancelled';
+      if (filterMode === 'completed') return ord.stage === 'Delivered';
+      return true;
+    });
+  }, [dedupedOrders, filterMode]);
+
+  const activeOrdersCount = dedupedOrders.filter(o => o.stage !== 'Delivered' && (o.stage as string) !== 'Cancelled').length;
+  const completedOrdersCount = dedupedOrders.filter(o => o.stage === 'Delivered').length;
+  const allOrdersCount = dedupedOrders.length;
 
   return (
     <div className="p-6 space-y-6 text-slate-900">
@@ -106,7 +292,7 @@ export const OrdersManager: React.FC = () => {
                 filterMode === 'all' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              All ({orders.length})
+              All ({allOrdersCount})
             </button>
           </div>
         </div>
@@ -146,9 +332,26 @@ export const OrdersManager: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900 font-heading mt-1">
-                    {ord.companyName} <span className="text-slate-500 font-normal text-sm">({ord.contactName})</span>
-                  </h3>
+                  {(() => {
+                    const companyName = ord.companyName || (ord as any).buyer?.companyName || 'Enterprise Client';
+                    const contactName = ord.contactName || (ord as any).buyer?.contactName || 'Purchasing Lead';
+                    const gstin = (ord as any).gstin || (ord as any).buyer?.gstin;
+                    const state = (ord as any).state || (ord as any).buyer?.state;
+                    return (
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-900 font-heading mt-1">
+                          {companyName} <span className="text-slate-500 font-normal text-sm">({contactName})</span>
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-3 text-slate-500 text-[11px] font-mono mt-0.5">
+                          {gstin && <span>GSTIN: <strong className="text-slate-700">{gstin}</strong></span>}
+                          {state && <span>State: <strong className="text-slate-700">{state}</strong></span>}
+                          {(ord as any).quotationNumber && (
+                            <span className="text-orange-700 font-bold">Ref Quote: {(ord as any).quotationNumber}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -158,11 +361,39 @@ export const OrdersManager: React.FC = () => {
 
                   <button
                     onClick={() => setSelectedOrderForInvoice(ord)}
-                    className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 text-slate-800 border-slate-300 bg-white hover:bg-slate-50 shadow-xs"
+                    className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 text-slate-800 border-slate-300 bg-white hover:bg-slate-50 shadow-xs cursor-pointer"
                   >
                     <FileText className="w-4 h-4 text-orange-600" />
-                    <span className="font-bold">View Tax Invoice PDF</span>
+                    <span className="font-bold">View PDF</span>
                   </button>
+
+                  {(() => {
+                    const linkedInvoice = (invoices || []).find((inv: any) => 
+                      inv && (inv.orderId === ord.id || (inv as any).orderNumber === ord.orderNumber || (inv.quotationRef && inv.quotationRef === ord.orderNumber))
+                    );
+                    if (linkedInvoice) {
+                      return (
+                        <button
+                          onClick={() => setActiveView('crm-invoices')}
+                          className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-mono font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                          title={`Tax Invoice ${linkedInvoice.invoiceNumber} already created`}
+                        >
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          <span>Invoice: {linkedInvoice.invoiceNumber} →</span>
+                        </button>
+                      );
+                    }
+                    return (
+                      <button
+                        onClick={() => handleGenerateInvoice(ord)}
+                        disabled={isGeneratingInvoice}
+                        className="btn-primary text-xs py-2 px-3 flex items-center gap-1.5 shadow-xs cursor-pointer"
+                      >
+                        <FileText className="w-4 h-4" />
+                        <span className="font-bold">Generate Tax Invoice →</span>
+                      </button>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -204,30 +435,82 @@ export const OrdersManager: React.FC = () => {
                 </div>
               </div>
 
-              {/* Items & Specs Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono bg-slate-50 p-4 rounded-xl border border-slate-200">
-                <div>
-                  <span className="text-slate-500 block text-[10px] font-bold">TOTAL ORDER VALUE</span>
-                  <span className="text-slate-900 font-extrabold text-base">
-                    ${(ord.totalValueUSD || (ord as any).totalAmountUSD || 0).toLocaleString()} USD
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block text-[10px] font-bold">EXPECTED DELIVERY DATE</span>
-                  <span className="text-amber-800 font-bold text-sm">{ord.expectedDeliveryDate || 'TBD'}</span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block text-[10px] font-bold">COURIER & DISPATCH MANIFEST</span>
-                  <span className="text-slate-900 font-bold text-xs">
-                    {(ord as any).courierPartner || 'Pending Carrier Assignment'}
-                  </span>
-                  {(ord as any).courierTrackingNo && (
-                    <p className="text-[10px] text-emerald-700 font-bold mt-0.5">
-                      Track: {(ord as any).courierTrackingNo}
-                    </p>
-                  )}
-                </div>
-              </div>
+              {/* Itemized Products & Financial Breakdown (matching Commercial Quotation) */}
+              {(() => {
+                const items = ord.items || (ord as any).lineItems || [];
+                const grandTotalINR = (ord as any).grandTotalINR || Math.round((ord.totalValueUSD || 0) * 85);
+                const taxableINR = (ord as any).taxableTotalUSD 
+                  ? Math.round((ord as any).taxableTotalUSD * 85) 
+                  : Math.round(grandTotalINR / 1.18);
+                const taxINR = (ord as any).totalTaxUSD 
+                  ? Math.round((ord as any).totalTaxUSD * 85) 
+                  : Math.max(0, grandTotalINR - taxableINR);
+                const freightINR = Math.round(((ord as any).freightCostUSD || 0) * 85);
+                const packagingINR = Math.round(((ord as any).packagingCostUSD || 0) * 85);
+
+                return (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                      <div>
+                        <span className="text-slate-400 text-[10px] uppercase block font-bold">Itemized Products</span>
+                        <p className="font-bold text-slate-800 mt-0.5">
+                          {items.length} Product Line {items.length === 1 ? 'Item' : 'Items'}
+                        </p>
+                        <p className="text-slate-600 text-[11px] truncate mt-0.5" title={items.map((it: any) => `${it.productName} (${it.quantity} ${it.unit || 'PCS'})`).join(', ')}>
+                          {items.length > 0 
+                            ? items.map((it: any) => `${it.productName} (${it.quantity} ${it.unit || 'PCS'})`).join(', ')
+                            : 'Standard Industrial Consumables & Custom OEM Components'}
+                        </p>
+                      </div>
+
+                      <div>
+                        <span className="text-slate-400 text-[10px] uppercase block font-bold">Tax & Cost Breakdown</span>
+                        <p className="text-slate-700 mt-0.5">
+                          Taxable: <strong className="text-slate-900">₹{taxableINR.toLocaleString('en-IN')}</strong> | Tax: <strong className="text-emerald-700">₹{taxINR.toLocaleString('en-IN')}</strong>
+                        </p>
+                        <p className="text-slate-500 text-[10px] mt-0.5">
+                          Freight: ₹{freightINR.toLocaleString('en-IN')} | Packaging: ₹{packagingINR.toLocaleString('en-IN')}
+                        </p>
+                      </div>
+
+                      <div>
+                        <span className="text-slate-400 text-[10px] uppercase block font-bold">Destination & Delivery</span>
+                        <p className="text-slate-800 font-bold mt-0.5 truncate" title={(ord as any).shippingAddress || 'Client Factory Gate'}>
+                          {(ord as any).shippingAddress || 'Client Factory Gate, India'}
+                        </p>
+                        <p className="text-amber-800 font-bold text-[11px] mt-0.5">
+                          Expected: {ord.expectedDeliveryDate || 'TBD'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Logistics & Value Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono bg-orange-50/40 p-4 rounded-xl border border-orange-100">
+                      <div>
+                        <span className="text-slate-500 block text-[10px] font-bold uppercase">TOTAL ORDER VALUE (INCL. GST)</span>
+                        <span className="text-orange-600 font-black text-xl">
+                          ₹{grandTotalINR.toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block text-[10px] font-bold uppercase">EXPECTED DELIVERY DATE</span>
+                        <span className="text-amber-800 font-bold text-sm">{ord.expectedDeliveryDate || 'TBD'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block text-[10px] font-bold uppercase">COURIER & DISPATCH MANIFEST</span>
+                        <span className="text-slate-900 font-bold text-xs">
+                          {(ord as any).courierPartner || 'Pending Carrier Assignment'}
+                        </span>
+                        {(ord as any).courierTrackingNo && (
+                          <p className="text-[10px] text-emerald-700 font-bold mt-0.5">
+                            Track: {(ord as any).courierTrackingNo}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
 
               {/* Order Actions */}
               <div className="pt-2 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 text-xs">
@@ -263,16 +546,36 @@ export const OrdersManager: React.FC = () => {
                     </button>
                   )}
 
-                  <button
-                    onClick={() => {
-                      if (window.confirm(`Are you sure you want to cancel and remove order ${ord.orderNumber}?`)) {
-                        deleteOrder(ord.id);
-                      }
-                    }}
-                    className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 font-mono font-bold transition-colors"
-                  >
-                    Cancel / Delete Order
-                  </button>
+                  {confirmDeleteOrderId === ord.id ? (
+                    <div className="flex items-center gap-1.5 bg-rose-50 border border-rose-300 p-1 rounded-xl">
+                      <span className="text-[11px] font-bold text-rose-900 px-1 font-mono">Delete Order?</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          deleteOrder(ord.id);
+                          setConfirmDeleteOrderId(null);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-mono font-bold text-xs cursor-pointer shadow-xs transition-colors"
+                      >
+                        Yes, Delete
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteOrderId(null)}
+                        className="px-2 py-1 rounded-lg bg-white text-slate-700 hover:bg-slate-100 font-mono text-xs cursor-pointer border border-slate-200 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteOrderId(ord.id)}
+                      className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 font-mono font-bold transition-colors cursor-pointer"
+                    >
+                      Cancel / Delete Order
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -425,15 +728,26 @@ export const OrdersManager: React.FC = () => {
               <div className="grid grid-cols-2 gap-8 text-xs font-mono bg-slate-50 p-4 rounded-xl border border-slate-200">
                 <div>
                   <span className="text-slate-500 font-bold uppercase block mb-1">Billed To (Customer):</span>
-                  <p className="font-bold text-slate-900 text-sm">{selectedOrderForInvoice.companyName}</p>
-                  <p className="text-slate-700">Attn: {selectedOrderForInvoice.contactName}</p>
-                  <p className="text-slate-600">Industrial OEM Division</p>
+                  <p className="font-bold text-slate-900 text-sm">
+                    {selectedOrderForInvoice.companyName || (selectedOrderForInvoice as any).buyer?.companyName || 'Enterprise Client'}
+                  </p>
+                  <p className="text-slate-700">
+                    Attn: {selectedOrderForInvoice.contactName || (selectedOrderForInvoice as any).buyer?.contactName || 'Purchasing Lead'}
+                  </p>
+                  {((selectedOrderForInvoice as any).gstin || (selectedOrderForInvoice as any).buyer?.gstin) && (
+                    <p className="text-slate-600">GSTIN: {(selectedOrderForInvoice as any).gstin || (selectedOrderForInvoice as any).buyer?.gstin}</p>
+                  )}
+                  {((selectedOrderForInvoice as any).state || (selectedOrderForInvoice as any).buyer?.state) && (
+                    <p className="text-slate-600">State: {(selectedOrderForInvoice as any).state || (selectedOrderForInvoice as any).buyer?.state}</p>
+                  )}
                 </div>
                 <div>
                   <span className="text-slate-500 font-bold uppercase block mb-1">Shipping & Dispatch Manifest:</span>
-                  <p className="font-bold text-slate-900">Carrier: {(selectedOrderForInvoice as any).courierPartner || 'DHL Industrial Freight'}</p>
-                  <p className="text-slate-700">Airway Bill: {(selectedOrderForInvoice as any).courierTrackingNo || 'WEL-TRK-771928'}</p>
-                  <p className="text-slate-600">Dispatch Date: {(selectedOrderForInvoice as any).dispatchDate || '2026-09-13'}</p>
+                  <p className="font-bold text-slate-900">
+                    Destination: {(selectedOrderForInvoice as any).shippingAddress || (selectedOrderForInvoice as any).buyer?.shippingAddress || 'Client Factory Gate'}
+                  </p>
+                  <p className="text-slate-700">Carrier: {(selectedOrderForInvoice as any).courierPartner || 'Industrial Road Logistics'}</p>
+                  <p className="text-slate-600">Tracking: {(selectedOrderForInvoice as any).courierTrackingNo || 'Pending Assignment'}</p>
                 </div>
               </div>
 
@@ -444,8 +758,8 @@ export const OrdersManager: React.FC = () => {
                     <th className="p-3 border-b border-slate-200">Item & Description</th>
                     <th className="p-3 border-b border-slate-200">HSN Code</th>
                     <th className="p-3 border-b border-slate-200 text-right">Qty</th>
-                    <th className="p-3 border-b border-slate-200 text-right">Unit Price ($)</th>
-                    <th className="p-3 border-b border-slate-200 text-right">Total ($)</th>
+                    <th className="p-3 border-b border-slate-200 text-right">Unit Price (₹)</th>
+                    <th className="p-3 border-b border-slate-200 text-right">Total (₹)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 font-mono text-slate-800">
@@ -457,30 +771,49 @@ export const OrdersManager: React.FC = () => {
                       </td>
                       <td className="p-3 text-slate-600">8412.21.00</td>
                       <td className="p-3 text-right font-bold">{item.quantity} PCS</td>
-                      <td className="p-3 text-right">${(item.unitPriceUSD || item.unitPrice || 0).toLocaleString()}</td>
-                      <td className="p-3 text-right font-bold text-slate-900">${(item.totalPriceUSD || (item.quantity * (item.unitPriceUSD || item.unitPrice || 0)) || 0).toLocaleString()}</td>
+                      <td className="p-3 text-right">₹{Math.round((item.unitPriceUSD || item.unitPrice || 0) * 85).toLocaleString('en-IN')}</td>
+                      <td className="p-3 text-right font-bold text-slate-900">₹{Math.round((item.totalPriceUSD || (item.quantity * (item.unitPriceUSD || item.unitPrice || 0)) || 0) * 85).toLocaleString('en-IN')}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
 
               {/* Calculation Summary */}
-              <div className="flex justify-end pt-2">
-                <div className="w-72 space-y-2 text-xs font-mono">
-                  <div className="flex justify-between text-slate-600">
-                    <span>Subtotal:</span>
-                    <span className="font-bold">${(selectedOrderForInvoice.totalValueUSD || (selectedOrderForInvoice as any).totalAmountUSD || 0).toLocaleString()} USD</span>
+              {(() => {
+                const grandTotal = (selectedOrderForInvoice as any).grandTotalINR || Math.round((selectedOrderForInvoice.totalValueUSD || 0) * 85);
+                const taxableVal = (selectedOrderForInvoice as any).taxableTotalUSD 
+                  ? Math.round((selectedOrderForInvoice as any).taxableTotalUSD * 85) 
+                  : Math.round(grandTotal / 1.18);
+                const taxVal = (selectedOrderForInvoice as any).totalTaxUSD 
+                  ? Math.round((selectedOrderForInvoice as any).totalTaxUSD * 85) 
+                  : Math.max(0, grandTotal - taxableVal);
+                const freightVal = Math.round(((selectedOrderForInvoice as any).freightCostUSD || 0) * 85);
+
+                return (
+                  <div className="flex justify-end pt-2">
+                    <div className="w-80 space-y-2 text-xs font-mono">
+                      <div className="flex justify-between text-slate-600">
+                        <span>Taxable Subtotal:</span>
+                        <span className="font-bold">₹{taxableVal.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <span>GST Tax Total:</span>
+                        <span className="font-bold">₹{taxVal.toLocaleString('en-IN')}</span>
+                      </div>
+                      {freightVal > 0 && (
+                        <div className="flex justify-between text-slate-600">
+                          <span>Freight & Packaging:</span>
+                          <span className="font-bold">₹{freightVal.toLocaleString('en-IN')}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-slate-900 text-sm font-extrabold border-t-2 border-slate-900 pt-2">
+                        <span>Grand Total (Incl. GST):</span>
+                        <span className="text-orange-700">₹{grandTotal.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-slate-600">
-                    <span>Estimated Tax / Export Duty:</span>
-                    <span className="font-bold">$0.00 (Zero Rated Export)</span>
-                  </div>
-                  <div className="flex justify-between text-slate-900 text-sm font-extrabold border-t-2 border-slate-900 pt-2">
-                    <span>Grand Total:</span>
-                    <span className="text-orange-700">${(selectedOrderForInvoice.totalValueUSD || (selectedOrderForInvoice as any).totalAmountUSD || 0).toLocaleString()} USD</span>
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* Signatures & Seal Stamp */}
               <div className="pt-8 border-t border-slate-200 flex items-center justify-between text-xs font-mono">

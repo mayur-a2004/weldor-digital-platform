@@ -16,7 +16,7 @@ import {
   Eye,
   Layers,
   FileText,
-  DollarSign,
+  IndianRupee,
   Upload,
   Image as ImageIcon,
   Key,
@@ -32,7 +32,8 @@ import {
   FileSpreadsheet,
   UploadCloud,
   Check,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import type { Product, ProductSpecification } from '../../types';
 
@@ -108,16 +109,13 @@ export const ProductCatalogManager: React.FC = () => {
     industries: ['Automotive', 'Automation & Robotics', 'Heavy Engineering'],
     applications: ['Robotic Fixture', 'Hydraulic Press', 'Assembly Line'],
     materials: ['Hard Anodized Aluminum', 'SS304 Piston Rod', 'Viton Seals'],
-    image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=800',
-    gallery: [
-      'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&q=80&w=800'
-    ],
-    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    image: '',
+    gallery: [],
+    videoUrl: '',
     videoThumbnail: '',
-    catalogPdfUrl: 'https://weldorindustries.com/catalogs/Weldor-Product-Catalog.pdf',
+    catalogPdfUrl: '',
     datasheetUrl: '',
-    cadDrawingUrl: 'https://weldorindustries.com/drawings/Weldor-3D-CAD.step',
+    cadDrawingUrl: '',
     priceUSD: 150,
     priceINR: 12500,
     minOrderQty: 5,
@@ -137,7 +135,7 @@ export const ProductCatalogManager: React.FC = () => {
     seoMetaDescription: ''
   });
 
-  // Temporary inputs for array tags
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
   const [newKeywordInput, setNewKeywordInput] = useState('');
   const [newGalleryUrlInput, setNewGalleryUrlInput] = useState('');
   const [newIndustryInput, setNewIndustryInput] = useState('');
@@ -145,13 +143,14 @@ export const ProductCatalogManager: React.FC = () => {
   const [newMaterialInput, setNewMaterialInput] = useState('');
 
   // Filtering Logic
-  const filteredProducts = products.filter(p => {
-    const q = searchQuery.toLowerCase();
-    const matchesSearch = 
-      p.name.toLowerCase().includes(q) || 
-      p.sku.toLowerCase().includes(q) ||
+  const filteredProducts = (products || []).filter(p => {
+    if (!p) return false;
+    const q = (searchQuery || '').trim().toLowerCase();
+    const matchesSearch = !q ||
+      (p.name || '').toLowerCase().includes(q) || 
+      (p.sku || '').toLowerCase().includes(q) ||
       (p.modelNumber && p.modelNumber.toLowerCase().includes(q)) ||
-      (p.seoKeywords && p.seoKeywords.some(k => k.toLowerCase().includes(q)));
+      (Array.isArray(p.seoKeywords) && p.seoKeywords.some(k => (k || '').toLowerCase().includes(q)));
     
     const matchesCat = selectedCategoryFilter === 'All' || p.category === selectedCategoryFilter;
     const matchesStatus = statusFilter === 'All' || (p.status || 'Active') === statusFilter;
@@ -189,16 +188,13 @@ export const ProductCatalogManager: React.FC = () => {
       industries: ['Automotive', 'Automation & Robotics', 'Heavy Engineering'],
       applications: ['Robotic Fixture', 'Hydraulic Press', 'Assembly Line'],
       materials: ['Hard Anodized Aluminum', 'SS304 Piston Rod', 'Viton Seals'],
-      image: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=800',
-      gallery: [
-        'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=800',
-        'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&q=80&w=800'
-      ],
-      videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+      image: '',
+      gallery: [],
+      videoUrl: '',
       videoThumbnail: '',
-      catalogPdfUrl: 'https://weldorindustries.com/catalogs/Weldor-Product-Catalog.pdf',
+      catalogPdfUrl: '',
       datasheetUrl: '',
-      cadDrawingUrl: 'https://weldorindustries.com/drawings/Weldor-3D-CAD.step',
+      cadDrawingUrl: '',
       priceUSD: 150,
       priceINR: 12500,
       minOrderQty: 5,
@@ -239,8 +235,8 @@ export const ProductCatalogManager: React.FC = () => {
       industries: prod.industries || ['Automotive', 'Aerospace'],
       applications: prod.applications || ['Automation Cell'],
       materials: prod.materials || ['SS304', 'Aluminum Alloy'],
-      image: prod.image,
-      gallery: prod.gallery && prod.gallery.length > 0 ? prod.gallery : [prod.image],
+      image: prod.image || '',
+      gallery: prod.gallery && prod.gallery.length > 0 ? prod.gallery : (prod.image ? [prod.image] : []),
       videoUrl: prod.videoUrl || '',
       videoThumbnail: prod.videoThumbnail || '',
       catalogPdfUrl: prod.catalogPdfUrl || '',
@@ -316,32 +312,42 @@ export const ProductCatalogManager: React.FC = () => {
     }));
   };
 
-  // Helper for Real File Upload (Cloudinary CDN / Server API with fallback)
+  // Helper for Real File Upload (Cloudinary CDN)
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, targetField: 'image' | 'gallery' | 'videoUrl' | 'catalogPdfUrl' | 'cadDrawingUrl') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    showNotification(`Uploading "${file.name}"...`, 'info');
-    let uploadedUrl = '';
+    setUploadingField(targetField);
+    showNotification(`Uploading "${file.name}" to Cloudinary CDN...`, 'info');
     try {
-      const res = await api.uploadFile(file);
+      const res = await api.uploadFile(file, 'weldor-products');
       if (res?.success && (res?.data?.cdnUrl || res?.data?.url)) {
-        uploadedUrl = res.data.cdnUrl || res.data.url;
+        const uploadedUrl = res.data.cdnUrl || res.data.url;
+
+        if (targetField === 'gallery') {
+          setFormData(prev => ({ 
+            ...prev, 
+            gallery: [...prev.gallery, uploadedUrl],
+            ...(!prev.image ? { image: uploadedUrl } : {})
+          }));
+          showNotification(`Added "${file.name}" to gallery!`, 'success');
+        } else if (targetField === 'image') {
+          setFormData(prev => ({ ...prev, image: uploadedUrl, gallery: prev.gallery.includes(uploadedUrl) ? prev.gallery : [uploadedUrl, ...prev.gallery] }));
+          showNotification(`Thumbnail updated to "${file.name}"!`, 'success');
+        } else {
+          setFormData(prev => ({ ...prev, [targetField]: uploadedUrl }));
+          showNotification(`Uploaded "${file.name}" successfully!`, 'success');
+        }
+      } else {
+        console.error('Upload response error:', res);
+        showNotification(`Upload failed for "${file.name}". Please check connection and try again.`, 'warning');
       }
     } catch (err) {
-      console.warn('Upload error, fallback:', err);
-    }
-    const finalUrl = uploadedUrl || URL.createObjectURL(file);
-
-    if (targetField === 'gallery') {
-      setFormData(prev => ({ ...prev, gallery: [...prev.gallery, finalUrl] }));
-      showNotification(`Added "${file.name}" to gallery!`, 'success');
-    } else if (targetField === 'image') {
-      setFormData(prev => ({ ...prev, image: finalUrl, gallery: prev.gallery.includes(finalUrl) ? prev.gallery : [finalUrl, ...prev.gallery] }));
-      showNotification(`Thumbnail updated to "${file.name}"!`, 'success');
-    } else {
-      setFormData(prev => ({ ...prev, [targetField]: finalUrl }));
-      showNotification(`Uploaded "${file.name}" successfully!`, 'success');
+      console.error('Upload error:', err);
+      showNotification(`Upload error for "${file.name}". Please try again.`, 'warning');
+    } finally {
+      setUploadingField(null);
+      e.target.value = '';
     }
   };
 
@@ -868,7 +874,7 @@ export const ProductCatalogManager: React.FC = () => {
 
                   {/* Pricing & MOQ */}
                   <td className="p-3.5 font-mono">
-                    <div className="font-bold text-slate-900">${p.priceUSD || 150} USD</div>
+                    <div className="font-bold text-slate-900">₹{(p.priceINR || (p.priceUSD ? p.priceUSD * 85 : 4500)).toLocaleString('en-IN')}</div>
                     <div className="text-[11px] text-slate-500">MOQ: {p.minOrderQty} pcs | {p.standardLeadTimeDays}d</div>
                   </td>
 
@@ -1024,7 +1030,7 @@ export const ProductCatalogManager: React.FC = () => {
             </div>
 
             {/* Modal Body Form Scroll Area */}
-            <form onSubmit={handleSaveProduct} className="flex-1 overflow-y-auto p-6 space-y-6">
+            <form onSubmit={handleSaveProduct} noValidate className="flex-1 overflow-y-auto p-6 space-y-6">
               
               {/* TAB 1: VITAL INFO */}
               {activeFormTab === 'vital' && (
@@ -1244,22 +1250,35 @@ export const ProductCatalogManager: React.FC = () => {
                         <h4 className="font-bold text-xs text-slate-900 uppercase font-mono">1. Primary Product Thumbnail Photo</h4>
                         <p className="text-[11px] text-slate-500">Main hero image shown on search cards and catalog index</p>
                       </div>
-                      <label className="btn-secondary text-xs py-1.5 px-3 cursor-pointer shadow-xs flex items-center gap-1.5">
-                        <Upload className="w-3.5 h-3.5 text-orange-600" />
-                        <span>Upload File</span>
-                        <input type="file" accept="image/*" className="hidden" onChange={e => handleFileUpload(e, 'image')} />
+                      <label className={`btn-secondary text-xs py-1.5 px-3 cursor-pointer shadow-xs flex items-center gap-1.5 ${uploadingField === 'image' ? 'opacity-70 pointer-events-none' : ''}`}>
+                        {uploadingField === 'image' ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 text-orange-600 animate-spin" />
+                            <span>Uploading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-3.5 h-3.5 text-orange-600" />
+                            <span>Upload File</span>
+                          </>
+                        )}
+                        <input type="file" accept="image/*" className="hidden" disabled={uploadingField === 'image'} onChange={e => handleFileUpload(e, 'image')} />
                       </label>
                     </div>
 
                     <div className="flex items-center gap-4">
-                      <div className="w-20 h-20 rounded-xl bg-white border border-slate-300 overflow-hidden shrink-0 shadow-xs">
-                        <img src={formData.image} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                      <div className="w-20 h-20 rounded-xl bg-white border border-slate-300 overflow-hidden shrink-0 shadow-xs flex items-center justify-center">
+                        {formData.image ? (
+                          <img src={formData.image} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                        ) : (
+                          <ImageIcon className="w-8 h-8 text-slate-300" />
+                        )}
                       </div>
                       <input
                         type="text"
                         value={formData.image}
                         onChange={e => setFormData({ ...formData, image: e.target.value })}
-                        placeholder="Image URL https://..."
+                        placeholder="Image URL https://... or click Upload File"
                         className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono focus:border-orange-500 focus:outline-none"
                       />
                     </div>
@@ -1273,27 +1292,42 @@ export const ProductCatalogManager: React.FC = () => {
                         <p className="text-[11px] text-slate-500">Multi-angle photos, CAD cutaway renders, and installation views</p>
                       </div>
 
-                      <label className="btn-secondary text-xs py-1.5 px-3 cursor-pointer shadow-xs flex items-center gap-1.5">
-                        <Upload className="w-3.5 h-3.5 text-orange-600" />
-                        <span>Add Photo File</span>
-                        <input type="file" accept="image/*" className="hidden" onChange={e => handleFileUpload(e, 'gallery')} />
+                      <label className={`btn-secondary text-xs py-1.5 px-3 cursor-pointer shadow-xs flex items-center gap-1.5 ${uploadingField === 'gallery' ? 'opacity-70 pointer-events-none' : ''}`}>
+                        {uploadingField === 'gallery' ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 text-orange-600 animate-spin" />
+                            <span>Uploading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-3.5 h-3.5 text-orange-600" />
+                            <span>Add Photo File</span>
+                          </>
+                        )}
+                        <input type="file" accept="image/*" className="hidden" disabled={uploadingField === 'gallery'} onChange={e => handleFileUpload(e, 'gallery')} />
                       </label>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {formData.gallery.map((imgUrl, i) => (
-                        <div key={i} className="relative group rounded-xl border border-slate-300 overflow-hidden bg-white shadow-xs aspect-square">
-                          <img src={imgUrl} alt={`Gallery ${i}`} className="w-full h-full object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => setFormData({ ...formData, gallery: formData.gallery.filter((_, idx) => idx !== i) })}
-                            className="absolute top-1.5 right-1.5 p-1 rounded-full bg-slate-900/80 text-white hover:bg-rose-600 transition-colors"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                    {formData.gallery.length === 0 ? (
+                      <div className="border border-dashed border-slate-300 rounded-xl p-4 text-center text-xs text-slate-500 bg-white">
+                        No gallery photos yet. Click &quot;Add Photo File&quot; above to upload photos to Cloudinary.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {formData.gallery.map((imgUrl, i) => (
+                          <div key={i} className="relative group rounded-xl border border-slate-300 overflow-hidden bg-white shadow-xs aspect-square">
+                            <img src={imgUrl} alt={`Gallery ${i}`} className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setFormData({ ...formData, gallery: formData.gallery.filter((_, idx) => idx !== i) })}
+                              className="absolute top-1.5 right-1.5 p-1 rounded-full bg-slate-900/80 text-white hover:bg-rose-600 transition-colors"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Product Demo Video */}
@@ -1304,10 +1338,19 @@ export const ProductCatalogManager: React.FC = () => {
                         <p className="text-[11px] text-slate-500">Embedded video demo player shown directly on public product detail page</p>
                       </div>
 
-                      <label className="btn-secondary text-xs py-1.5 px-3 cursor-pointer shadow-xs flex items-center gap-1.5">
-                        <Upload className="w-3.5 h-3.5 text-purple-600" />
-                        <span>Upload Video</span>
-                        <input type="file" accept="video/*" className="hidden" onChange={e => handleFileUpload(e, 'videoUrl')} />
+                      <label className={`btn-secondary text-xs py-1.5 px-3 cursor-pointer shadow-xs flex items-center gap-1.5 ${uploadingField === 'videoUrl' ? 'opacity-70 pointer-events-none' : ''}`}>
+                        {uploadingField === 'videoUrl' ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 text-purple-600 animate-spin" />
+                            <span>Uploading...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-3.5 h-3.5 text-purple-600" />
+                            <span>Upload Video</span>
+                          </>
+                        )}
+                        <input type="file" accept="video/*" className="hidden" disabled={uploadingField === 'videoUrl'} onChange={e => handleFileUpload(e, 'videoUrl')} />
                       </label>
                     </div>
 
@@ -1315,13 +1358,21 @@ export const ProductCatalogManager: React.FC = () => {
                       type="text"
                       value={formData.videoUrl}
                       onChange={e => setFormData({ ...formData, videoUrl: e.target.value })}
-                      placeholder="Video URL https://www.w3schools.com/html/mov_bbb.mp4"
+                      placeholder="Video URL https://... or click Upload Video"
                       className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono focus:border-orange-500 focus:outline-none"
                     />
 
                     {formData.videoUrl && (
-                      <div className="rounded-xl overflow-hidden border border-slate-300 max-w-sm bg-black">
+                      <div className="rounded-xl overflow-hidden border border-slate-300 max-w-sm bg-black relative">
                         <video src={formData.videoUrl} controls className="w-full h-36 object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, videoUrl: '' })}
+                          className="absolute top-2 right-2 p-1 bg-black/60 text-white rounded-full hover:bg-rose-600 transition-colors"
+                          title="Remove video"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     )}
                   </div>
@@ -1333,16 +1384,22 @@ export const ProductCatalogManager: React.FC = () => {
                         <h4 className="font-bold text-xs text-slate-900 uppercase font-mono flex items-center gap-1.5">
                           <FileText className="w-3.5 h-3.5 text-emerald-600" /> Catalog / Brochure PDF
                         </h4>
-                        <label className="text-[10px] font-mono text-orange-700 font-bold hover:underline cursor-pointer">
-                          Upload PDF
-                          <input type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={e => handleFileUpload(e, 'catalogPdfUrl')} />
+                        <label className={`text-[10px] font-mono text-orange-700 font-bold hover:underline cursor-pointer flex items-center gap-1 ${uploadingField === 'catalogPdfUrl' ? 'opacity-70 pointer-events-none' : ''}`}>
+                          {uploadingField === 'catalogPdfUrl' ? (
+                            <>
+                              <Loader2 className="w-3 h-3 text-orange-600 animate-spin" /> Uploading...
+                            </>
+                          ) : (
+                            'Upload PDF'
+                          )}
+                          <input type="file" accept=".pdf,.doc,.docx" className="hidden" disabled={uploadingField === 'catalogPdfUrl'} onChange={e => handleFileUpload(e, 'catalogPdfUrl')} />
                         </label>
                       </div>
                       <input
                         type="text"
                         value={formData.catalogPdfUrl}
                         onChange={e => setFormData({ ...formData, catalogPdfUrl: e.target.value })}
-                        placeholder="PDF Link https://..."
+                        placeholder="PDF Link https://... or Upload PDF"
                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono focus:border-orange-500 focus:outline-none"
                       />
                     </div>
@@ -1352,16 +1409,22 @@ export const ProductCatalogManager: React.FC = () => {
                         <h4 className="font-bold text-xs text-slate-900 uppercase font-mono flex items-center gap-1.5">
                           <FileCode className="w-3.5 h-3.5 text-amber-600" /> 3D CAD Model (.STEP / .DWG)
                         </h4>
-                        <label className="text-[10px] font-mono text-orange-700 font-bold hover:underline cursor-pointer">
-                          Upload CAD
-                          <input type="file" accept=".step,.stp,.iges,.igs,.dxf,.dwg" className="hidden" onChange={e => handleFileUpload(e, 'cadDrawingUrl')} />
+                        <label className={`text-[10px] font-mono text-orange-700 font-bold hover:underline cursor-pointer flex items-center gap-1 ${uploadingField === 'cadDrawingUrl' ? 'opacity-70 pointer-events-none' : ''}`}>
+                          {uploadingField === 'cadDrawingUrl' ? (
+                            <>
+                              <Loader2 className="w-3 h-3 text-orange-600 animate-spin" /> Uploading...
+                            </>
+                          ) : (
+                            'Upload CAD'
+                          )}
+                          <input type="file" accept=".step,.stp,.iges,.igs,.dxf,.dwg" className="hidden" disabled={uploadingField === 'cadDrawingUrl'} onChange={e => handleFileUpload(e, 'cadDrawingUrl')} />
                         </label>
                       </div>
                       <input
                         type="text"
                         value={formData.cadDrawingUrl}
                         onChange={e => setFormData({ ...formData, cadDrawingUrl: e.target.value })}
-                        placeholder="3D STEP Link https://..."
+                        placeholder="3D STEP Link https://... or Upload CAD"
                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono focus:border-orange-500 focus:outline-none"
                       />
                     </div>
@@ -1451,26 +1514,28 @@ export const ProductCatalogManager: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-mono font-bold text-slate-700 mb-1">
-                        B2B Unit Price ($ USD)
+                        B2B Unit Price (₹ INR) *
                       </label>
                       <input
                         type="number"
-                        value={formData.priceUSD}
-                        onChange={e => setFormData({ ...formData, priceUSD: Number(e.target.value) })}
+                        required
+                        value={formData.priceINR || (formData.priceUSD ? formData.priceUSD * 85 : '')}
+                        onChange={e => {
+                          const inr = Number(e.target.value) || 0;
+                          setFormData({ ...formData, priceINR: inr, priceUSD: Math.round(inr / 85) });
+                        }}
                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold focus:border-orange-500 focus:outline-none"
+                        placeholder="e.g. 8500"
                       />
                     </div>
 
                     <div>
                       <label className="block text-xs font-mono font-bold text-slate-700 mb-1">
-                        B2B Unit Price (₹ INR)
+                        Standard Currency
                       </label>
-                      <input
-                        type="number"
-                        value={formData.priceINR}
-                        onChange={e => setFormData({ ...formData, priceINR: Number(e.target.value) })}
-                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold focus:border-orange-500 focus:outline-none"
-                      />
+                      <div className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-700 flex items-center gap-1.5">
+                        <span className="font-extrabold text-orange-700">₹ INR</span> (Indian Rupees)
+                      </div>
                     </div>
                   </div>
 
@@ -1737,10 +1802,9 @@ export const ProductCatalogManager: React.FC = () => {
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                   <div>
                     <span className="text-[10px] font-mono text-slate-500 block uppercase font-bold">B2B Commercial Price</span>
-                    <span className="text-2xl font-black text-slate-900 font-mono">${viewingProduct.priceUSD || 150} USD</span>
-                    {viewingProduct.priceINR && (
-                      <span className="text-xs font-mono text-slate-500 ml-2">(₹{viewingProduct.priceINR.toLocaleString()} INR)</span>
-                    )}
+                    <span className="text-2xl font-black text-slate-900 font-mono">
+                      ₹{(viewingProduct.priceINR || (viewingProduct.priceUSD ? viewingProduct.priceUSD * 85 : 4500)).toLocaleString('en-IN')}
+                    </span>
                   </div>
 
                   <span className="text-xs font-mono px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
@@ -1920,7 +1984,7 @@ export const ProductCatalogManager: React.FC = () => {
                           <th className="p-2.5">PRODUCT NAME</th>
                           <th className="p-2.5">SKU</th>
                           <th className="p-2.5">CATEGORY</th>
-                          <th className="p-2.5">PRICE (USD)</th>
+                          <th className="p-2.5">PRICE (INR)</th>
                           <th className="p-2.5">SPECS</th>
                           <th className="p-2.5">HOME SHOWCASE</th>
                         </tr>
@@ -1932,7 +1996,7 @@ export const ProductCatalogManager: React.FC = () => {
                             <td className="p-2.5 font-bold text-slate-900 font-sans max-w-xs truncate">{p.name}</td>
                             <td className="p-2.5 text-orange-700 font-bold">{p.sku}</td>
                             <td className="p-2.5 text-slate-600">{p.category}</td>
-                            <td className="p-2.5 font-bold">${p.priceUSD || 100}</td>
+                            <td className="p-2.5 font-bold">₹{(p.priceINR || (p.priceUSD ? p.priceUSD * 85 : 8000)).toLocaleString('en-IN')}</td>
                             <td className="p-2.5 text-slate-500">{p.specifications?.length || 0} specs</td>
                             <td className="p-2.5">
                               <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${

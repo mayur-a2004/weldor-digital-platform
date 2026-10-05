@@ -52,10 +52,12 @@ mongoose.connection.on('disconnected', () => {
   console.warn('⚠️  MongoDB disconnected. Using in-memory & file storage fallback.');
 });
 
-// Auto-seed collections from bundled JSON files into MongoDB
+// Auto-seed collections from bundled JSON files into MongoDB (ONLY for products, categories, roles, settings)
 const autoSeedFromLocalData = async () => {
   try {
+    const ALLOWED_SEED_COLLECTIONS = ['products', 'categories', 'roles', 'settings'];
     for (const [key, Model] of Object.entries(COLLECTION_MODELS)) {
+      if (!ALLOWED_SEED_COLLECTIONS.includes(key)) continue;
       const count = await Model.countDocuments();
       if (count === 0) {
         const filePath = path.join(BUNDLED_DATA_DIR, `${key}.json`);
@@ -145,7 +147,7 @@ export const db = {
 
     if (isMongoConnected && Model) {
       try {
-        const docs = await Model.find({}).lean();
+        const docs = await Model.find({}).sort({ createdAt: -1 }).lean();
         const cleanDocs = (docs || []).map(d => {
           const { _id, __v, ...rest } = d;
           return { id: rest.id || _id?.toString(), ...rest };
@@ -248,6 +250,9 @@ export const db = {
           if (existing) {
             const updated = { ...existing, ...updates, id: existing.id || id, updatedAt: new Date().toISOString() };
             await Model.findOneAndUpdate(query, { $set: updated }, { upsert: true });
+            items.unshift(updated);
+            inMemoryStore.set(collection, items);
+            writeToFile(collection, items);
             return updated;
           }
         } catch (e) {}

@@ -41,41 +41,14 @@ export const Navbar: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-white/98 backdrop-blur-md border-b border-slate-200 shadow-sm">
-      {/* Top Engineering Micro-Bar (Desktop Only) */}
-      <div className="hidden lg:flex justify-between items-center px-6 py-2 bg-slate-900 text-xs text-slate-200 font-medium">
-        <div className="flex items-center gap-6">
-          <span className="flex items-center gap-1.5 text-orange-400 font-mono font-bold whitespace-nowrap">
-            <ShieldCheck className="w-4 h-4 text-orange-400 shrink-0" /> ISO 9001:2015 & AS9100D Certified Manufacturing
-          </span>
-          <span className="text-slate-600">|</span>
-          <span className="font-mono text-slate-300 font-semibold whitespace-nowrap">Pneumatic • Hydraulic • Welding • Precision CNC</span>
-        </div>
-        
-        <div className="flex items-center gap-6 shrink-0">
-          <a href="tel:+918780098088" className="flex items-center gap-1.5 hover:text-white transition-colors font-mono font-semibold whitespace-nowrap">
-            <PhoneCall className="w-3.5 h-3.5 text-orange-400 shrink-0" /> +91-87800 98088
-          </a>
-          
-          <button 
-            onClick={() => {
-              window.open('https://wa.me/918780098088?text=Hello%20Weldor%20Sales%20Team%2C%20I%20have%20an%20industrial%20enquiry.', '_blank');
-            }}
-            className="text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 font-mono font-bold whitespace-nowrap cursor-pointer"
-          >
-            <MessageSquare className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> WhatsApp Sales
-          </button>
-
-        </div>
-      </div>
-
+    <header className="site-sticky-header sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-xs">
       {/* Main Corporate Navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
           
           {/* Logo */}
           <div 
-            className="flex items-center gap-3 cursor-pointer group shrink-0"
+            className="flex items-center cursor-pointer group shrink-0"
             onClick={() => {
               setActiveView('public-home');
               setMobileMenuOpen(false);
@@ -83,17 +56,9 @@ export const Navbar: React.FC = () => {
           >
             <img 
               src="/weldor-logo.png" 
-              alt="Weldor by Earth Metal Industries" 
-              className="h-7 sm:h-8 md:h-9 w-auto object-contain transition-transform group-hover:scale-105" 
+              alt="Weldor" 
+              className="h-10 sm:h-12 md:h-13 w-auto object-contain transition-transform group-hover:scale-105" 
             />
-            <div className="hidden sm:block border-l border-slate-200 pl-3">
-              <span className="block font-heading font-extrabold text-xs text-slate-900 leading-tight">
-                EARTH METAL INDUSTRIES
-              </span>
-              <p className="text-[9px] font-mono text-slate-500 font-semibold uppercase tracking-wider">
-                Precision B2B Engineering
-              </p>
-            </div>
           </div>
 
           {/* Desktop Navigation Links (Concise 1-Word Clean Single Line) */}

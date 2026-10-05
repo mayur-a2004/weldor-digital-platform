@@ -1,0 +1,11 @@
+[
+  {
+    "id": "usr_admin_1",
+    "username": "admin",
+    "email": "admin@weldorindustries.com",
+    "name": "Super Admin",
+    "role": "Super Admin",
+    "avatar": "/weldor-logo.png",
+    "password": "Weldor@2026"
+  }
+]

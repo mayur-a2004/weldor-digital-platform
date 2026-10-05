@@ -12,7 +12,7 @@ import {
   Plus, 
   Filter, 
   Search, 
-  DollarSign, 
+  IndianRupee, 
   Building2, 
   ArrowUpRight, 
   AlertCircle, 
@@ -81,12 +81,14 @@ export const PayrollManager: React.FC = () => {
   }, [payrolls, selectedMonth]);
 
   const filteredRecords = useMemo(() => {
-    return currentMonthRecords.filter(rec => {
-      const matchesSearch = 
-        rec.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        rec.employeeCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        rec.designation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        rec.bankAccountNumber.includes(searchQuery);
+    const q = (searchQuery || '').trim().toLowerCase();
+    return (currentMonthRecords || []).filter(rec => {
+      if (!rec) return false;
+      const matchesSearch = !q ||
+        (rec.employeeName || '').toLowerCase().includes(q) ||
+        (rec.employeeCode || '').toLowerCase().includes(q) ||
+        (rec.designation || '').toLowerCase().includes(q) ||
+        (rec.bankAccountNumber || '').includes(searchQuery);
 
       const matchesStatus = statusFilter === 'All' || rec.status === statusFilter;
       const matchesDept = departmentFilter === 'All' || rec.department === departmentFilter;
@@ -536,11 +538,17 @@ export const PayrollManager: React.FC = () => {
                       W
                     </div>
                     <div>
-                      <h2 className="text-base font-extrabold text-slate-900 tracking-tight">{companySettings.legalEntityName}</h2>
-                      <p className="text-[10px] text-slate-500 font-mono">CIN: {companySettings.cinNumber} • GSTIN: {companySettings.gstinNumber}</p>
+                      <h2 className="text-base font-extrabold text-slate-900 tracking-tight">
+                        {companySettings?.legalEntityName || companySettings?.companyName || 'Weldor by Earth Metal Industries'}
+                      </h2>
+                      <p className="text-[10px] text-slate-500 font-mono">
+                        CIN: {companySettings?.cinNumber || (companySettings as any)?.corporateCin || 'U29299GJ2005PTC045890'} • GSTIN: {companySettings?.gstinNumber || companySettings?.gstin || '24AAACE1234P1ZV'}
+                      </p>
                     </div>
                   </div>
-                  <p className="text-[10px] text-slate-600 mt-1 max-w-md">{companySettings.registeredOffice}</p>
+                  <p className="text-[10px] text-slate-600 mt-1 max-w-md">
+                    {companySettings?.registeredOffice || companySettings?.factoryPlantAddress || (typeof companySettings?.registeredOfficeAddress === 'string' ? companySettings.registeredOfficeAddress : 'Plot No. 588, G.I.D.C. Phase 2, Dared, Jamnagar – 361004, Gujarat, India')}
+                  </p>
                 </div>
 
                 <div className="text-right">
@@ -650,7 +658,7 @@ export const PayrollManager: React.FC = () => {
               {/* Signatures & Verification */}
               <div className="pt-8 border-t border-slate-300 flex items-center justify-between text-[11px] text-slate-600">
                 <div>
-                  <p className="font-bold text-slate-800">For Weldor Industries Private Limited</p>
+                  <p className="font-bold text-slate-800">For {companySettings?.legalEntityName || companySettings?.companyName || 'Weldor by Earth Metal Industries'}</p>
                   <div className="w-28 h-10 mt-1 border-b border-dashed border-slate-400 flex items-end">
                     <span className="font-serif italic text-[11px] text-slate-500">Authorized Signatory</span>
                   </div>

@@ -1,10 +1,8 @@
 [
   {
     "id": "prod-weldor-01",
-    "createdAt": "2026-09-25T17:40:11.116Z",
-    "updatedAt": "2026-09-28T10:05:25.331Z",
     "sku": "WLD-MIG-24KD",
-    "name": "24KD Air-Cooled MIG Welding Torch (250A High-Performance)",
+    "name": "24KD MIG Welding Torch (250A Air-Cooled)",
     "category": "MIG / CO2 & TIG Welding Torches",
     "categoryId": "cat-wel-01",
     "subCategory": "24KD MIG Torches",
@@ -65,11 +63,11 @@
         "value": "Universal EURO Connection"
       }
     ],
-    "featured": false,
-    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_4.png",
+    "featured": true,
+    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/v1790790908/weldor-products/wx3pqgg7vllns5xvflce.jpg",
     "gallery": [
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_4.png",
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-products/p4_img1_936x710.png"
+      "/catalog_pages/page_4.png",
+      "/catalog_pages/page_1.png"
     ],
     "catalogPdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
     "priceUSD": 48,
@@ -90,18 +88,10 @@
       "air cooled MIG torch",
       "Weldor 24KD"
     ],
-    "status": "Active",
-    "cadDrawingUrl": "",
-    "datasheetUrl": "",
-    "seoMetaDescription": "",
-    "seoMetaTitle": "",
-    "videoThumbnail": "",
-    "videoUrl": ""
+    "status": "Active"
   },
   {
     "id": "prod-weldor-02",
-    "createdAt": "2026-09-25T17:40:11.122Z",
-    "updatedAt": "2026-09-25T17:40:11.122Z",
     "sku": "WLD-MIG-36KD",
     "name": "36KD Heavy-Duty MIG Welding Torch (320A High-Performance)",
     "category": "MIG / CO2 & TIG Welding Torches",
@@ -161,10 +151,10 @@
       }
     ],
     "featured": true,
-    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_4.png",
+    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/v1790790929/weldor-products/n8c30lnmlctrnwpe5aal.jpg",
     "gallery": [
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_4.png",
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-products/p4_img3_773x645.png"
+      "/catalog_pages/page_4.png",
+      "/catalog_pages/page_10.png"
     ],
     "catalogPdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
     "priceUSD": 65,
@@ -188,8 +178,6 @@
   },
   {
     "id": "prod-weldor-03",
-    "createdAt": "2026-09-25T17:40:11.122Z",
-    "updatedAt": "2026-09-25T17:40:11.122Z",
     "sku": "WLD-PANA-500",
     "name": "PANA 350A / 500A Industrial MIG Welding Torch",
     "category": "MIG / CO2 & TIG Welding Torches",
@@ -245,10 +233,9 @@
       }
     ],
     "featured": true,
-    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_5.png",
+    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/v1790790948/weldor-products/jqscylr1qv1nqxhqemfc.jpg",
     "gallery": [
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_5.png",
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-products/p5_img1_659x408.png"
+      "/catalog_pages/page_5.png"
     ],
     "catalogPdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
     "priceUSD": 82,
@@ -271,8 +258,6 @@
   },
   {
     "id": "prod-weldor-04",
-    "createdAt": "2026-09-25T17:40:11.122Z",
-    "updatedAt": "2026-09-25T17:40:11.122Z",
     "sku": "WLD-TIG-PRO",
     "name": "Precision High-Frequency TIG Welding Torch (150A - 400A)",
     "category": "MIG / CO2 & TIG Welding Torches",
@@ -328,10 +313,9 @@
       }
     ],
     "featured": true,
-    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_5.png",
+    "image": "/catalog_pages/page_5.png",
     "gallery": [
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_5.png",
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-products/p5_img3_667x478.png"
+      "/catalog_pages/page_5.png"
     ],
     "catalogPdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
     "priceUSD": 55,
@@ -353,8 +337,6 @@
   },
   {
     "id": "prod-weldor-05",
-    "createdAt": "2026-09-25T17:40:11.122Z",
-    "updatedAt": "2026-09-25T17:40:11.122Z",
     "sku": "WLD-PLC-MAN-100",
     "name": "Plasma Manual Handheld Cutting Torch (40A - 200A)",
     "category": "Plasma & Gas Cutting Torches",
@@ -410,10 +392,9 @@
       }
     ],
     "featured": true,
-    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_6.png",
+    "image": "/catalog_pages/page_6.png",
     "gallery": [
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_6.png",
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-products/p6_img1_936x684.png"
+      "/catalog_pages/page_6.png"
     ],
     "catalogPdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
     "priceUSD": 95,
@@ -435,8 +416,6 @@
   },
   {
     "id": "prod-weldor-06",
-    "createdAt": "2026-09-25T17:40:11.122Z",
-    "updatedAt": "2026-09-25T17:40:11.122Z",
     "sku": "WLD-PLC-CNC-200",
     "name": "Plasma Automatic CNC Gantry Cutting Torch (40A - 200A)",
     "category": "Plasma & Gas Cutting Torches",
@@ -488,10 +467,9 @@
       }
     ],
     "featured": true,
-    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_6.png",
+    "image": "/catalog_pages/page_6.png",
     "gallery": [
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_6.png",
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-products/p6_img3_935x710.png"
+      "/catalog_pages/page_6.png"
     ],
     "catalogPdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
     "priceUSD": 140,
@@ -513,8 +491,6 @@
   },
   {
     "id": "prod-weldor-07",
-    "createdAt": "2026-09-25T17:40:11.123Z",
-    "updatedAt": "2026-09-25T17:40:11.123Z",
     "sku": "WLD-GCT-PNME",
     "name": "PNME Injector Type Gas Cutting Torch (Cutting up to 300mm)",
     "category": "Plasma & Gas Cutting Torches",
@@ -570,10 +546,9 @@
       }
     ],
     "featured": true,
-    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_7.png",
+    "image": "/catalog_pages/page_7.png",
     "gallery": [
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_7.png",
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-products/p7_img1_936x708.png"
+      "/catalog_pages/page_7.png"
     ],
     "catalogPdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
     "priceUSD": 38,
@@ -595,8 +570,6 @@
   },
   {
     "id": "prod-weldor-08",
-    "createdAt": "2026-09-25T17:40:11.123Z",
-    "updatedAt": "2026-09-25T17:40:11.123Z",
     "sku": "WLD-GCT-ANME",
     "name": "ANME Equal Pressure Gas Cutting Torch (Oxygen-LPG / Acetylene)",
     "category": "Plasma & Gas Cutting Torches",
@@ -647,10 +620,9 @@
       }
     ],
     "featured": true,
-    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_8.png",
+    "image": "/catalog_pages/page_7.png",
     "gallery": [
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_8.png",
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-products/p8_img1_825x522.png"
+      "/catalog_pages/page_7.png"
     ],
     "catalogPdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
     "priceUSD": 42,
@@ -672,8 +644,6 @@
   },
   {
     "id": "prod-weldor-09",
-    "createdAt": "2026-09-25T17:40:11.123Z",
-    "updatedAt": "2026-09-25T17:40:11.123Z",
     "sku": "WLD-REG-O2-300B",
     "name": "Heavy-Duty Forged Brass Oxygen Gas Regulator (300 Bar Inlet)",
     "category": "Industrial Gas Pressure Regulators",
@@ -733,10 +703,9 @@
       }
     ],
     "featured": true,
-    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_8.png",
+    "image": "/catalog_pages/page_9.png",
     "gallery": [
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_8.png",
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-products/p8_img3_687x372.png"
+      "/catalog_pages/page_9.png"
     ],
     "catalogPdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
     "priceUSD": 32,
@@ -759,8 +728,6 @@
   },
   {
     "id": "prod-weldor-10",
-    "createdAt": "2026-09-25T17:40:11.123Z",
-    "updatedAt": "2026-09-25T17:40:11.123Z",
     "sku": "WLD-REG-ACET-40B",
     "name": "Industrial Acetylene Gas Pressure Regulator (40 Bar DA)",
     "category": "Industrial Gas Pressure Regulators",
@@ -815,10 +782,9 @@
       }
     ],
     "featured": true,
-    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_9.png",
+    "image": "/catalog_pages/page_9.png",
     "gallery": [
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_9.png",
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-products/p9_img1_569x377.png"
+      "/catalog_pages/page_9.png"
     ],
     "catalogPdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
     "priceUSD": 34,
@@ -840,8 +806,6 @@
   },
   {
     "id": "prod-weldor-11",
-    "createdAt": "2026-09-25T17:40:11.123Z",
-    "updatedAt": "2026-09-25T17:40:11.123Z",
     "sku": "WLD-REG-AR-CO2",
     "name": "Argon / CO2 Shielding Gas Regulator & Flowmeter (300 Bar)",
     "category": "Industrial Gas Pressure Regulators",
@@ -897,9 +861,9 @@
       }
     ],
     "featured": true,
-    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_10.png",
+    "image": "/catalog_pages/page_9.png",
     "gallery": [
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_10.png"
+      "/catalog_pages/page_9.png"
     ],
     "catalogPdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
     "priceUSD": 36,
@@ -921,8 +885,6 @@
   },
   {
     "id": "prod-weldor-12",
-    "createdAt": "2026-09-25T17:40:11.123Z",
-    "updatedAt": "2026-09-25T17:40:11.123Z",
     "sku": "WLD-REG-LPG-17B",
     "name": "Industrial Heavy-Duty Forged Brass LPG Regulator (17 Bar Inlet)",
     "category": "Industrial Gas Pressure Regulators",
@@ -973,9 +935,9 @@
       }
     ],
     "featured": false,
-    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_10.png",
+    "image": "/catalog_pages/page_9.png",
     "gallery": [
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_10.png"
+      "/catalog_pages/page_9.png"
     ],
     "catalogPdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
     "priceUSD": 28,
@@ -997,8 +959,6 @@
   },
   {
     "id": "prod-weldor-13",
-    "createdAt": "2026-09-25T17:40:11.123Z",
-    "updatedAt": "2026-09-25T17:40:11.123Z",
     "sku": "WLD-CON-MIG-KIT",
     "name": "MIG Welding Consumables Kit (Contact Tips, Nozzles, Diffusers)",
     "category": "Welding & Cutting Consumables",
@@ -1048,9 +1008,9 @@
       }
     ],
     "featured": true,
-    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_11.png",
+    "image": "/catalog_pages/page_10.png",
     "gallery": [
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_11.png"
+      "/catalog_pages/page_10.png"
     ],
     "catalogPdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
     "priceUSD": 15,
@@ -1073,8 +1033,6 @@
   },
   {
     "id": "prod-weldor-14",
-    "createdAt": "2026-09-25T17:40:11.123Z",
-    "updatedAt": "2026-09-25T17:40:11.123Z",
     "sku": "WLD-CON-PL-KIT",
     "name": "Plasma Cutting Consumables Set (Hafnium Electrodes & Nozzles)",
     "category": "Welding & Cutting Consumables",
@@ -1121,9 +1079,9 @@
       }
     ],
     "featured": false,
-    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_11.png",
+    "image": "/catalog_pages/page_8.png",
     "gallery": [
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_11.png"
+      "/catalog_pages/page_8.png"
     ],
     "catalogPdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
     "priceUSD": 18,
@@ -1145,8 +1103,6 @@
   },
   {
     "id": "prod-weldor-15",
-    "createdAt": "2026-09-25T17:40:11.123Z",
-    "updatedAt": "2026-09-25T17:40:11.123Z",
     "sku": "WLD-NOZ-PNME",
     "name": "PNME & ANME Gas Cutting Nozzles (1/32\" to 1/8\" CNC Machined)",
     "category": "Welding & Cutting Consumables",
@@ -1192,9 +1148,9 @@
       }
     ],
     "featured": false,
-    "image": "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_12.png",
+    "image": "/catalog_pages/page_8.png",
     "gallery": [
-      "https://res.cloudinary.com/ptiq7p8r/image/upload/weldor-catalog-pages/page_12.png"
+      "/catalog_pages/page_8.png"
     ],
     "catalogPdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
     "priceUSD": 6,

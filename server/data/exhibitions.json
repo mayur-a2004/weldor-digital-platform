@@ -1,1 +1,111 @@
-[]
+[
+  {
+    "id": "expo-01",
+    "title": "INDIA WELDING & FABRICATION EXPO 2026",
+    "subtitle": "Live Automated Torch & High-Pressure Gas Flow Demos",
+    "location": "Bombay Exhibition Centre (NESCO)",
+    "fullAddress": "Western Express Highway, Goregaon East, Mumbai, Maharashtra 400063",
+    "city": "Mumbai",
+    "country": "India",
+    "startDate": "2026-11-20",
+    "endDate": "2026-11-23",
+    "hallNumber": "Hall 4",
+    "boothNumber": "Stall E-28",
+    "description": "Join Weldor by Earth Metal Industries at India premier welding technology expo. Experience live demonstrations of our 36KD/500A robotic torches, CNC plasma torches, and forged brass 300 Bar gas pressure regulators.",
+    "keyHighlights": [
+      "Live Automated MIG Welding",
+      "300 Bar Gas Pressure Testing Demos",
+      "OEM B2B Technical Consultations"
+    ],
+    "bannerImage": "/images/banners/hero_welding_plant.jpg",
+    "galleryImages": [
+      "/images/banners/hero_welding_plant.jpg",
+      "/images/banners/hero_welding_torch.jpg",
+      "/catalog_pages/page_4.png"
+    ],
+    "videoUrls": [
+      "https://www.w3schools.com/html/mov_bbb.mp4"
+    ],
+    "brochurePdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
+    "showcasedCategoryIds": [
+      "cat-wel-01",
+      "cat-cut-02",
+      "cat-reg-03"
+    ],
+    "qrSlug": "india-welding-expo-2026",
+    "leadsCapturedCount": 148,
+    "featured": true,
+    "status": "Upcoming"
+  },
+  {
+    "id": "expo-02",
+    "title": "IMTEX FORMING & WELDING 2027",
+    "subtitle": "South Asia Largest Metal Forming & Automation Exhibition",
+    "location": "Bangalore International Exhibition Centre (BIEC)",
+    "fullAddress": "10th Mile, Tumkur Road, Madavara Post, Bengaluru, Karnataka 562123",
+    "city": "Bengaluru",
+    "country": "India",
+    "startDate": "2027-01-21",
+    "endDate": "2027-01-26",
+    "hallNumber": "Hall 5",
+    "boothNumber": "Stall B-114",
+    "description": "Showcasing next-generation 500A water-cooled torches, CNC plasma cutting gantries, and customized OEM brass manifolds for aerospace and defence manufacturing.",
+    "keyHighlights": [
+      "High-Torque Arc Stability Tests",
+      "Heavy-Duty 300 Bar Regulators",
+      "Prototype Sample Trial Bookings"
+    ],
+    "bannerImage": "/images/banners/hero_welding_torch.jpg",
+    "galleryImages": [
+      "/images/banners/hero_welding_torch.jpg",
+      "/images/quality_inspection_lab.jpg",
+      "/catalog_pages/page_6.png"
+    ],
+    "videoUrls": [
+      "https://www.w3schools.com/html/mov_bbb.mp4"
+    ],
+    "brochurePdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
+    "showcasedCategoryIds": [
+      "cat-wel-01",
+      "cat-con-04"
+    ],
+    "qrSlug": "imtex-forming-2027",
+    "leadsCapturedCount": 215,
+    "featured": true,
+    "status": "Upcoming"
+  },
+  {
+    "id": "expo-03",
+    "title": "SCHWEISSEN & SCHNEIDEN (International Welding Fair)",
+    "subtitle": "World Leading Trade Fair for Joining, Cutting & Surfacing",
+    "location": "Messe Essen",
+    "fullAddress": "Messeplatz 1, 45131 Essen, Germany",
+    "city": "Essen",
+    "country": "Germany",
+    "startDate": "2025-09-15",
+    "endDate": "2025-09-19",
+    "hallNumber": "Hall 3",
+    "boothNumber": "Stand 3C42",
+    "description": "Global European showcase of Weldor export-grade heavy-duty 24KD & 36KD torches and 300 Bar gas pressure regulators manufactured to ISO 9001:2015 standards in Jamnagar.",
+    "keyHighlights": [
+      "European Distributor Partnerships Signed",
+      "Extreme Safety Leak Tests",
+      "Global OEM Quality Recognition"
+    ],
+    "bannerImage": "/images/quality_inspection_lab.jpg",
+    "galleryImages": [
+      "/images/quality_inspection_lab.jpg",
+      "/catalog_pages/page_9.png"
+    ],
+    "videoUrls": [],
+    "brochurePdfUrl": "/catalog/Weldor_Welding_Product_Catalog.pdf",
+    "showcasedCategoryIds": [
+      "cat-reg-03",
+      "cat-con-04"
+    ],
+    "qrSlug": "schweissen-schneiden-essen",
+    "leadsCapturedCount": 390,
+    "featured": false,
+    "status": "Past Exhibition"
+  }
+]

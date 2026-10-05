@@ -27,19 +27,24 @@ export const IndiaMartManager: React.FC = () => {
   const [registeredMobile, setRegisteredMobile] = useState('+91-87800 98088');
 
   // Filter IndiaMART specific leads
-  const indiaMartLeads = leads.filter(l => 
-    l.source === 'IndiaMART' || 
-    (l.technicalNotes && l.technicalNotes.toLowerCase().includes('indiamart')) ||
-    (l.title && l.title.toLowerCase().includes('indiamart'))
+  const indiaMartLeads = (leads || []).filter(l => 
+    l && (
+      l.source === 'IndiaMART' || 
+      (l.technicalNotes && l.technicalNotes.toLowerCase().includes('indiamart')) ||
+      (l.title && l.title.toLowerCase().includes('indiamart'))
+    )
   );
 
-  const filteredLeads = indiaMartLeads.filter(l => 
-    l.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    l.contactName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (l.contactEmail && l.contactEmail.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (l.contactPhone && l.contactPhone.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (l.technicalNotes && l.technicalNotes.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredLeads = indiaMartLeads.filter(l => {
+    if (!l) return false;
+    const q = (searchQuery || '').trim().toLowerCase();
+    return !q ||
+      (l.companyName || '').toLowerCase().includes(q) ||
+      (l.contactName || '').toLowerCase().includes(q) ||
+      (l.contactEmail && l.contactEmail.toLowerCase().includes(q)) ||
+      (l.contactPhone && l.contactPhone.toLowerCase().includes(q)) ||
+      (l.technicalNotes && l.technicalNotes.toLowerCase().includes(q));
+  });
 
   const webhookUrl = `${window.location.origin}/api/crm/indiamart-webhook`;
 

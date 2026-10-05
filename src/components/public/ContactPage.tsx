@@ -14,6 +14,7 @@ import {
   Building2,
   Navigation
 } from 'lucide-react';
+import { SEOFAQSection } from './SEOFAQSection';
 
 export const ContactPage: React.FC = () => {
   const { addPublicRFQLead, showNotification } = useApp();
@@ -341,6 +342,11 @@ export const ContactPage: React.FC = () => {
               className="w-full h-full"
             />
           </div>
+        </div>
+
+        {/* Technical & Commercial Engineering FAQs */}
+        <div className="pt-4">
+          <SEOFAQSection />
         </div>
 
       </div>

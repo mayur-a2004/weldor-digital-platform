@@ -288,11 +288,11 @@ export const EmployeeManager: React.FC = () => {
     };
     reader.readAsDataURL(file);
 
-    // 2. Server upload
+    // 2. Server upload to Cloudinary
     try {
-      const res = await api.uploadFile(file);
-      if (res?.success && res.data?.url) {
-        setFormData(prev => ({ ...prev, avatarUrl: res.data.url }));
+      const res = await api.uploadFile(file, 'weldor-employees');
+      if (res?.success && (res.data?.cdnUrl || res.data?.url)) {
+        setFormData(prev => ({ ...prev, avatarUrl: res.data.cdnUrl || res.data.url }));
       }
     } catch (err) {
       console.warn('Server upload fallback to base64 preview:', err);
@@ -303,13 +303,15 @@ export const EmployeeManager: React.FC = () => {
 
   // Filtered employees
   const filteredEmployees = useMemo(() => {
-    return employees.filter(emp => {
-      const matchesSearch = 
-        emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        emp.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        emp.employeeId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (emp.employeeCode && emp.employeeCode.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        emp.designation.toLowerCase().includes(searchQuery.toLowerCase());
+    const q = (searchQuery || '').trim().toLowerCase();
+    return (employees || []).filter(emp => {
+      if (!emp) return false;
+      const matchesSearch = !q ||
+        (emp.name || '').toLowerCase().includes(q) ||
+        (emp.email || '').toLowerCase().includes(q) ||
+        (emp.employeeId || '').toLowerCase().includes(q) ||
+        (emp.employeeCode || '').toLowerCase().includes(q) ||
+        (emp.designation || '').toLowerCase().includes(q);
       
       const matchesDept = selectedDepartment === 'All' || emp.department === selectedDepartment;
       const matchesStatus = selectedStatus === 'All' || emp.status === selectedStatus;

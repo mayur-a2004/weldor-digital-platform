@@ -18,7 +18,8 @@ import {
   UserCheck,
   Search,
   Filter,
-  ExternalLink
+  ExternalLink,
+  Trash2
 } from 'lucide-react';
 import type { RFQRequirement } from '../../types';
 import { FileUploadZone, type UploadedFileMeta } from '../common/FileUploadZone';
@@ -29,6 +30,9 @@ export const RFQManager: React.FC = () => {
     products, 
     createQuotationFromLead, 
     addPublicRFQLead,
+    deleteRFQ,
+    createSampleRequest,
+    createTechnicalTrial,
     setActiveView, 
     showNotification,
     employees
@@ -57,12 +61,14 @@ export const RFQManager: React.FC = () => {
     technicalNotes: 'High-speed automated packaging line requirement.'
   });
 
-  const filteredRfqs = rfqs.filter(r => {
+  const filteredRfqs = (rfqs || []).filter(r => {
+    if (!r) return false;
     const matchesStatus = filterStatus === 'All' || r.status === filterStatus;
-    const matchesSearch = !searchQuery || 
-      r.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.contactPerson.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.categoryName.toLowerCase().includes(searchQuery.toLowerCase());
+    const q = (searchQuery || '').trim().toLowerCase();
+    const matchesSearch = !q || 
+      (r.companyName || '').toLowerCase().includes(q) ||
+      (r.contactPerson || '').toLowerCase().includes(q) ||
+      (r.categoryName || '').toLowerCase().includes(q);
     return matchesStatus && matchesSearch;
   });
 
@@ -113,23 +119,68 @@ export const RFQManager: React.FC = () => {
   const handleConvertToQuote = (rfq: RFQRequirement) => {
     const matchedProduct = products.find(p => p.category === rfq.categoryName) || products[0];
     const unitPrice = matchedProduct?.priceUSD || 250;
+    const qty = Number(rfq.targetQuantity) || 50;
     
-    createQuotationFromLead(rfq.leadId, [
+    createQuotationFromLead(rfq.leadId || `lead-rfq-${Date.now()}`, [
       {
         id: `item-${Date.now()}`,
         productId: matchedProduct?.id || `prod-spec-${Date.now()}`,
-        productName: matchedProduct ? `${matchedProduct.name} (${rfq.materialPreference})` : `${rfq.categoryName} (${rfq.materialPreference})`,
+        productName: matchedProduct ? `${matchedProduct.name} (${rfq.materialPreference || 'Standard'})` : `${rfq.categoryName || 'Automation Spec'} (${rfq.materialPreference || 'SS304'})`,
         sku: matchedProduct?.sku || 'WEL-SPEC-01',
-        quantity: rfq.targetQuantity,
+        quantity: qty,
         unitPriceUSD: unitPrice,
         discountPercentage: 5,
         taxPercentage: 18,
-        totalPriceUSD: rfq.targetQuantity * unitPrice * 0.95,
+        totalPriceUSD: qty * unitPrice * 0.95,
       }
-    ], 1500, 30);
+    ], 1500, 30, {
+      companyName: rfq.companyName || 'Enterprise Client',
+      contactName: rfq.contactPerson || 'Purchasing Lead',
+      email: rfq.email || '',
+      phone: rfq.phone || '+91 98000 00000',
+      state: rfq.country === 'India' ? 'Gujarat' : 'Export',
+    });
 
-    showNotification(`Commercial Quotation generated for RFQ from ${rfq.companyName}!`, 'success');
+    showNotification(`Commercial Quotation generated for ${rfq.companyName || 'Inquiry'}!`, 'success');
     setActiveView('crm-quotations');
+  };
+
+  const handleDispatchSample = async (rfq: RFQRequirement) => {
+    await createSampleRequest({
+      leadId: rfq.leadId,
+      companyName: rfq.companyName || 'Enterprise Client',
+      productName: `${rfq.categoryName || 'Pneumatic Automation'} (${rfq.materialPreference || 'Prototype'})`,
+      quantityRequested: 1,
+      stage: 'Requested'
+    });
+    setActiveView('crm-samples');
+  };
+
+  const handleInitiateTrial = async (rfq: RFQRequirement) => {
+    await createTechnicalTrial({
+      leadId: rfq.leadId,
+      companyName: rfq.companyName || 'Enterprise Client',
+      productName: `${rfq.categoryName || 'Hydraulic Valve'} (${rfq.materialPreference || 'High Pressure ISO'})`,
+      testParameters: {
+        pressureTestBar: 525,
+        leakageTestResult: '0.000 sccs (Zero Bubble Helium Test)',
+        corrosionHours: 500,
+        cycleCount: 250000,
+      }
+    });
+    setActiveView('crm-trials');
+  };
+
+  const handlePruneEmptyRfqs = () => {
+    const emptyOnes = (rfqs || []).filter(r => !r.companyName || r.companyName === 'B2B Client' || (!r.contactPerson && !r.email));
+    if (emptyOnes.length === 0) {
+      showNotification('No blank RFQs found! All entries have complete data.', 'info');
+      return;
+    }
+    if (window.confirm(`Found ${emptyOnes.length} incomplete/empty RFQ entries. Do you want to delete them?`)) {
+      emptyOnes.forEach(r => deleteRFQ(r.id));
+      showNotification(`Deleted ${emptyOnes.length} incomplete RFQ entries.`, 'success');
+    }
   };
 
   return (
@@ -154,13 +205,24 @@ export const RFQManager: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsAddRfqModalOpen(true)}
-          className="btn-primary text-xs py-2.5 px-4 shadow-md flex items-center gap-1.5 shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>+ Log Inbound RFQ / CAD</span>
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={handlePruneEmptyRfqs}
+            className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 hover:border-rose-200 text-xs font-mono font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Clean up incomplete or corrupted RFQs"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Clean Blank Entries</span>
+          </button>
+
+          <button
+            onClick={() => setIsAddRfqModalOpen(true)}
+            className="btn-primary text-xs py-2.5 px-4 shadow-md flex items-center gap-1.5 shrink-0 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Log Inbound RFQ / CAD</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter Toolbar */}
@@ -234,6 +296,18 @@ export const RFQManager: React.FC = () => {
                   }`}>
                     ● {rfq.status}
                   </span>
+
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`Are you sure you want to delete this RFQ from ${rfq.companyName || rfq.email}?`)) {
+                        deleteRFQ(rfq.id);
+                      }
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                    title="Delete RFQ"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
@@ -241,15 +315,15 @@ export const RFQManager: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs font-mono bg-slate-50 p-4 rounded-xl border border-slate-200">
                 <div>
                   <span className="text-slate-500 block font-bold text-[10px] uppercase">PRODUCT DIVISION</span>
-                  <span className="text-slate-900 font-bold">{rfq.categoryName}</span>
+                  <span className="text-slate-900 font-bold">{rfq.categoryName || 'Automation OEM'}</span>
                 </div>
                 <div>
                   <span className="text-slate-500 block font-bold text-[10px] uppercase">TARGET PRODUCTION VOLUME</span>
-                  <span className="text-orange-700 font-extrabold">{rfq.targetQuantity} {rfq.targetUnit}</span>
+                  <span className="text-orange-700 font-extrabold">{rfq.targetQuantity || 50} {rfq.targetUnit || 'PCS'}</span>
                 </div>
                 <div>
                   <span className="text-slate-500 block font-bold text-[10px] uppercase">MATERIAL SPECIFICATION</span>
-                  <span className="text-slate-900 font-bold">{rfq.materialPreference}</span>
+                  <span className="text-slate-900 font-bold">{rfq.materialPreference || 'Standard ISO Spec'}</span>
                 </div>
                 <div>
                   <span className="text-slate-500 block font-bold text-[10px] uppercase">PRESSURE / DUTY RATING</span>
@@ -291,22 +365,16 @@ export const RFQManager: React.FC = () => {
 
                 <div className="flex flex-wrap items-center gap-2">
                   <button
-                    onClick={() => {
-                      showNotification(`Sample Request created for ${rfq.companyName}!`, 'success');
-                      setActiveView('crm-samples');
-                    }}
-                    className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 font-bold"
+                    onClick={() => handleDispatchSample(rfq)}
+                    className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 font-bold cursor-pointer"
                   >
                     <Package className="w-3.5 h-3.5 text-orange-600" />
                     <span>Dispatch Prototype Sample</span>
                   </button>
 
                   <button
-                    onClick={() => {
-                      showNotification(`Technical Trial created for ${rfq.companyName}!`, 'success');
-                      setActiveView('crm-trials');
-                    }}
-                    className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 font-bold"
+                    onClick={() => handleInitiateTrial(rfq)}
+                    className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 font-bold cursor-pointer"
                   >
                     <FlaskConical className="w-3.5 h-3.5 text-blue-600" />
                     <span>Initiate Lab Trial</span>
@@ -314,7 +382,7 @@ export const RFQManager: React.FC = () => {
 
                   <button
                     onClick={() => handleConvertToQuote(rfq)}
-                    className="btn-primary text-xs py-2 px-4 shadow-sm flex items-center gap-1.5 font-bold"
+                    className="btn-primary text-xs py-2 px-4 shadow-sm flex items-center gap-1.5 font-bold cursor-pointer"
                   >
                     <CheckSquare className="w-3.5 h-3.5" />
                     <span>Convert to Commercial Quotation</span>
@@ -391,7 +459,7 @@ export const RFQManager: React.FC = () => {
               </div>
               <div>
                 <span className="text-slate-500 block font-bold text-[10px]">ESTIMATED TOOLING COST</span>
-                <span className="text-emerald-700 font-bold">$0 (Standard CNC Tooling)</span>
+                <span className="text-emerald-700 font-bold">₹0 (Standard CNC Tooling)</span>
               </div>
             </div>
 

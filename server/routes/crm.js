@@ -86,7 +86,23 @@ router.delete('/rfqs/:id', async (req, res) => {
 // Public RFQ submission
 router.post('/rfq/public', async (req, res) => {
   try {
-    const { title, companyName, contactPerson, email, phone, country, targetQuantity, technicalNotes, cadFileUrl } = req.body;
+    const { 
+      title, 
+      companyName, 
+      contactPerson, 
+      email, 
+      phone, 
+      country, 
+      categoryName,
+      materialPreference,
+      pressureRating,
+      requirementType,
+      targetQuantity, 
+      targetUnit,
+      technicalNotes, 
+      cadFileUrl,
+      drawingFileName
+    } = req.body;
     const leadNumber = `WEL-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const newLead = await db.insert('leads', {
@@ -111,10 +127,21 @@ router.post('/rfq/public', async (req, res) => {
     const newRfq = await db.insert('rfqs', {
       leadId: newLead.id,
       leadNumber,
-      title: title || `RFQ: ${companyName}`,
-      targetQuantity: targetQuantity || 50,
-      cadFileUrl,
-      technicalNotes,
+      title: title || `RFQ: ${companyName || 'Inbound Inquiry'}`,
+      companyName: companyName || 'B2B Client',
+      contactPerson: contactPerson || 'Purchasing Lead',
+      email: email || '',
+      phone: phone || '',
+      country: country || 'India',
+      categoryName: categoryName || 'Pneumatic Automation',
+      materialPreference: materialPreference || 'Standard ISO Spec',
+      pressureRating: pressureRating || 'Standard ISO',
+      requirementType: requirementType || 'Custom OEM Drawing',
+      targetQuantity: Number(targetQuantity) || 50,
+      targetUnit: targetUnit || 'PCS',
+      cadFileUrl: cadFileUrl || '',
+      drawingFileName: drawingFileName || '',
+      technicalNotes: technicalNotes || '',
       status: 'Pending Review',
       createdAt: new Date().toISOString(),
     });
@@ -125,6 +152,7 @@ router.post('/rfq/public', async (req, res) => {
       leadNumber,
       leadId: newLead.id,
       rfqId: newRfq.id,
+      data: newRfq
     });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Public RFQ failed', error: err.message });
@@ -327,6 +355,108 @@ router.delete('/trials/:id', async (req, res) => {
     res.json({ success: true, message: 'Trial deleted' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to delete trial', error: err.message });
+  }
+});
+
+// --- BUSINESS REPORTS & ANALYTICS ---
+router.get('/reports/summary', async (req, res) => {
+  try {
+    const { period = 'month', startDate, endDate, type = 'all' } = req.query;
+    
+    // Fetch raw records from MongoDB
+    const [invoices, quotations, orders, leads, products] = await Promise.all([
+      db.get('invoices', []),
+      db.get('quotations', []),
+      db.get('orders', []),
+      db.get('leads', []),
+      db.get('products', [])
+    ]);
+
+    const now = new Date();
+    let filterStart = new Date(0);
+    let filterEnd = new Date(now.getTime() + 86400000);
+
+    if (startDate && endDate) {
+      filterStart = new Date(startDate);
+      filterEnd = new Date(new Date(endDate).getTime() + 86400000);
+    } else if (period === 'day') {
+      filterStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    } else if (period === 'week') {
+      filterStart = new Date(now.getTime() - 7 * 86400000);
+    } else if (period === 'month') {
+      filterStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else if (period === 'year') {
+      filterStart = new Date(now.getFullYear(), 0, 1);
+    }
+
+    const isWithinRange = (dateStr) => {
+      if (!dateStr) return true;
+      const d = new Date(dateStr);
+      return !isNaN(d.getTime()) && d >= filterStart && d <= filterEnd;
+    };
+
+    const filteredInvoices = (Array.isArray(invoices) ? invoices : []).filter(inv => isWithinRange(inv.issueDate || inv.createdAt));
+    const filteredQuotations = (Array.isArray(quotations) ? quotations : []).filter(q => isWithinRange(q.createdAt));
+    const filteredOrders = (Array.isArray(orders) ? orders : []).filter(o => isWithinRange(o.createdAt));
+
+    // Summary Financial Calculations
+    let totalInvoiceBilledINR = 0;
+    let totalTaxableINR = 0;
+    let totalGstTaxINR = 0;
+    let totalPaidINR = 0;
+    let totalPendingINR = 0;
+
+    filteredInvoices.forEach(inv => {
+      const grandTotal = inv.grandTotalINR || Math.round((inv.grandTotalUSD || 0) * 85);
+      const taxable = inv.taxableTotalUSD ? Math.round(inv.taxableTotalUSD * 85) : Math.round(grandTotal / 1.18);
+      const tax = inv.totalTaxUSD ? Math.round(inv.totalTaxUSD * 85) : (grandTotal - taxable);
+
+      totalInvoiceBilledINR += grandTotal;
+      totalTaxableINR += taxable;
+      totalGstTaxINR += tax;
+
+      if (inv.status === 'Paid') {
+        totalPaidINR += grandTotal;
+      } else {
+        totalPendingINR += grandTotal;
+      }
+    });
+
+    let totalQuotedINR = 0;
+    filteredQuotations.forEach(q => {
+      totalQuotedINR += (q.grandTotalINR || Math.round((q.grandTotalUSD || 0) * 85));
+    });
+
+    let totalOrdersValueINR = 0;
+    filteredOrders.forEach(o => {
+      totalOrdersValueINR += Math.round((o.totalValueUSD || 0) * 85);
+    });
+
+    res.json({
+      success: true,
+      filter: { period, startDate: filterStart.toISOString(), endDate: filterEnd.toISOString() },
+      metrics: {
+        totalInvoicesCount: filteredInvoices.length,
+        totalInvoiceBilledINR,
+        totalTaxableINR,
+        totalGstTaxINR,
+        totalPaidINR,
+        totalPendingINR,
+        totalQuotationsCount: filteredQuotations.length,
+        totalQuotedINR,
+        totalOrdersCount: filteredOrders.length,
+        totalOrdersValueINR,
+        totalProductsCount: Array.isArray(products) ? products.length : 0,
+        totalLeadsCount: Array.isArray(leads) ? leads.length : 0
+      },
+      data: {
+        invoices: filteredInvoices,
+        quotations: filteredQuotations,
+        orders: filteredOrders
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to generate report summary', error: err.message });
   }
 });
 

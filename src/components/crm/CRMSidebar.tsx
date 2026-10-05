@@ -21,7 +21,9 @@ import {
   CreditCard,
   Clock,
   Sliders,
-  Sparkles
+  Sparkles,
+  BarChart3,
+  Boxes
 } from 'lucide-react';
 import type { CRMModule } from '../../types';
 
@@ -31,7 +33,13 @@ interface CRMSidebarProps {
 }
 
 export const CRMSidebar: React.FC<CRMSidebarProps> = ({ mobileOpen, onCloseMobile }) => {
-  const { activeView, setActiveView, hasPermission, currentRole } = useApp();
+  const { activeView, setActiveView, hasPermission, currentRole, lowStockCount, outOfStockCount } = useApp();
+
+  const inventoryBadge = outOfStockCount > 0 
+    ? `${outOfStockCount} Out` 
+    : lowStockCount > 0 
+      ? `${lowStockCount} Low` 
+      : undefined;
 
   const menuSections: {
     title: string;
@@ -47,6 +55,14 @@ export const CRMSidebar: React.FC<CRMSidebarProps> = ({ mobileOpen, onCloseMobil
         { label: 'Commercial Quotations', view: 'crm-quotations', module: 'quotations', icon: <CheckSquare className="w-4 h-4" /> },
         { label: 'Tax Invoices & Billing', view: 'crm-invoices', module: 'orders', icon: <CreditCard className="w-4 h-4" />, badge: 'GST 18%' },
         { label: 'Orders & B2B Dispatch', view: 'crm-orders', module: 'orders', icon: <ShoppingBag className="w-4 h-4" /> },
+        { 
+          label: 'Warehouse & Inventory Hub', 
+          view: 'crm-inventory', 
+          module: 'products', 
+          icon: <Boxes className="w-4 h-4 text-amber-600" />, 
+          badge: inventoryBadge 
+        },
+        { label: 'Reports & Export Hub', view: 'crm-reports', module: 'dashboard', icon: <BarChart3 className="w-4 h-4 text-emerald-500" />, badge: 'Excel / PDF / CSV' },
       ]
     },
     {

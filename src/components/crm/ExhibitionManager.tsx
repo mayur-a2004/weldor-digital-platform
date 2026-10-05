@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
+import { api } from '../../services/api';
 import {
   QrCode,
   Calendar,
@@ -26,7 +27,9 @@ import {
   Check,
   Building,
   AlertTriangle,
-  Download
+  Download,
+  Loader2,
+  Upload
 } from 'lucide-react';
 import type { Exhibition } from '../../types';
 
@@ -49,6 +52,12 @@ export const ExhibitionManager: React.FC = () => {
   const [previewExpo, setPreviewExpo] = useState<Exhibition | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
+  // Upload States
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+  const [isUploadingBrochure, setIsUploadingBrochure] = useState(false);
+
   // Form State
   const initialFormState = {
     title: '',
@@ -63,15 +72,10 @@ export const ExhibitionManager: React.FC = () => {
     boothNumber: 'Booth A-01',
     description: '',
     keyHighlights: ['Live 700 Bar Hydrostatic Valve Burst Test', '5-Axis CNC Precision Manifold Showcase'],
-    bannerImage: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=1200',
-    galleryImages: [
-      'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800',
-      'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&q=80&w=800',
-    ],
-    videoUrls: [
-      'https://assets.mixkit.co/videos/preview/mixkit-close-up-of-a-lathe-machine-in-a-factory-43187-large.mp4',
-    ],
-    brochurePdfUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    bannerImage: '',
+    galleryImages: [] as string[],
+    videoUrls: [] as string[],
+    brochurePdfUrl: '',
     showcasedCategoryIds: ['cat-pneumatic', 'cat-hydraulic', 'cat-welding'],
     showcasedProducts: ['ISO 15552 Pneumatic Cylinder', '700 Bar Proportional Valve'],
     qrSlug: '',
@@ -81,6 +85,44 @@ export const ExhibitionManager: React.FC = () => {
   };
 
   const [formData, setFormData] = useState(initialFormState);
+
+  const handleFileUpload = async (file: File, type: 'banner' | 'gallery' | 'video' | 'brochure') => {
+    if (type === 'banner') setIsUploadingBanner(true);
+    else if (type === 'gallery') setIsUploadingGallery(true);
+    else if (type === 'video') setIsUploadingVideo(true);
+    else if (type === 'brochure') setIsUploadingBrochure(true);
+
+    showNotification(`Uploading ${file.name} to Cloudinary CDN...`, 'info');
+    try {
+      const res = await api.uploadFile(file, 'weldor-exhibitions');
+      if (res?.success && (res?.data?.cdnUrl || res?.data?.url)) {
+        const uploadedUrl = res.data.cdnUrl || res.data.url;
+        if (type === 'banner') {
+          setFormData(prev => ({ ...prev, bannerImage: uploadedUrl }));
+          showNotification(`Banner poster uploaded successfully to Cloudinary!`, 'success');
+        } else if (type === 'gallery') {
+          setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, uploadedUrl] }));
+          showNotification(`Added photo to exhibition gallery!`, 'success');
+        } else if (type === 'video') {
+          setFormData(prev => ({ ...prev, videoUrls: [...prev.videoUrls, uploadedUrl] }));
+          showNotification(`Added demonstration video to exhibition!`, 'success');
+        } else if (type === 'brochure') {
+          setFormData(prev => ({ ...prev, brochurePdfUrl: uploadedUrl }));
+          showNotification(`Exhibition brochure PDF uploaded!`, 'success');
+        }
+      } else {
+        showNotification(res?.message || `Upload failed for ${file.name}`, 'warning');
+      }
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      showNotification(`Upload error: ${err?.message || 'Server error'}`, 'warning');
+    } finally {
+      if (type === 'banner') setIsUploadingBanner(false);
+      else if (type === 'gallery') setIsUploadingGallery(false);
+      else if (type === 'video') setIsUploadingVideo(false);
+      else if (type === 'brochure') setIsUploadingBrochure(false);
+    }
+  };
   const [newHighlightInput, setNewHighlightInput] = useState('');
   const [newGalleryInput, setNewGalleryInput] = useState('');
   const [newVideoInput, setNewVideoInput] = useState('');
@@ -149,13 +191,15 @@ export const ExhibitionManager: React.FC = () => {
   }, [exhibitions]);
 
   const filteredExhibitions = useMemo(() => {
-    return processedExhibitions.filter(expo => {
-      const matchesSearch =
-        expo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        expo.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        expo.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        expo.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        expo.boothNumber.toLowerCase().includes(searchQuery.toLowerCase());
+    const q = (searchQuery || '').trim().toLowerCase();
+    return (processedExhibitions || []).filter(expo => {
+      if (!expo) return false;
+      const matchesSearch = !q ||
+        (expo.title || '').toLowerCase().includes(q) ||
+        (expo.location || '').toLowerCase().includes(q) ||
+        (expo.city || '').toLowerCase().includes(q) ||
+        (expo.country || '').toLowerCase().includes(q) ||
+        (expo.boothNumber || '').toLowerCase().includes(q);
 
       if (!matchesSearch) return false;
 
@@ -178,27 +222,27 @@ export const ExhibitionManager: React.FC = () => {
   const handleOpenEditModal = (expo: Exhibition) => {
     setEditingExpoId(expo.id);
     setFormData({
-      title: expo.title,
+      title: expo.title || '',
       subtitle: expo.subtitle || '',
-      location: expo.location,
+      location: expo.location || '',
       fullAddress: expo.fullAddress || '',
-      city: expo.city,
-      country: expo.country,
-      startDate: expo.startDate,
-      endDate: expo.endDate,
-      hallNumber: expo.hallNumber,
-      boothNumber: expo.boothNumber,
-      description: expo.description,
-      keyHighlights: expo.keyHighlights || [],
-      bannerImage: expo.bannerImage,
-      galleryImages: expo.galleryImages || [],
-      videoUrls: expo.videoUrls || [],
+      city: expo.city || '',
+      country: expo.country || '',
+      startDate: expo.startDate || '',
+      endDate: expo.endDate || '',
+      hallNumber: expo.hallNumber || '',
+      boothNumber: expo.boothNumber || '',
+      description: expo.description || '',
+      keyHighlights: Array.isArray(expo.keyHighlights) ? expo.keyHighlights : [],
+      bannerImage: expo.bannerImage || '',
+      galleryImages: Array.isArray(expo.galleryImages) ? expo.galleryImages : [],
+      videoUrls: Array.isArray(expo.videoUrls) ? expo.videoUrls : [],
       brochurePdfUrl: expo.brochurePdfUrl || '',
-      showcasedCategoryIds: expo.showcasedCategoryIds || [],
-      showcasedProducts: expo.showcasedProducts || [],
-      qrSlug: expo.qrSlug,
-      featured: expo.featured,
-      status: expo.status,
+      showcasedCategoryIds: Array.isArray(expo.showcasedCategoryIds) ? expo.showcasedCategoryIds : [],
+      showcasedProducts: Array.isArray(expo.showcasedProducts) ? expo.showcasedProducts : [],
+      qrSlug: expo.qrSlug || '',
+      featured: !!expo.featured,
+      status: expo.status || 'Upcoming',
       autoArchivePassedDate: expo.autoArchivePassedDate ?? true,
     });
     setModalActiveTab('basic');
@@ -208,48 +252,52 @@ export const ExhibitionManager: React.FC = () => {
   // Submit Handler
   const handleSaveExpoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim()) {
+    const title = (formData.title || '').trim();
+    if (!title) {
       showNotification('Exhibition Title is required!', 'warning');
+      setModalActiveTab('basic');
       return;
     }
 
     const qrSlug =
-      formData.qrSlug.trim() ||
-      formData.title
+      (formData.qrSlug || '').trim() ||
+      title
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '');
 
     const expoPayload: Omit<Exhibition, 'id'> = {
-      title: formData.title.trim(),
-      subtitle: formData.subtitle.trim(),
-      location: formData.location.trim() || 'International Convention Center',
-      fullAddress: formData.fullAddress.trim(),
-      city: formData.city.trim() || 'Mumbai',
-      country: formData.country.trim() || 'India',
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      hallNumber: formData.hallNumber.trim() || 'Hall 1',
-      boothNumber: formData.boothNumber.trim() || 'Booth A-01',
-      description: formData.description.trim() || 'Weldor Industries live machining and high-pressure fluid technology booth.',
-      keyHighlights: formData.keyHighlights.filter(h => h.trim() !== ''),
-      bannerImage: formData.bannerImage.trim() || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=1200',
-      galleryImages: formData.galleryImages.filter(img => img.trim() !== ''),
-      videoUrls: formData.videoUrls.filter(v => v.trim() !== ''),
-      brochurePdfUrl: formData.brochurePdfUrl.trim(),
-      showcasedCategoryIds: formData.showcasedCategoryIds,
-      showcasedProducts: formData.showcasedProducts.filter(p => p.trim() !== ''),
+      title,
+      subtitle: (formData.subtitle || '').trim(),
+      location: (formData.location || '').trim() || 'International Convention Center',
+      fullAddress: (formData.fullAddress || '').trim(),
+      city: (formData.city || '').trim() || 'Mumbai',
+      country: (formData.country || '').trim() || 'India',
+      startDate: formData.startDate || new Date().toISOString().split('T')[0],
+      endDate: formData.endDate || new Date().toISOString().split('T')[0],
+      hallNumber: (formData.hallNumber || '').trim() || 'Hall 1',
+      boothNumber: (formData.boothNumber || '').trim() || 'Booth A-01',
+      description: (formData.description || '').trim() || 'Weldor Industries live machining and high-pressure fluid technology booth.',
+      keyHighlights: (formData.keyHighlights || []).filter(h => h && h.trim() !== ''),
+      bannerImage: (formData.bannerImage || '').trim(),
+      galleryImages: (formData.galleryImages || []).filter(img => img && img.trim() !== ''),
+      videoUrls: (formData.videoUrls || []).filter(v => v && v.trim() !== ''),
+      brochurePdfUrl: (formData.brochurePdfUrl || '').trim(),
+      showcasedCategoryIds: formData.showcasedCategoryIds || [],
+      showcasedProducts: (formData.showcasedProducts || []).filter(p => p && p.trim() !== ''),
       qrSlug,
       leadsCapturedCount: editingExpoId ? (exhibitions.find(e => e.id === editingExpoId)?.leadsCapturedCount || 0) : 0,
-      featured: formData.featured,
-      status: formData.status,
-      autoArchivePassedDate: formData.autoArchivePassedDate,
+      featured: !!formData.featured,
+      status: formData.status || 'Upcoming',
+      autoArchivePassedDate: formData.autoArchivePassedDate ?? true,
     };
 
     if (editingExpoId) {
       updateExhibition(editingExpoId, expoPayload);
+      showNotification(`Exhibition "${title}" updated successfully!`, 'success');
     } else {
       addExhibition(expoPayload);
+      showNotification(`New Exhibition "${title}" published!`, 'success');
     }
 
     setIsModalOpen(false);
@@ -776,7 +824,7 @@ export const ExhibitionManager: React.FC = () => {
             </div>
 
             {/* Modal Body / Form */}
-            <form onSubmit={handleSaveExpoSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 text-xs font-mono">
+            <form onSubmit={handleSaveExpoSubmit} noValidate className="flex-1 overflow-y-auto p-6 space-y-6 text-xs font-mono">
               
               {/* TAB 1: BASIC INFO & DATES */}
               {modalActiveTab === 'basic' && (
@@ -963,60 +1011,116 @@ export const ExhibitionManager: React.FC = () => {
                 <div className="space-y-5">
                   {/* Main Banner / Thumbnail */}
                   <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-                    <label className="block font-bold text-slate-900 text-xs">
-                      Primary Event Thumbnail / Poster Image URL *
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="text"
-                        required
-                        value={formData.bannerImage}
-                        onChange={e => setFormData({ ...formData, bannerImage: e.target.value })}
-                        className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:border-orange-500 outline-none bg-white text-xs font-mono"
-                      />
-                      <img
-                        src={formData.bannerImage}
-                        alt="Preview"
-                        className="w-16 h-12 rounded object-cover border border-slate-300 bg-slate-200 shrink-0"
-                      />
+                    <div className="flex items-center justify-between">
+                      <label className="block font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                        <ImageIcon className="w-3.5 h-3.5 text-orange-600" /> Primary Event Poster / Thumbnail *
+                      </label>
+                      <label className="text-[10px] font-mono font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 px-2 py-0.5 rounded cursor-pointer transition-colors flex items-center gap-1">
+                        {isUploadingBanner ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                        <span>{isUploadingBanner ? 'Uploading...' : 'Upload Poster'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={isUploadingBanner}
+                          className="hidden"
+                          onChange={e => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(file, 'banner');
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
                     </div>
-                  </div>
 
-                  {/* Preset Selector */}
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase">Quick Preset Posters:</span>
-                    <div className="flex flex-wrap gap-2">
-                      {samplePresets.map((preset, idx) => (
+                    {formData.bannerImage ? (
+                      <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-white h-36">
+                        <img
+                          src={formData.bannerImage}
+                          alt="Poster Preview"
+                          className="w-full h-full object-cover"
+                        />
                         <button
-                          key={idx}
                           type="button"
-                          onClick={() => setFormData({ ...formData, bannerImage: preset.url })}
-                          className="px-2.5 py-1 rounded bg-slate-100 hover:bg-orange-50 hover:text-orange-700 border border-slate-200 text-[10px] font-mono transition-colors"
+                          onClick={() => setFormData(prev => ({ ...prev, bannerImage: '' }))}
+                          className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full opacity-80 hover:opacity-100 transition-opacity"
+                          title="Remove poster"
                         >
-                          + {preset.label}
+                          <X className="w-3.5 h-3.5" />
                         </button>
-                      ))}
-                    </div>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-slate-200 rounded-xl hover:border-orange-400 bg-white cursor-pointer transition-colors p-2 text-center">
+                        {isUploadingBanner ? (
+                          <div className="flex flex-col items-center gap-1 text-orange-600">
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span className="text-[10px] font-mono">Uploading poster to Cloudinary...</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-1 text-slate-400">
+                            <UploadCloud className="w-5 h-5 text-slate-400" />
+                            <span className="text-[11px] font-mono text-slate-600 font-semibold">Click to upload poster image</span>
+                            <span className="text-[9px] font-mono text-slate-400">PNG, JPG, WEBP (Auto CDN)</span>
+                          </div>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={isUploadingBanner}
+                          className="hidden"
+                          onChange={e => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(file, 'banner');
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
+                    )}
+
+                    <input
+                      type="text"
+                      value={formData.bannerImage}
+                      onChange={e => setFormData({ ...formData, bannerImage: e.target.value })}
+                      placeholder="Or paste image URL directly..."
+                      className="w-full px-3 py-1.5 border border-slate-300 rounded-lg focus:border-orange-500 outline-none bg-white text-xs font-mono"
+                    />
                   </div>
 
                   {/* Multiple Gallery Photos */}
                   <div className="border-t border-slate-200 pt-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-bold text-slate-900 text-xs">Multiple High-Res Photos Gallery</h4>
+                        <h4 className="font-bold text-slate-900 text-xs">Exhibition Booth & Machinery Gallery Photos</h4>
                         <p className="text-[11px] text-slate-500">
-                          Add multiple booth setup photos, live crowd demos, and machinery close-ups.
+                          Upload multiple booth setup photos, live crowd demos, and machinery close-ups.
                         </p>
                       </div>
-                      <span className="text-xs font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded border border-orange-200">
-                        {formData.galleryImages.length} Photos Added
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs font-mono font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 px-3 py-1 rounded-lg cursor-pointer transition-colors flex items-center gap-1">
+                          {isUploadingGallery ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                          <span>{isUploadingGallery ? 'Uploading...' : '📁 Upload Photos'}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            disabled={isUploadingGallery}
+                            className="hidden"
+                            onChange={e => {
+                              const files = Array.from(e.target.files || []);
+                              files.forEach(f => handleFileUpload(f, 'gallery'));
+                              e.target.value = '';
+                            }}
+                          />
+                        </label>
+                        <span className="text-xs font-bold text-orange-700 bg-orange-50 px-2 py-1 rounded border border-orange-200">
+                          {formData.galleryImages.length} Photos
+                        </span>
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
-                        placeholder="Paste image URL (e.g. https://images.unsplash.com/...)"
+                        placeholder="Or paste photo URL..."
                         value={newGalleryInput}
                         onChange={e => setNewGalleryInput(e.target.value)}
                         className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:border-orange-500 outline-none bg-slate-50 text-xs font-mono"
@@ -1026,47 +1130,39 @@ export const ExhibitionManager: React.FC = () => {
                         onClick={() => handleAddGalleryImage()}
                         className="btn-primary text-xs py-2 px-4 shrink-0 flex items-center gap-1"
                       >
-                        <Plus className="w-3.5 h-3.5" /> Add Photo
+                        <Plus className="w-3.5 h-3.5" /> Add URL
                       </button>
                     </div>
 
-                    {/* Quick Add Presets to Gallery */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {samplePresets.map((preset, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => handleAddGalleryImage(preset.url)}
-                          className="text-[10px] bg-slate-50 hover:bg-slate-200 border border-slate-200 px-2 py-0.5 rounded text-slate-700"
-                        >
-                          Add {preset.label} to Gallery
-                        </button>
-                      ))}
-                    </div>
-
                     {/* Gallery Preview Cards */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                      {formData.galleryImages.map((imgUrl, index) => (
-                        <div key={index} className="relative group rounded-xl overflow-hidden border border-slate-200 shadow-2xs">
-                          <img
-                            src={imgUrl}
-                            alt={`Gallery item ${index + 1}`}
-                            className="w-full h-24 object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveGalleryImage(index)}
-                            className="absolute top-1 right-1 p-1 bg-rose-600 text-white rounded-full opacity-80 hover:opacity-100 shadow-xs"
-                            title="Remove Photo"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                          <span className="absolute bottom-1 left-1 bg-slate-900/80 text-white text-[9px] px-1 rounded">
-                            #{index + 1}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                    {formData.galleryImages.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                        {formData.galleryImages.map((imgUrl, index) => (
+                          <div key={index} className="relative group rounded-xl overflow-hidden border border-slate-200 shadow-2xs">
+                            <img
+                              src={imgUrl}
+                              alt={`Gallery item ${index + 1}`}
+                              className="w-full h-24 object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveGalleryImage(index)}
+                              className="absolute top-1 right-1 p-1 bg-rose-600 text-white rounded-full opacity-80 hover:opacity-100 shadow-xs"
+                              title="Remove Photo"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                            <span className="absolute bottom-1 left-1 bg-slate-900/80 text-white text-[9px] px-1 rounded">
+                              #{index + 1}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 border border-dashed border-slate-200 rounded-xl text-center text-slate-400 text-xs font-mono">
+                        No gallery photos uploaded yet. Click "Upload Photos" above.
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1078,20 +1174,37 @@ export const ExhibitionManager: React.FC = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-bold text-slate-900 text-xs">Multiple Live Demonstration & Product Videos</h4>
+                        <h4 className="font-bold text-slate-900 text-xs">Exhibition Demonstration & Machinery Videos</h4>
                         <p className="text-[11px] text-slate-500">
-                          Add MP4 / WebM / YouTube demo links for booth presentations and live machine runs.
+                          Upload MP4 videos or paste YouTube/WebM demo links for booth presentations.
                         </p>
                       </div>
-                      <span className="text-xs font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
-                        {formData.videoUrls.length} Videos Added
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs font-mono font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-1 rounded-lg cursor-pointer transition-colors flex items-center gap-1">
+                          {isUploadingVideo ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                          <span>{isUploadingVideo ? 'Uploading...' : '📁 Upload MP4 Video'}</span>
+                          <input
+                            type="file"
+                            accept="video/*"
+                            disabled={isUploadingVideo}
+                            className="hidden"
+                            onChange={e => {
+                              const file = e.target.files?.[0];
+                              if (file) handleFileUpload(file, 'video');
+                              e.target.value = '';
+                            }}
+                          />
+                        </label>
+                        <span className="text-xs font-bold text-rose-700 bg-rose-50 px-2 py-1 rounded border border-rose-200">
+                          {formData.videoUrls.length} Videos
+                        </span>
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
-                        placeholder="Paste video MP4 URL (e.g. https://assets.mixkit.co/...)"
+                        placeholder="Or paste video MP4 / stream URL..."
                         value={newVideoInput}
                         onChange={e => setNewVideoInput(e.target.value)}
                         className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:border-orange-500 outline-none bg-slate-50 text-xs font-mono"
@@ -1101,7 +1214,7 @@ export const ExhibitionManager: React.FC = () => {
                         onClick={handleAddVideo}
                         className="btn-primary text-xs py-2 px-4 shrink-0 flex items-center gap-1 bg-rose-600 hover:bg-rose-700"
                       >
-                        <Plus className="w-3.5 h-3.5" /> Add Video
+                        <Plus className="w-3.5 h-3.5" /> Add URL
                       </button>
                     </div>
 
@@ -1145,27 +1258,55 @@ export const ExhibitionManager: React.FC = () => {
                   </div>
 
                   {/* Brochure Catalog PDF */}
-                  <div className="border-t border-slate-200 pt-4 space-y-2">
-                    <label className="block font-bold text-slate-900 text-xs">
-                      Event Catalog / Printable PDF Brochure URL
-                    </label>
+                  <div className="border-t border-slate-200 pt-4 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="block font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                        <FileText className="w-3.5 h-3.5 text-blue-600" /> Event Catalog / Printable PDF Brochure
+                      </label>
+                      <label className="text-[10px] font-mono font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2 py-0.5 rounded cursor-pointer transition-colors flex items-center gap-1">
+                        {isUploadingBrochure ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                        <span>{isUploadingBrochure ? 'Uploading...' : '📁 Upload PDF'}</span>
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          disabled={isUploadingBrochure}
+                          className="hidden"
+                          onChange={e => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(file, 'brochure');
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
+                    </div>
+
                     <div className="flex items-center gap-2">
                       <input
                         type="text"
-                        placeholder="https://.../event-brochure.pdf"
+                        placeholder="Upload PDF above or paste brochure link..."
                         value={formData.brochurePdfUrl}
                         onChange={e => setFormData({ ...formData, brochurePdfUrl: e.target.value })}
                         className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:border-orange-500 outline-none bg-slate-50 text-xs font-mono"
                       />
                       {formData.brochurePdfUrl && (
-                        <a
-                          href={formData.brochurePdfUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="btn-secondary text-xs py-2 px-3 flex items-center gap-1"
-                        >
-                          <FileText className="w-3.5 h-3.5 text-blue-600" /> Test PDF
-                        </a>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <a
+                            href={formData.brochurePdfUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="btn-secondary text-xs py-2 px-3 flex items-center gap-1"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-blue-600" /> View PDF
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, brochurePdfUrl: '' }))}
+                            className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg border border-rose-200"
+                            title="Remove PDF"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>

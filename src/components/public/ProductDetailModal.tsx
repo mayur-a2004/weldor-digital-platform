@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   X, 
@@ -15,7 +15,7 @@ import {
   FileCode,
   Video,
   Sparkles,
-  DollarSign
+  IndianRupee
 } from 'lucide-react';
 
 export const ProductDetailModal: React.FC = () => {
@@ -31,6 +31,24 @@ export const ProductDetailModal: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'photos' | 'specs' | 'video' | 'downloads' | 'applications'>('photos');
   const [activeImage, setActiveImage] = useState<string>('');
 
+  // Escape key handler & scroll lock for modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedProduct(null);
+        setActiveImage('');
+      }
+    };
+    if (selectedProduct) {
+      window.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedProduct]);
+
   if (!selectedProduct) return null;
 
   const galleryImages = selectedProduct.gallery && selectedProduct.gallery.length > 0 
@@ -41,19 +59,54 @@ export const ProductDetailModal: React.FC = () => {
   const isCompared = compareList.some(p => p.id === selectedProduct.id);
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white border border-slate-200 rounded-3xl max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl relative text-slate-900 font-sans my-6">
+    <div 
+      className="fixed inset-0 z-[100] bg-slate-950/85 backdrop-blur-md flex justify-center items-start p-3 sm:p-6 md:p-8 overflow-y-auto animate-fadeIn"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          setSelectedProduct(null);
+          setActiveImage('');
+        }
+      }}
+    >
+      {/* Fixed Floating Screen Close Button (Always visible on screen, never scrolls away) */}
+      <button 
+        type="button"
+        onClick={() => {
+          setSelectedProduct(null);
+          setActiveImage('');
+        }}
+        aria-label="Close Product Modal"
+        title="Close Modal (Esc)"
+        className="fixed top-3 right-3 sm:top-6 sm:right-6 z-[120] p-2.5 sm:px-4 sm:py-2.5 rounded-full bg-slate-900/95 hover:bg-rose-600 text-white shadow-2xl border border-slate-700 hover:border-rose-500 transition-all flex items-center gap-2 cursor-pointer group"
+      >
+        <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-200" />
+        <span className="text-xs font-mono font-bold hidden sm:inline">CLOSE</span>
+      </button>
+
+      {/* Modal Container Box */}
+      <div className="bg-white border border-slate-200 rounded-3xl max-w-5xl w-full shadow-2xl relative text-slate-900 font-sans my-4 sm:my-8 overflow-hidden">
         
-        {/* Modal Close Button */}
-        <button 
-          onClick={() => {
-            setSelectedProduct(null);
-            setActiveImage('');
-          }}
-          className="absolute top-5 right-5 z-20 p-2.5 rounded-full bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition-colors shadow-sm"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Modal Top Header Bar with Close Button */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/90">
+          <div className="flex items-center gap-2">
+            <span className="tech-label text-[10px]">PRODUCT SPECIFICATION DOSSIER</span>
+            <span className="text-xs font-mono font-bold text-orange-700 bg-orange-100/60 px-2 py-0.5 rounded border border-orange-200">
+              {selectedProduct.sku}
+            </span>
+          </div>
+          <button 
+            type="button"
+            onClick={() => {
+              setSelectedProduct(null);
+              setActiveImage('');
+            }}
+            aria-label="Close Modal"
+            title="Close Modal (Esc)"
+            className="p-1.5 sm:p-2 rounded-full bg-slate-200/70 hover:bg-rose-100 text-slate-700 hover:text-rose-700 border border-slate-300 transition-colors cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
         <div className="p-6 sm:p-10 space-y-8">
           
@@ -66,6 +119,7 @@ export const ProductDetailModal: React.FC = () => {
                 <img 
                   src={currentMainImage} 
                   alt={selectedProduct.name} 
+                  onError={(e) => { e.currentTarget.src = '/catalog_pages/page_4.png'; }}
                   className="w-full h-full object-cover" 
                 />
                 <span className="absolute top-4 left-4 bg-slate-900/90 text-white px-3 py-1 rounded-md text-xs font-mono font-bold border border-slate-700">
@@ -93,7 +147,7 @@ export const ProductDetailModal: React.FC = () => {
                         currentMainImage === imgUrl ? 'border-orange-600 scale-105 shadow-md ring-2 ring-orange-200' : 'border-slate-200 opacity-70 hover:opacity-100'
                       }`}
                     >
-                      <img src={imgUrl} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover" />
+                      <img src={imgUrl} alt={`Thumbnail ${idx}`} onError={(e) => { e.currentTarget.src = '/catalog_pages/page_4.png'; }} className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
@@ -130,10 +184,9 @@ export const ProductDetailModal: React.FC = () => {
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                 <div>
                   <span className="text-[10px] font-mono text-slate-500 uppercase block font-bold">B2B Commercial Price</span>
-                  <span className="text-2xl font-black text-slate-900 font-mono">${selectedProduct.priceUSD || 150} USD</span>
-                  {selectedProduct.priceINR && (
-                    <span className="text-xs font-mono text-slate-500 ml-2">(₹{selectedProduct.priceINR.toLocaleString()} INR)</span>
-                  )}
+                  <span className="text-2xl font-black text-slate-900 font-mono">
+                    ₹{(selectedProduct.priceINR || (selectedProduct.priceUSD ? selectedProduct.priceUSD * 85 : 4500)).toLocaleString('en-IN')}
+                  </span>
                 </div>
 
                 <div className="text-right">
@@ -377,6 +430,23 @@ export const ProductDetailModal: React.FC = () => {
             </div>
           </div>
 
+        </div>
+
+        {/* Bottom Action Footer Strip */}
+        <div className="p-4 sm:px-10 sm:py-5 border-t border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-3">
+          <span className="text-xs font-mono text-slate-500">
+            Weldor Industrial Engineering • SKU: {selectedProduct.sku}
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedProduct(null);
+              setActiveImage('');
+            }}
+            className="btn-secondary text-xs px-4 py-2 flex items-center gap-1.5 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 cursor-pointer"
+          >
+            <X className="w-4 h-4" /> Close Product View
+          </button>
         </div>
 
       </div>

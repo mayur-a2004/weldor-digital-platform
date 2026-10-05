@@ -1,0 +1,6 @@
+sku,name,category,hsnCode,unit,unitPriceINR,unitPriceUSD,costPriceINR,gstRatePct,currentStock,minStockAlert,isPublic,warehouseLocation,supplierName,description
+WLD-TIP-1.0-M6,"MIG Contact Tip 1.0mm CuCrZr M6","MIG Consumables & Spares",85159000,PCS,45,0.55,25,18,500,100,FALSE,"Jamnagar Godown A - Rack B12","Earth Metal Industries In-House","Heavy-duty copper contact tip for MIG torches"
+WLD-NOZ-250A,"MIG Gas Nozzle 250A Conical","MIG Consumables & Spares",85159000,PCS,180,2.15,110,18,40,15,FALSE,"Jamnagar Godown A - Bin C02","Earth Metal Industries Pressings","Conical gas shielding nozzle"
+WLD-VALV-12V,"Direct Solenoid Valve 12V DC 1/8""","Pneumatic Automation Valves",84818030,PCS,1250,15.00,800,18,12,5,FALSE,"Automation Assembly Rack E1","Earth Pneumatics Sub-Assembly","Compact pilot-operated solenoid valve"
+WLD-FT-8MM,"Brass Male Push-In 8mm OD x 1/8"" BSPT","Brass Pneumatic Fittings",74122019,PCS,58,0.70,32,18,1200,200,TRUE,"Jamnagar Brass Yard Bay 2","Earth Metal Jamnagar Foundry","Nickel-plated precision brass push-in fitting"
+WLD-ROD-HEX20,"Brass Hex Rod CW617N 20mm (3 Mtr)","Raw Materials & Extrusions",74072110,KG,690,8.25,590,18,25,10,FALSE,"Raw Yard Bay 1","Earth Extrusions Plant","High-machinability forging grade brass rod"

@@ -5,7 +5,8 @@ import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { ScrollToTop } from './components/layout/ScrollToTop';
 import { Hero } from './components/public/Hero';
-import { ProductDiscovery } from './components/public/ProductDiscovery';
+import { HomeCompanyAbout } from './components/public/HomeCompanyAbout';
+import { HomeVisionMission } from './components/public/HomeVisionMission';
 import { CategoriesShowcase } from './components/public/CategoriesShowcase';
 import { QualitySection } from './components/public/QualitySection';
 import { SEOFAQSection } from './components/public/SEOFAQSection';
@@ -42,6 +43,8 @@ import { CompanySettingsManager } from './components/crm/CompanySettingsManager'
 import { BulkUploadStudio } from './components/crm/BulkUploadStudio';
 import { IndiaMartManager } from './components/crm/IndiaMartManager';
 import { InvoiceBillingManager } from './components/crm/InvoiceBillingManager';
+import { InventoryManager } from './components/crm/InventoryManager';
+import { ReportsManager } from './components/crm/ReportsManager';
 import { LoginModal } from './components/auth/LoginModal';
 import { LoginPage } from './components/auth/LoginPage';
 import { Lock, ShieldAlert } from 'lucide-react';
@@ -100,10 +103,10 @@ const MainContent: React.FC = () => {
             {activeView === 'public-home' && (
               <>
                 <Hero />
-                <ProductDiscovery />
+                <HomeCompanyAbout />
+                <HomeVisionMission />
                 <CategoriesShowcase />
                 <QualitySection />
-                <SEOFAQSection />
                 <ExhibitionsSection />
               </>
             )}
@@ -132,23 +135,27 @@ const MainContent: React.FC = () => {
         <LoginPage />
       ) : (
         /* CRM ADMIN & SALES PORTAL: Fixed-height app shell with independent Sidebar and Main scrolling */
-        <div className="h-screen w-screen overflow-hidden bg-[#FAF9F6] text-slate-900 flex flex-col font-sans">
+        <div className="h-screen w-screen overflow-hidden bg-[#FAF9F6] text-slate-900 flex flex-col font-sans print:h-auto print:w-auto print:overflow-visible print:bg-white">
           
           {/* Fixed Header */}
-          <CRMHeader onToggleSidebar={() => setMobileSidebarOpen(prev => !prev)} />
+          <div className="print:hidden">
+            <CRMHeader onToggleSidebar={() => setMobileSidebarOpen(prev => !prev)} />
+          </div>
           
           {/* Main CRM Area: Sidebar + Content */}
-          <div className="flex-1 flex overflow-hidden min-h-0 relative">
+          <div className="flex-1 flex overflow-hidden min-h-0 relative print:h-auto print:overflow-visible print:block">
             
             {/* Docked Sidebar (Desktop) + Drawer (Mobile) */}
-            <CRMSidebar 
-              mobileOpen={mobileSidebarOpen} 
-              onCloseMobile={() => setMobileSidebarOpen(false)} 
-            />
+            <div className="print:hidden">
+              <CRMSidebar 
+                mobileOpen={mobileSidebarOpen} 
+                onCloseMobile={() => setMobileSidebarOpen(false)} 
+              />
+            </div>
             
             {/* Independently Scrollable CRM Main Stage */}
-            <main className="flex-1 h-full overflow-y-auto overflow-x-hidden bg-[#FAF9F6] text-slate-900 focus:outline-none">
-              <div className="max-w-7xl mx-auto w-full">
+            <main className="flex-1 h-full overflow-y-auto overflow-x-hidden bg-[#FAF9F6] text-slate-900 focus:outline-none print:h-auto print:w-full print:overflow-visible print:bg-white print:p-0">
+              <div className="max-w-7xl mx-auto w-full print:max-w-none print:w-full print:p-0">
                 {activeView === 'crm-dashboard' && (hasPermission('dashboard', 'view') ? <CRMDashboard /> : <RestrictedAccess module="Executive Dashboard" />)}
                 {activeView === 'crm-leads' && (hasPermission('leads', 'view') ? <KanbanPipeline /> : <RestrictedAccess module="Leads & Sales Kanban" />)}
                 {activeView === 'crm-indiamart' && (hasPermission('leads', 'view') ? <IndiaMartManager /> : <RestrictedAccess module="IndiaMART Integration Hub" />)}
@@ -162,6 +169,7 @@ const MainContent: React.FC = () => {
                 {activeView === 'crm-quotations' && (hasPermission('quotations', 'view') ? <QuotationBuilder /> : <RestrictedAccess module="Quotation Engine" />)}
                 {activeView === 'crm-invoices' && (hasPermission('orders', 'view') ? <InvoiceBillingManager /> : <RestrictedAccess module="Tax Invoices & Billing" />)}
                 {activeView === 'crm-orders' && (hasPermission('orders', 'view') ? <OrdersManager /> : <RestrictedAccess module="Orders & Dispatch" />)}
+                {activeView === 'crm-inventory' && (hasPermission('products', 'view') ? <InventoryManager /> : <RestrictedAccess module="Warehouse & Inventory Hub" />)}
                 {activeView === 'crm-employees' && (hasPermission('employees', 'view') ? <EmployeeManager /> : <RestrictedAccess module="Employee Directory" />)}
                 {activeView === 'crm-payroll' && (hasPermission('payroll', 'view') ? <PayrollManager /> : <RestrictedAccess module="Salary Roll & Payslips" />)}
                 {activeView === 'crm-attendance' && (hasPermission('attendance', 'view') ? <AttendanceManager /> : <RestrictedAccess module="Attendance & Leaves" />)}
@@ -170,6 +178,7 @@ const MainContent: React.FC = () => {
                 {activeView === 'crm-rbac' && (hasPermission('rbac', 'view') ? <RBACManager /> : <RestrictedAccess module="RBAC Security Matrix" />)}
                 {activeView === 'crm-audit' && (hasPermission('audit', 'view') ? <AuditLogViewer /> : <RestrictedAccess module="Security Audit Logs" />)}
                 {activeView === 'crm-settings' && (hasPermission('settings', 'view') ? <CompanySettingsManager /> : <RestrictedAccess module="Company Settings" />)}
+                {activeView === 'crm-reports' && <ReportsManager />}
               </div>
             </main>
           </div>

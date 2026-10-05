@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   X, 
@@ -32,6 +32,23 @@ export const ProductCatalogModal: React.FC = () => {
     setActiveView, 
     showNotification 
   } = useApp();
+
+  // Escape key handler & scroll lock for catalog modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeCatalogModal();
+      }
+    };
+    if (catalogModal?.isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [catalogModal?.isOpen]);
 
   const printAreaRef = useRef<HTMLDivElement>(null);
 
@@ -165,10 +182,26 @@ export const ProductCatalogModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto print:p-0 print:bg-white print:static print:overflow-visible">
+    <div 
+      className="fixed inset-0 z-[100] bg-slate-950/85 backdrop-blur-md flex justify-center items-start p-2 sm:p-4 md:p-6 overflow-y-auto print:p-0 print:bg-white print:static print:overflow-visible animate-fadeIn"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) closeCatalogModal();
+      }}
+    >
+      {/* Fixed Floating Screen Close Button (Always visible on screen, never scrolls away) */}
+      <button 
+        type="button"
+        onClick={closeCatalogModal}
+        aria-label="Close Technical Datasheet"
+        title="Close Modal (Esc)"
+        className="fixed top-3 right-3 sm:top-5 sm:right-5 z-[120] p-2.5 sm:px-4 sm:py-2.5 rounded-full bg-slate-900/95 hover:bg-rose-600 text-white shadow-2xl border border-slate-700 hover:border-rose-500 transition-all flex items-center gap-2 cursor-pointer group print:hidden"
+      >
+        <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-200" />
+        <span className="text-xs font-mono font-bold hidden sm:inline">CLOSE</span>
+      </button>
       
       {/* Modal Container */}
-      <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl max-w-5xl w-full max-h-[94vh] flex flex-col shadow-2xl overflow-hidden print:max-h-none print:shadow-none print:border-none print:w-full print:rounded-none">
+      <div className="bg-white border border-slate-200 rounded-2xl sm:rounded-3xl max-w-5xl w-full max-h-[94vh] flex flex-col shadow-2xl overflow-hidden print:max-h-none print:shadow-none print:border-none print:w-full print:rounded-none my-2 sm:my-6">
         
         {/* Top Action & Navigation Strip (Hidden in Print) */}
         <div className="bg-slate-900 text-white px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 print:hidden shrink-0">
@@ -216,10 +249,11 @@ export const ProductCatalogModal: React.FC = () => {
 
             <button
               onClick={closeCatalogModal}
-              className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-600 text-slate-400 hover:text-white transition-colors cursor-pointer ml-1"
-              title="Close Catalog"
+              className="p-1.5 sm:px-3 sm:py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-mono font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-sm ml-1"
+              title="Close Catalog (Esc)"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
+              <span className="hidden sm:inline">Close</span>
             </button>
           </div>
 
@@ -321,10 +355,9 @@ export const ProductCatalogModal: React.FC = () => {
 
                     <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-center">
                       <span className="text-[10px] font-mono text-slate-500 uppercase block font-bold">Standard Commercial Pricing</span>
-                      <span className="text-lg font-black font-mono text-slate-900">${activeProduct.priceUSD || 85} USD</span>
-                      {activeProduct.priceINR && (
-                        <span className="text-xs font-mono text-slate-600 ml-2">(₹{activeProduct.priceINR.toLocaleString()} INR)</span>
-                      )}
+                      <span className="text-lg font-black font-mono text-slate-900">
+                        ₹{(activeProduct.priceINR || (activeProduct.priceUSD ? activeProduct.priceUSD * 85 : 4500)).toLocaleString('en-IN')}
+                      </span>
                       <span className="text-[11px] font-mono text-slate-500 block">MOQ: {activeProduct.minOrderQty || 5} Units • Lead Time: {activeProduct.standardLeadTimeDays || 7} Days</span>
                     </div>
                   </div>
@@ -595,17 +628,17 @@ export const ProductCatalogModal: React.FC = () => {
                           <th className="p-2.5">Product Name</th>
                           <th className="p-2.5">Pressure Rating</th>
                           <th className="p-2.5">Material Grade</th>
-                          <th className="p-2.5">B2B Price (USD)</th>
+                          <th className="p-2.5">B2B Price (INR)</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {products.slice(0, 8).map((p, idx) => (
+                        {(products || []).slice(0, 8).map((p, idx) => (
                           <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
                             <td className="p-2.5 font-mono font-bold text-orange-700">{p.sku}</td>
                             <td className="p-2.5 font-bold text-slate-900">{p.name}</td>
-                            <td className="p-2.5 font-mono text-slate-700">{p.specifications.find(s => s.label.toLowerCase().includes('pressure'))?.value || '10 - 700 Bar'}</td>
-                            <td className="p-2.5 font-mono text-slate-700">{p.specifications.find(s => s.label.toLowerCase().includes('material'))?.value || 'Alloy 6061-T6 / SS316'}</td>
-                            <td className="p-2.5 font-mono font-bold text-slate-900">${p.priceUSD || 120} USD</td>
+                            <td className="p-2.5 font-mono text-slate-700">{(p.specifications || []).find(s => s.label.toLowerCase().includes('pressure'))?.value || '10 - 700 Bar'}</td>
+                            <td className="p-2.5 font-mono text-slate-700">{(p.specifications || []).find(s => s.label.toLowerCase().includes('material'))?.value || 'Alloy 6061-T6 / SS316'}</td>
+                            <td className="p-2.5 font-mono font-bold text-slate-900">₹{(p.priceINR || (p.priceUSD ? p.priceUSD * 85 : 4500)).toLocaleString('en-IN')}</td>
                           </tr>
                         ))}
                       </tbody>

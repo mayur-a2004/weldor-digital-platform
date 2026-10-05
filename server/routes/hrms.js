@@ -154,6 +154,24 @@ router.delete('/payroll/:id', async (req, res) => {
   }
 });
 
+// Bulk payroll operations
+router.post('/payroll/bulk', async (req, res) => {
+  try {
+    const { records } = req.body;
+    if (!Array.isArray(records)) {
+      return res.status(400).json({ success: false, message: 'records array is required' });
+    }
+    const results = [];
+    for (const record of records) {
+      const inserted = await db.insert('payrolls', record);
+      results.push(inserted);
+    }
+    res.status(201).json({ success: true, message: `${results.length} payroll records created`, data: results });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to bulk create payroll', error: err.message });
+  }
+});
+
 // --- ATTENDANCE & LEAVES ---
 router.get('/attendance', async (req, res) => {
   try {

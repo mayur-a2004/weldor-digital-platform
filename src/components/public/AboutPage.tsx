@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   Award, 
@@ -36,6 +36,23 @@ export const AboutPage: React.FC = () => {
     image: string;
     pdfUrl: string;
   } | null>(null);
+
+  // Escape key handler & scroll lock for certificate modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedCertModal(null);
+      }
+    };
+    if (selectedCertModal) {
+      window.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [selectedCertModal]);
 
   const googleMapsUrl = "https://www.google.com/maps/place/Weldor+by+Earth+Metal+Industries/@22.4145771,70.059849,17z/data=!3m1!4b1!4m6!3m5!1s0x39576b0f8c29599d:0x4b5181f8c3ddc48!8m2!3d22.4145771!4d70.059849!16s%2Fg%2F11fj_75ywj?hl=en-US&entry=ttu";
   const embedMapUrl = "https://maps.google.com/maps?q=22.4145771,70.059849&hl=en&z=16&output=embed";
@@ -93,17 +110,24 @@ export const AboutPage: React.FC = () => {
   return (
     <div className="bg-[#FAF9F6] min-h-screen text-slate-900 font-sans">
       
-      {/* 1. TOP HERO SECTION (Matching Image 3 Dark Architecture Aesthetic) */}
-      <section className="relative bg-[#131b26] text-white py-24 sm:py-32 overflow-hidden border-b border-slate-800">
-        {/* Perspective Geometric Architectural Grid / Glow Background */}
-        <div className="absolute inset-0 bg-[radial-gradient(#ea580c_1px,transparent_1px)] [background-size:32px_32px] opacity-15 pointer-events-none" />
+      {/* 1. TOP HERO SECTION (Matching Image 2 with Real Industrial Background & Exact Preserved Text) */}
+      <section className="relative bg-[#0d131d] text-white py-24 sm:py-32 overflow-hidden border-b border-slate-800">
+        {/* Real Industrial High-Resolution Plant Background */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-35 mix-blend-luminosity pointer-events-none transform scale-105 transition-transform duration-1000"
+          style={{ backgroundImage: `url('/images/banners/hero_welding_plant.jpg')` }}
+        />
+        {/* Cinematic Vignette & Precision Gradients */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0d131d] via-[#0d131d]/90 to-[#0d131d]/75 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0d131d] via-transparent to-[#0d131d]/50 pointer-events-none" />
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-orange-600/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-amber-600/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(#ea580c_1px,transparent_1px)] [background-size:32px_32px] opacity-10 pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-3xl space-y-6">
             
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-950/80 border border-orange-500/40 text-orange-400 text-xs font-mono font-bold uppercase tracking-widest">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-950/80 border border-orange-500/40 text-orange-400 text-xs font-mono font-bold uppercase tracking-widest backdrop-blur-xs">
               <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
               <span>ABOUT US</span>
             </div>
@@ -140,60 +164,94 @@ export const AboutPage: React.FC = () => {
         </div>
       </section>
 
-      {/* 2. COMPANY VALUES SECTION (Matching Image 3 Layout) */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      {/* 2. COMPANY VALUES SECTION (Aesthetic, Premium Engineering Redesign - Image 3) */}
+      <section className="py-20 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           
-          {/* Left: Manufacturing / Inspection Lighting Visual Image */}
+          {/* Left: Authentic Zeiss 3D CMM Quality Lab with Industrial Frame */}
           <div className="lg:col-span-5 relative group">
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-slate-900 aspect-[4/5] flex items-center justify-center">
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-200 bg-slate-950 aspect-[4/5] flex items-center justify-center">
               <img 
-                src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=900" 
-                alt="Precision CNC Quality Inspection" 
+                src="/images/quality_inspection_lab.jpg" 
+                alt="Zeiss 3D CMM Metrology Quality Lab" 
+                onError={(e) => { e.currentTarget.src = '/catalog_pages/page_4.png'; }}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-95"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/30 to-transparent" />
+
+              {/* Top Industrial Stamp */}
+              <div className="absolute top-4 left-4 flex items-center gap-2">
+                <span className="bg-slate-900/90 text-white text-[10px] font-mono font-bold px-2.5 py-1 rounded-md border border-slate-700 backdrop-blur-md shadow-sm">
+                  PLANT: JAMNAGAR, GUJARAT
+                </span>
+              </div>
               
-              <div className="absolute bottom-6 left-6 right-6 p-5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white">
-                <div className="flex items-center gap-2 text-orange-400 font-mono text-xs font-bold uppercase mb-1">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Quality Assured</span>
+              {/* Bottom Calibrated Quality Tag */}
+              <div className="absolute bottom-5 left-5 right-5 p-5 rounded-2xl bg-slate-900/85 backdrop-blur-md border border-slate-700/80 text-white shadow-xl">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <div className="flex items-center gap-1.5 text-orange-400 font-mono text-xs font-bold uppercase">
+                    <ShieldCheck className="w-4 h-4 text-orange-500" />
+                    <span>Metrology Assured</span>
+                  </div>
+                  <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded font-bold">
+                    ±0.005mm
+                  </span>
                 </div>
-                <p className="font-heading font-bold text-sm">
-                  100% Dimensional Accuracy Tested on 3D CMM
+                <p className="font-heading font-bold text-sm text-slate-100">
+                  100% Dimensional Accuracy Tested on Zeiss 3D CMM
+                </p>
+                <p className="text-[11px] text-slate-400 font-mono mt-1">
+                  Calibrated to ISO 9001:2015 & European Welding Standards
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Right: Company Values Grid */}
+          {/* Right: Company Values Grid with Polished Industrial Aesthetics */}
           <div className="lg:col-span-7 space-y-8">
             <div>
-              <span className="text-xs font-mono font-bold text-orange-600 uppercase tracking-widest block mb-1">
-                OUR PHILOSOPHY
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-extrabold font-heading text-slate-900 tracking-tight">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-mono font-bold uppercase tracking-wider mb-2">
+                <Sparkles className="w-3.5 h-3.5 text-orange-600" />
+                <span>OUR PHILOSOPHY</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-heading text-slate-900 tracking-tight">
                 Company Values
               </h2>
+              <p className="text-sm text-slate-600 mt-2 max-w-xl">
+                Our bedrock operating principles ensure consistent high-volume delivery for Tier-1 automotive and heavy fabrication OEMs worldwide.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {companyValues.map((val, idx) => {
                 const IconComp = val.icon;
+                const indexNumber = `0${idx + 1}`;
+
                 return (
                   <div 
                     key={idx} 
-                    className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-orange-300 transition-all space-y-3"
+                    className="p-6 rounded-2xl bg-gradient-to-br from-white to-slate-50/70 border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-orange-500 transition-all duration-300 space-y-3.5 relative overflow-hidden group"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 text-orange-600 flex items-center justify-center">
-                      <IconComp className="w-5 h-5" />
+                    {/* Top Right Monospace Index */}
+                    <span className="absolute top-5 right-5 font-mono text-xl font-black text-slate-300 group-hover:text-orange-400/70 transition-colors">
+                      {indexNumber}
+                    </span>
+
+                    <div className="w-11 h-11 rounded-xl bg-orange-50 border border-orange-200/90 text-orange-600 flex items-center justify-center group-hover:scale-110 group-hover:bg-orange-600 group-hover:text-white transition-all shadow-xs">
+                      <IconComp className="w-5 h-5 transition-colors" />
                     </div>
-                    <h3 className="font-bold text-base text-slate-900 font-heading">
-                      {val.title}
-                    </h3>
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      {val.desc}
-                    </p>
+
+                    <div>
+                      <h3 className="font-bold text-base text-slate-900 font-heading group-hover:text-orange-600 transition-colors">
+                        {val.title}
+                      </h3>
+                      <p className="text-xs text-slate-600 leading-relaxed mt-1.5 font-medium">
+                        {val.desc}
+                      </p>
+                    </div>
+
+                    {/* Bottom subtle accent line */}
+                    <div className="h-0.5 w-8 bg-orange-500/0 group-hover:w-full group-hover:bg-orange-500/80 transition-all duration-500 rounded-full" />
                   </div>
                 );
               })}
@@ -203,7 +261,101 @@ export const AboutPage: React.FC = () => {
         </div>
       </section>
 
-      {/* 3. PRODUCT CATEGORIES SPOTLIGHT (Matching Image 3 Dark Stage) */}
+      {/* 3. FOUNDER'S MESSAGE SECTION */}
+      <section className="py-16 sm:py-20 bg-gradient-to-b from-slate-50 to-white border-b border-slate-200 relative overflow-hidden">
+        {/* Subtle ambient orbs */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+          {/* Section Label */}
+          <div className="flex items-center gap-2 mb-10">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 border border-orange-200 text-orange-700 text-xs font-mono font-bold uppercase tracking-wider">
+              <Users className="w-3.5 h-3.5 text-orange-600" />
+              FOUNDER'S MESSAGE
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+
+            {/* Left: Founder Photo Card */}
+            <div className="lg:col-span-4 flex flex-col items-center lg:items-start">
+              <div className="relative group w-full max-w-sm mx-auto lg:mx-0">
+                {/* Orange glow accent behind photo */}
+                <div className="absolute -inset-1 bg-gradient-to-br from-orange-500 via-amber-400 to-orange-600 rounded-3xl blur-sm opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
+                
+                {/* Photo Frame — Professional executive framing */}
+                <div className="relative rounded-3xl overflow-hidden border-2 border-white shadow-2xl bg-[#F5F3EE]">
+                  <img
+                    src="/images/kevin_dholariya_founder.jpg"
+                    alt="Kevin Dholariya – Founder & Managing Director, Weldor by Earth Metal Industries"
+                    className="w-full h-auto object-cover block group-hover:scale-[1.02] transition-transform duration-700"
+                    onError={(e) => { e.currentTarget.src = '/catalog_pages/page_4.png'; }}
+                  />
+
+                  {/* Name badge below photo */}
+                  <div className="px-5 py-4 bg-white border-t border-slate-100">
+                    <p className="font-extrabold text-slate-900 font-heading text-lg leading-tight">Kevin Dholariya</p>
+                    <p className="text-xs text-orange-600 font-semibold mt-1">Founder & Managing Director</p>
+                    <p className="text-xs text-slate-500 mt-0.5">Weldor · Jamnagar, Gujarat</p>
+                  </div>
+                </div>
+
+                {/* Floating credibility badge */}
+                <div className="absolute -top-3 -right-3 bg-orange-600 text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-lg border-2 border-white">
+                  Est. 2011
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Message Content */}
+            <div className="lg:col-span-8 space-y-6">
+              {/* Large quote mark */}
+              <div className="text-orange-500/25 font-serif text-[120px] leading-none select-none -mb-10 -mt-4" aria-hidden="true">"</div>
+
+              <div className="space-y-5 relative z-10">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-heading text-slate-900 tracking-tight leading-tight">
+                  Crafted With Purpose,<br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600">Delivered With Pride.</span>
+                </h2>
+
+                <div className="space-y-4 text-slate-700 text-sm leading-relaxed font-normal">
+                  <p>
+                    When I founded Earth Metal Industries in 2011, I had one clear goal — to build a company where every component we manufacture would be a reflection of our integrity and craftsmanship. In an industry where precision is everything, we chose to invest in people, technology, and processes that could consistently deliver excellence.
+                  </p>
+                  <p>
+                    Today, <strong className="text-slate-900">Weldor</strong> stands as a trusted OEM partner to leading welding and industrial fabrication companies across India and international markets. Our advanced Swiss CNC machining facility in Jamnagar, our ISO 9001:2015 certified quality lab, and our team of dedicated engineers are the backbone of that trust.
+                  </p>
+                  <p>
+                    We don't just manufacture parts — we engineer reliability. Every MIG torch, every gas regulator, every precision consumable that leaves our plant carries our commitment to zero defects, on-time delivery, and long-term customer success.
+                  </p>
+                </div>
+
+                {/* Signature block */}
+                <div className="pt-4 border-t border-slate-200 flex items-center gap-4">
+                  <div>
+                    <p className="font-extrabold text-slate-900 text-base font-heading">Kevin Dholariya</p>
+                    <p className="text-xs text-orange-600 font-semibold">Founder & Managing Director</p>
+                    <p className="text-xs text-slate-500">Earth Metal Industries · Jamnagar, Gujarat</p>
+                  </div>
+                  <div className="ml-auto flex flex-col items-end gap-1.5">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> ISO 9001:2015 Certified
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-700 bg-orange-50 border border-orange-200 px-3 py-1 rounded-full">
+                      <Award className="w-3.5 h-3.5" /> 15+ Years of Excellence
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* 4. PRODUCT CATEGORIES SPOTLIGHT (Matching Image 3 Dark Stage) */}
       <section className="py-16 bg-[#111923] text-white border-y border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           
@@ -228,53 +380,59 @@ export const AboutPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
-            {/* Spotlight 1: Pneumatic & Hydraulic */}
+            {/* Spotlight 1: Gas Regulators & Pressure Equipment */}
             <div 
               onClick={() => setActiveView('public-products')}
-              className="p-8 rounded-3xl bg-slate-900/90 border border-slate-800 hover:border-orange-500/50 shadow-xl transition-all cursor-pointer group relative overflow-hidden"
+              className="p-7 sm:p-8 rounded-3xl bg-slate-900/90 border border-slate-800 hover:border-orange-500/50 shadow-2xl transition-all cursor-pointer group relative overflow-hidden"
             >
-              <div className="h-44 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center mb-6 overflow-hidden border border-slate-700/60">
+              <div className="h-48 sm:h-52 rounded-2xl bg-slate-950 flex items-center justify-center mb-6 overflow-hidden border border-slate-800 relative">
                 <img 
-                  src="https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&q=80&w=700" 
-                  alt="Pneumatic & Hydraulic Components"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  src="/images/quality_inspection_lab.jpg" 
+                  alt="Precision Gas Regulators & Inspection Lab"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+                <span className="absolute bottom-3 left-3 text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-orange-600/90 text-white backdrop-blur shadow">
+                  300 Bar Forged Brass
+                </span>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold font-heading text-white group-hover:text-orange-400 transition-colors">
-                    Pneumatic & Hydraulic →
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1 max-w-md">
-                    Heavy-duty ISO pneumatic cylinders, high pressure 700 Bar hydraulic directional valves, quick connect couplings, and precision manifolds.
-                  </p>
-                </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold font-heading text-white group-hover:text-orange-400 transition-colors flex items-center justify-between">
+                  <span>Gas Regulators & Control Valves</span>
+                  <ArrowRight className="w-5 h-5 text-orange-400 group-hover:translate-x-1 transition-transform" />
+                </h3>
+                <p className="text-xs text-slate-300 leading-relaxed max-w-md">
+                  Heavy forged brass dual-gauge gas pressure regulators, stainless steel diaphragms, and precision micro-adjustment valves for oxygen, argon, and LPG.
+                </p>
               </div>
             </div>
 
-            {/* Spotlight 2: Welding Components */}
+            {/* Spotlight 2: Welding Components & Torches */}
             <div 
               onClick={() => setActiveView('public-products')}
-              className="p-8 rounded-3xl bg-slate-900/90 border border-slate-800 hover:border-orange-500/50 shadow-xl transition-all cursor-pointer group relative overflow-hidden"
+              className="p-7 sm:p-8 rounded-3xl bg-slate-900/90 border border-slate-800 hover:border-orange-500/50 shadow-2xl transition-all cursor-pointer group relative overflow-hidden"
             >
-              <div className="h-44 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center mb-6 overflow-hidden border border-slate-700/60">
+              <div className="h-48 sm:h-52 rounded-2xl bg-slate-950 flex items-center justify-center mb-6 overflow-hidden border border-slate-800 relative">
                 <img 
-                  src="https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?auto=format&fit=crop&q=80&w=700" 
-                  alt="Welding Components & Torches"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  src="/images/banners/hero_welding_torch.jpg" 
+                  alt="Welding Components & Industrial Torches"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+                <span className="absolute bottom-3 left-3 text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-orange-600/90 text-white backdrop-blur shadow">
+                  MIG, TIG & Plasma Range
+                </span>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold font-heading text-white group-hover:text-orange-400 transition-colors">
-                    Welding Components →
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1 max-w-md">
-                    High conductivity CuCrZr contact tips, conical gas nozzles, ceramic gas diffusers, and automated robotic MIG/TIG torch assemblies.
-                  </p>
-                </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold font-heading text-white group-hover:text-orange-400 transition-colors flex items-center justify-between">
+                  <span>Welding Torches & Consumables</span>
+                  <ArrowRight className="w-5 h-5 text-orange-400 group-hover:translate-x-1 transition-transform" />
+                </h3>
+                <p className="text-xs text-slate-300 leading-relaxed max-w-md">
+                  High-conductivity CuCrZr contact tips, conical gas nozzles, ceramic diffusers, and heavy-duty 24KD/36KD & PANA style automated torches.
+                </p>
               </div>
             </div>
 
@@ -506,44 +664,59 @@ export const AboutPage: React.FC = () => {
         </div>
       </section>
 
-      {/* 5. WELDOR BY EARTH METAL INDUSTRIES HIGHLIGHTS (Matching Image 3) */}
-      <section className="py-20 bg-white border-y border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* 5. WELDOR BY EARTH METAL INDUSTRIES HIGHLIGHTS (With Proper Industrial Background) */}
+      <section className="py-24 bg-slate-950 text-white border-y border-slate-800 relative overflow-hidden">
+        
+        {/* Proper Industrial Manufacturing Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-25 mix-blend-luminosity pointer-events-none" 
+          style={{ backgroundImage: `url('/images/banners/hero_welding_plant.jpg')` }} 
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-slate-950/70 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950 pointer-events-none" />
+        <div className="absolute top-1/3 left-0 w-96 h-96 bg-orange-600/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
             {/* Left Description */}
             <div className="lg:col-span-5 space-y-6">
-              <span className="text-xs font-mono font-bold text-orange-600 uppercase tracking-widest block">
-                PRECISION MANUFACTURING
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/20 border border-orange-500/40 text-orange-400 text-xs font-mono font-bold uppercase tracking-wider">
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
+                PRECISION MANUFACTURING • JAMNAGAR
               </span>
-              <h2 className="text-3xl sm:text-4xl font-extrabold font-heading text-slate-900 leading-tight">
+              
+              <h2 className="text-3xl sm:text-5xl font-extrabold font-heading text-white leading-tight tracking-tight">
                 Weldor by Earth Metal Industries
               </h2>
-              <p className="text-sm text-slate-600 leading-relaxed">
+              
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
                 Operating out of Jamnagar, the brass and engineering hub of India, we provide end-to-end component engineering solutions. From raw alloy extrusion to CNC turning, milling, surface finishing, and assembly, our manufacturing plant delivers superior industrial quality to customers globally.
               </p>
 
-              <button
-                onClick={() => setActiveView('public-contact')}
-                className="px-6 py-3.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs font-mono flex items-center gap-2 shadow-lg shadow-orange-600/30 transition-all cursor-pointer"
-              >
-                <span>Get in Touch</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+              <div className="pt-2">
+                <button
+                  onClick={() => setActiveView('public-contact')}
+                  className="px-7 py-3.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs sm:text-sm font-mono flex items-center gap-2 shadow-lg shadow-orange-600/40 transition-all cursor-pointer hover:-translate-y-0.5"
+                >
+                  <span>Get in Touch With Us</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
-            {/* Right: 6 Highlight Blocks */}
-            <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* Right: 6 Highlight Blocks in Dark Glassmorphism */}
+            <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               {capabilities.map((cap, cIdx) => (
                 <div 
                   key={cIdx} 
-                  className="p-5 rounded-2xl bg-slate-50 border border-slate-200/90 shadow-2xs space-y-2 hover:bg-orange-50/40 hover:border-orange-300 transition-colors"
+                  className="p-5 rounded-2xl bg-slate-900/85 backdrop-blur-md border border-slate-800 hover:border-orange-500/50 hover:bg-slate-900/95 shadow-xl space-y-2 transition-all group"
                 >
-                  <h4 className="font-bold text-sm text-slate-900 font-heading flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-orange-500" />
+                  <h4 className="font-bold text-sm text-white font-heading flex items-center gap-2 group-hover:text-orange-400 transition-colors">
+                    <span className="w-2 h-2 rounded-full bg-orange-500 group-hover:scale-125 transition-transform" />
                     <span>{cap.title}</span>
                   </h4>
-                  <p className="text-xs text-slate-600 leading-relaxed">
+                  <p className="text-xs text-slate-300 leading-relaxed">
                     {cap.desc}
                   </p>
                 </div>
@@ -636,8 +809,25 @@ export const AboutPage: React.FC = () => {
 
       {/* 8. DEDICATED OFFICIAL CERTIFICATE PREVIEW MODAL */}
       {selectedCertModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
+        <div 
+          className="fixed inset-0 z-[100] bg-slate-950/85 backdrop-blur-md flex justify-center items-start p-3 sm:p-6 overflow-y-auto animate-fadeIn"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedCertModal(null);
+          }}
+        >
+          {/* Fixed Floating Screen Close Button (Always visible on screen, never scrolls away) */}
+          <button 
+            type="button"
+            onClick={() => setSelectedCertModal(null)}
+            aria-label="Close Certificate Preview"
+            title="Close Modal (Esc)"
+            className="fixed top-3 right-3 sm:top-5 sm:right-5 z-[120] p-2.5 sm:px-4 sm:py-2.5 rounded-full bg-slate-900/95 hover:bg-rose-600 text-white shadow-2xl border border-slate-700 hover:border-rose-500 transition-all flex items-center gap-2 cursor-pointer group"
+          >
+            <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-200" />
+            <span className="text-xs font-mono font-bold hidden sm:inline">CLOSE</span>
+          </button>
+
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 my-4 sm:my-8">
             {/* Modal Header */}
             <div className="p-4 sm:p-6 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
               <div>
@@ -649,10 +839,12 @@ export const AboutPage: React.FC = () => {
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setSelectedCertModal(null)}
-                className="w-8 h-8 rounded-full bg-white border border-slate-300 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="w-9 h-9 rounded-full bg-white border border-slate-300 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-600 transition-colors cursor-pointer"
+                title="Close (Esc)"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 

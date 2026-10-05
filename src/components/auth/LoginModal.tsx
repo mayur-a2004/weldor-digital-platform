@@ -65,9 +65,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   // Demo accounts list
   const demoAccounts = [
     {
-      name: 'Vikram Mehta',
+      name: 'Super Admin',
       role: 'Super Admin',
-      email: 'vikram.mehta@weldorindustries.com',
+      email: 'admin@weldorindustries.com',
       password: 'Weldor@2026',
       badge: 'bg-purple-100 text-purple-800 border-purple-200',
     },
@@ -98,8 +98,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
-        {/* Header Banner */}
-        <div className="bg-linear-to-r from-slate-900 via-slate-800 to-orange-950 p-6 text-white relative">
+        {/* Header Banner with Official Logo */}
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-orange-950 p-6 text-white relative">
           <button 
             onClick={handleClose}
             className="absolute top-4 right-4 p-2 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
@@ -108,8 +108,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           </button>
 
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-orange-600/30 border border-orange-500/50 flex items-center justify-center">
-              <ShieldCheck className="w-6 h-6 text-orange-400" />
+            <div className="bg-white px-3 py-1.5 rounded-xl shadow-md inline-flex items-center justify-center">
+              <img 
+                src="/weldor-logo.png" 
+                alt="Weldor" 
+                className="h-8 w-auto object-contain" 
+              />
             </div>
             <div>
               <span className="text-[11px] font-mono tracking-widest text-orange-400 font-bold uppercase">

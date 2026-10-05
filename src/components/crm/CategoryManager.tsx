@@ -13,6 +13,8 @@ import {
   Key, 
   Upload, 
   Image as ImageIcon,
+  Loader2,
+  UploadCloud,
   Wind,
   Droplets,
   Zap,
@@ -31,6 +33,8 @@ export const CategoryManager: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<ProductCategory | null>(null);
   const [viewingCategory, setViewingCategory] = useState<ProductCategory | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState<{
@@ -50,8 +54,8 @@ export const CategoryManager: React.FC = () => {
     slug: '',
     description: '',
     iconName: 'Box',
-    image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800',
-    bannerImage: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1600',
+    image: '',
+    bannerImage: '',
     subCategories: ['Standard Series', 'Heavy Duty Custom Series'],
     seoKeywords: ['industrial components', 'precision engineering'],
     seoMetaTitle: '',
@@ -75,8 +79,8 @@ export const CategoryManager: React.FC = () => {
       slug: '',
       description: '',
       iconName: 'Box',
-      image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800',
-      bannerImage: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1600',
+      image: '',
+      bannerImage: '',
       subCategories: ['Standard Series', 'Custom Engineered Series'],
       seoKeywords: ['industrial components', 'oem manufacturing'],
       seoMetaTitle: '',
@@ -93,8 +97,8 @@ export const CategoryManager: React.FC = () => {
       slug: cat.slug,
       description: cat.description,
       iconName: cat.iconName || 'Box',
-      image: cat.image,
-      bannerImage: cat.bannerImage || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1600',
+      image: cat.image || '',
+      bannerImage: cat.bannerImage || '',
       subCategories: cat.subCategories || ['Standard Series', 'Heavy Duty Series'],
       seoKeywords: cat.seoKeywords || ['industrial manufacturing'],
       seoMetaTitle: cat.seoMetaTitle || '',
@@ -106,16 +110,18 @@ export const CategoryManager: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name) {
+    const name = (formData.name || '').trim();
+    if (!name) {
       showNotification('Category Name is required!', 'warning');
       return;
     }
 
-    const generatedSlug = formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const generatedSlug = (formData.slug || '').trim() || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
     if (editingCategory) {
       updateCategory(editingCategory.id, {
         ...formData,
+        name,
         slug: generatedSlug,
         productCount: products.filter(p => p.categoryId === editingCategory.id || p.category === editingCategory.name).length
       });
@@ -160,19 +166,28 @@ export const CategoryManager: React.FC = () => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, targetField: 'image' | 'bannerImage') => {
     const file = e.target.files?.[0];
     if (!file) return;
-    showNotification(`Uploading ${file.name}...`, 'info');
-    let uploadedUrl = '';
+
+    if (targetField === 'image') setIsUploadingImage(true);
+    else setIsUploadingBanner(true);
+
+    showNotification(`Uploading ${file.name} to Cloudinary CDN...`, 'info');
     try {
-      const res = await api.uploadFile(file);
+      const res = await api.uploadFile(file, 'weldor-categories');
       if (res?.success && (res?.data?.cdnUrl || res?.data?.url)) {
-        uploadedUrl = res.data.cdnUrl || res.data.url;
+        const uploadedUrl = res.data.cdnUrl || res.data.url;
+        setFormData(prev => ({ ...prev, [targetField]: uploadedUrl }));
+        showNotification(`${targetField === 'image' ? 'Thumbnail' : 'Banner'} uploaded successfully to Cloudinary!`, 'success');
+      } else {
+        showNotification(res?.message || `Upload failed for ${file.name}. Please check Cloudinary connection.`, 'warning');
       }
-    } catch (err) {
-      console.warn('Upload error:', err);
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      showNotification(`Upload error: ${err?.message || 'Server error'}`, 'warning');
+    } finally {
+      if (targetField === 'image') setIsUploadingImage(false);
+      else setIsUploadingBanner(false);
+      e.target.value = '';
     }
-    const finalUrl = uploadedUrl || URL.createObjectURL(file);
-    setFormData(prev => ({ ...prev, [targetField]: finalUrl }));
-    showNotification(`Uploaded ${targetField === 'image' ? 'Thumbnail' : 'Banner'} successfully!`, 'success');
   };
 
   const availableIcons = [
@@ -382,7 +397,7 @@ export const CategoryManager: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} noValidate className="space-y-4">
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -468,35 +483,107 @@ export const CategoryManager: React.FC = () => {
 
               {/* Thumbnail & Banner Images */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                {/* Category Thumbnail */}
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-mono font-bold text-slate-700">Category Thumbnail</label>
-                    <label className="text-[10px] font-mono text-orange-700 font-bold hover:underline cursor-pointer">
-                      Upload
-                      <input type="file" accept="image/*" className="hidden" onChange={e => handleFileUpload(e, 'image')} />
+                    <label className="text-xs font-mono font-bold text-slate-700 flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5 text-orange-600" /> Category Thumbnail
+                    </label>
+                    <label className="text-[10px] font-mono text-orange-700 font-bold bg-orange-50 hover:bg-orange-100 border border-orange-200 px-2 py-0.5 rounded cursor-pointer transition-colors flex items-center gap-1">
+                      {isUploadingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                      <span>{isUploadingImage ? 'Uploading...' : 'Upload File'}</span>
+                      <input type="file" accept="image/*" disabled={isUploadingImage} className="hidden" onChange={e => handleFileUpload(e, 'image')} />
                     </label>
                   </div>
+
+                  {formData.image ? (
+                    <div className="relative group rounded-lg overflow-hidden border border-slate-200 bg-white h-24">
+                      <img src={formData.image} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                        className="absolute top-1.5 right-1.5 p-1 bg-red-600 text-white rounded-full opacity-80 hover:opacity-100 transition-opacity"
+                        title="Remove photo"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-slate-200 rounded-lg hover:border-orange-400 bg-white cursor-pointer transition-colors p-2 text-center">
+                      {isUploadingImage ? (
+                        <div className="flex flex-col items-center gap-1 text-orange-600">
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span className="text-[10px] font-mono">Uploading to CDN...</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1 text-slate-400">
+                          <UploadCloud className="w-5 h-5 text-slate-400" />
+                          <span className="text-[11px] font-mono text-slate-600 font-semibold">Click to select photo</span>
+                          <span className="text-[9px] font-mono text-slate-400">PNG, JPG, WEBP (Auto Cloudinary)</span>
+                        </div>
+                      )}
+                      <input type="file" accept="image/*" disabled={isUploadingImage} className="hidden" onChange={e => handleFileUpload(e, 'image')} />
+                    </label>
+                  )}
+
                   <input
                     type="text"
                     value={formData.image}
                     onChange={e => setFormData({ ...formData, image: e.target.value })}
-                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono focus:outline-none"
+                    placeholder="Or paste image URL directly..."
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono focus:outline-none focus:border-orange-500"
                   />
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                {/* Hero Banner Image */}
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-mono font-bold text-slate-700">Hero Banner Image</label>
-                    <label className="text-[10px] font-mono text-orange-700 font-bold hover:underline cursor-pointer">
-                      Upload
-                      <input type="file" accept="image/*" className="hidden" onChange={e => handleFileUpload(e, 'bannerImage')} />
+                    <label className="text-xs font-mono font-bold text-slate-700 flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5 text-blue-600" /> Hero Banner Image
+                    </label>
+                    <label className="text-[10px] font-mono text-blue-700 font-bold bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2 py-0.5 rounded cursor-pointer transition-colors flex items-center gap-1">
+                      {isUploadingBanner ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                      <span>{isUploadingBanner ? 'Uploading...' : 'Upload File'}</span>
+                      <input type="file" accept="image/*" disabled={isUploadingBanner} className="hidden" onChange={e => handleFileUpload(e, 'bannerImage')} />
                     </label>
                   </div>
+
+                  {formData.bannerImage ? (
+                    <div className="relative group rounded-lg overflow-hidden border border-slate-200 bg-white h-24">
+                      <img src={formData.bannerImage} alt="Banner preview" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, bannerImage: '' }))}
+                        className="absolute top-1.5 right-1.5 p-1 bg-red-600 text-white rounded-full opacity-80 hover:opacity-100 transition-opacity"
+                        title="Remove banner"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-slate-200 rounded-lg hover:border-blue-400 bg-white cursor-pointer transition-colors p-2 text-center">
+                      {isUploadingBanner ? (
+                        <div className="flex flex-col items-center gap-1 text-blue-600">
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span className="text-[10px] font-mono">Uploading to CDN...</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1 text-slate-400">
+                          <UploadCloud className="w-5 h-5 text-slate-400" />
+                          <span className="text-[11px] font-mono text-slate-600 font-semibold">Click to select banner</span>
+                          <span className="text-[9px] font-mono text-slate-400">Wide 1920x800 recommended</span>
+                        </div>
+                      )}
+                      <input type="file" accept="image/*" disabled={isUploadingBanner} className="hidden" onChange={e => handleFileUpload(e, 'bannerImage')} />
+                    </label>
+                  )}
+
                   <input
                     type="text"
                     value={formData.bannerImage}
                     onChange={e => setFormData({ ...formData, bannerImage: e.target.value })}
-                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono focus:outline-none"
+                    placeholder="Or paste banner URL directly..."
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono focus:outline-none focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -557,7 +644,7 @@ export const CategoryManager: React.FC = () => {
 
                 <button
                   type="submit"
-                  className="btn-primary text-xs py-2.5 px-6 font-bold shadow-md"
+                  className="btn-primary text-xs py-2.5 px-6 font-bold shadow-md flex items-center gap-2 cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>{editingCategory ? 'Update Category' : 'Create Category'}</span>

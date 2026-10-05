@@ -71,18 +71,57 @@ export const SampleTrialManager: React.FC = () => {
     completionDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
   });
 
+  const [isSubmittingSample, setIsSubmittingSample] = useState(false);
+  const [isSubmittingTrial, setIsSubmittingTrial] = useState(false);
+
+  // Strictly deduplicate samples by ID and sampleNumber
+  const dedupedSamples = React.useMemo(() => {
+    const seenIds = new Set<string>();
+    const seenNumbers = new Set<string>();
+    const list: SampleRequest[] = [];
+
+    for (const s of (samples || [])) {
+      if (!s || !s.id) continue;
+      const num = (s.sampleNumber || '').trim().toUpperCase();
+      if (seenIds.has(s.id)) continue;
+      if (num && seenNumbers.has(num)) continue;
+      seenIds.add(s.id);
+      if (num) seenNumbers.add(num);
+      list.push(s);
+    }
+    return list;
+  }, [samples]);
+
+  // Strictly deduplicate trials by ID and trialNumber
+  const dedupedTrials = React.useMemo(() => {
+    const seenIds = new Set<string>();
+    const seenNumbers = new Set<string>();
+    const list: TechnicalTrial[] = [];
+
+    for (const t of (trials || [])) {
+      if (!t || !t.id) continue;
+      const num = (t.trialNumber || '').trim().toUpperCase();
+      if (seenIds.has(t.id)) continue;
+      if (num && seenNumbers.has(num)) continue;
+      seenIds.add(t.id);
+      if (num) seenNumbers.add(num);
+      list.push(t);
+    }
+    return list;
+  }, [trials]);
+
   // Active vs Completed Slices
-  const activeSamples = samples.filter(s => s.stage !== 'Delivered');
-  const completedSamples = samples.filter(s => s.stage === 'Delivered');
-  const filteredSamples = samples.filter(s => {
+  const activeSamples = dedupedSamples.filter(s => s.stage !== 'Delivered');
+  const completedSamples = dedupedSamples.filter(s => s.stage === 'Delivered');
+  const filteredSamples = dedupedSamples.filter(s => {
     if (filterMode === 'active') return s.stage !== 'Delivered';
     if (filterMode === 'completed') return s.stage === 'Delivered';
     return true;
   });
 
-  const activeTrials = trials.filter(t => t.status !== 'Approved' && t.status !== 'Failed');
-  const completedTrials = trials.filter(t => t.status === 'Approved' || t.status === 'Failed');
-  const filteredTrials = trials.filter(t => {
+  const activeTrials = dedupedTrials.filter(t => t.status !== 'Approved' && t.status !== 'Failed');
+  const completedTrials = dedupedTrials.filter(t => t.status === 'Approved' || t.status === 'Failed');
+  const filteredTrials = dedupedTrials.filter(t => {
     if (filterMode === 'active') return t.status !== 'Approved' && t.status !== 'Failed';
     if (filterMode === 'completed') return t.status === 'Approved' || t.status === 'Failed';
     return true;
@@ -90,55 +129,69 @@ export const SampleTrialManager: React.FC = () => {
 
   const handleCreateSample = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingSample) return;
+
     if (!sampleForm.companyName.trim() || !sampleForm.productName.trim()) {
       showNotification('Please enter Company Name and Product Name.', 'warning');
       return;
     }
 
-    await createSampleRequest({
-      companyName: sampleForm.companyName,
-      productName: sampleForm.productName,
-      quantityRequested: Number(sampleForm.quantityRequested) || 1,
-      courierTrackingNo: sampleForm.courierTrackingNo ? `${sampleForm.courierPartner.toUpperCase()}-${sampleForm.courierTrackingNo}` : 'Pending Dispatch Allocation',
-      stage: sampleForm.courierTrackingNo ? 'Dispatched' : 'Requested',
-    });
+    setIsSubmittingSample(true);
+    try {
+      await createSampleRequest({
+        companyName: sampleForm.companyName,
+        productName: sampleForm.productName,
+        quantityRequested: Number(sampleForm.quantityRequested) || 1,
+        courierTrackingNo: sampleForm.courierTrackingNo ? `${sampleForm.courierPartner.toUpperCase()}-${sampleForm.courierTrackingNo}` : 'Pending Dispatch Allocation',
+        stage: sampleForm.courierTrackingNo ? 'Dispatched' : 'Requested',
+      });
 
-    setIsSampleModalOpen(false);
-    setSampleForm({ companyName: '', productName: '', quantityRequested: 2, courierTrackingNo: '', courierPartner: 'DHL Express' });
+      setIsSampleModalOpen(false);
+      setSampleForm({ companyName: '', productName: '', quantityRequested: 2, courierTrackingNo: '', courierPartner: 'DHL Express' });
+    } finally {
+      setIsSubmittingSample(false);
+    }
   };
 
   const handleCreateTrial = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingTrial) return;
+
     if (!trialForm.companyName.trim() || !trialForm.productName.trim()) {
       showNotification('Please enter Company Name and Product Name.', 'warning');
       return;
     }
 
-    await createTechnicalTrial({
-      companyName: trialForm.companyName,
-      productName: trialForm.productName,
-      testParameters: {
-        pressureTestBar: Number(trialForm.pressureTestBar) || 525,
-        leakageTestResult: trialForm.leakageTestResult || '0.000 sccs (Zero Bubble Helium Mass Spec)',
-        corrosionHours: Number(trialForm.corrosionHours) || 500,
-        cycleCount: Number(trialForm.cycleCount) || 250000,
-      },
-      evaluatorEngineer: trialForm.evaluatorEngineer,
-      completionDate: trialForm.completionDate,
-      status: 'Execution In Progress',
-    });
+    setIsSubmittingTrial(true);
+    try {
+      await createTechnicalTrial({
+        companyName: trialForm.companyName,
+        productName: trialForm.productName,
+        testParameters: {
+          pressureTestBar: Number(trialForm.pressureTestBar) || 525,
+          leakageTestResult: trialForm.leakageTestResult || '0.000 sccs (Zero Bubble Helium Mass Spec)',
+          corrosionHours: Number(trialForm.corrosionHours) || 500,
+          cycleCount: Number(trialForm.cycleCount) || 250000,
+        },
+        evaluatorEngineer: trialForm.evaluatorEngineer,
+        completionDate: trialForm.completionDate,
+        status: 'Execution In Progress',
+      });
 
-    setIsTrialModalOpen(false);
-    setTrialForm({
-      companyName: '',
-      productName: '',
-      pressureTestBar: 525,
-      leakageTestResult: '0.000 sccs (Zero Bubble Helium Mass Spec)',
-      corrosionHours: 500,
-      cycleCount: 250000,
-      evaluatorEngineer: currentEmployee?.name || 'Amit Verma (QC & Metallurgy Lead)',
-      completionDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-    });
+      setIsTrialModalOpen(false);
+      setTrialForm({
+        companyName: '',
+        productName: '',
+        pressureTestBar: 525,
+        leakageTestResult: '0.000 sccs (Zero Bubble Helium Mass Spec)',
+        corrosionHours: 500,
+        cycleCount: 250000,
+        evaluatorEngineer: currentEmployee?.name || 'Amit Verma (QC & Metallurgy Lead)',
+        completionDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+      });
+    } finally {
+      setIsSubmittingTrial(false);
+    }
   };
 
   const handleRecordFailureSubmit = () => {
@@ -491,7 +544,11 @@ export const SampleTrialManager: React.FC = () => {
                               taxPercentage: 18,
                               totalPriceUSD: 50 * (matchedProd?.priceUSD || 420) * 0.95,
                             }
-                          ], 1500, 30);
+                          ], 1500, 30, {
+                            companyName: trial.companyName,
+                            buyerName: `${trial.companyName} Lead Engineer`,
+                            destinationCountry: 'India',
+                          });
                           setActiveView('crm-quotations');
                           showNotification(`Commercial Quotation generated for validated trial ${trial.trialNumber}!`, 'success');
                         }}
