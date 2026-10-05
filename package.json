@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "start": "node server/index.js",
     "server": "node server/index.js",
     "server:dev": "tsx watch server/index.js",
     "fullstack": "concurrently \"npm run server:dev\" \"npm run dev\"",

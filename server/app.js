@@ -91,4 +91,17 @@ apiRouter.get('/health', (req, res) => {
 app.use('/api', apiRouter);
 app.use(apiRouter);
 
+// Serve static frontend files if built (Hostinger Node.js / VPS production deployment)
+const distPath = path.join(__dirname, '../dist');
+app.use(express.static(distPath));
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+    return next();
+  }
+  const indexPath = path.join(distPath, 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) next();
+  });
+});
+
 export default app;
