@@ -94,7 +94,8 @@ app.use(apiRouter);
 // Serve static frontend files if built (Hostinger Node.js / VPS production deployment)
 const distPath = path.join(__dirname, '../dist');
 app.use(express.static(distPath));
-app.get('*', (req, res, next) => {
+app.use((req, res, next) => {
+  if (req.method !== 'GET') return next();
   if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
     return next();
   }
