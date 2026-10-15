@@ -27,7 +27,7 @@ export const GalleryPage: React.FC = () => {
     };
   }, [activeMediaItem]);
 
-  const mediaList = (galleryMedia && galleryMedia.length > 0) ? galleryMedia : OFFICIAL_WELDOR_GALLERY;
+  const mediaList = galleryMedia || [];
 
   // Dynamic unique categories from mediaList
   const uniqueCategories = ['All', ...Array.from(new Set(mediaList.map(m => m.category)))];

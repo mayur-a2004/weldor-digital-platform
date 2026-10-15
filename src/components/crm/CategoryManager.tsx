@@ -35,6 +35,7 @@ export const CategoryManager: React.FC = () => {
   const [viewingCategory, setViewingCategory] = useState<ProductCategory | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Form State
   const [formData, setFormData] = useState<{
@@ -350,17 +351,36 @@ export const CategoryManager: React.FC = () => {
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
-                    <button
-                      onClick={() => {
-                        if (confirm(`Are you sure you want to delete category "${cat.name}"?`)) {
-                          deleteCategory(cat.id);
-                        }
-                      }}
-                      className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors"
-                      title="Delete Category"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {confirmDeleteId === cat.id ? (
+                      <div className="flex items-center gap-1 bg-red-50 p-1 rounded-lg border border-red-200">
+                        <span className="text-[10px] font-bold text-red-700 px-1">Delete?</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setConfirmDeleteId(null);
+                            deleteCategory(cat.id);
+                          }}
+                          className="px-1.5 py-0.5 bg-red-600 text-white rounded text-[10px] font-bold hover:bg-red-700 shadow-xs"
+                        >
+                          Yes
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded text-[10px] font-bold hover:bg-slate-300"
+                        >
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDeleteId(cat.id)}
+                        className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors"
+                        title="Delete Category"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
 

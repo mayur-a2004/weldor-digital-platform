@@ -357,8 +357,8 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// One-time cache migration: Cleanses stale/mock local storage keys to ensure 100% MongoDB accuracy
-const CACHE_VERSION = 'weldor_v7_clean_slate_superadmin_only';
+// One-time cache migration: Cleanses stale/mock local storage keys to ensure 100% clean slate & MongoDB accuracy
+const CACHE_VERSION = 'weldor_v9_clean_products_and_quotes';
 if (typeof window !== 'undefined') {
   try {
     const currentVer = localStorage.getItem('weldor_cache_version');
@@ -366,6 +366,7 @@ if (typeof window !== 'undefined') {
       const token = localStorage.getItem('weldor_session_token');
       const user = localStorage.getItem('weldor_current_user');
       [
+        'weldor_products', 'weldor_inventory', 'weldor_inventory_logs',
         'weldor_leads', 'weldor_rfqs', 'weldor_quotations', 'weldor_orders',
         'weldor_invoices', 'weldor_commercial_quotes',
         'weldor_samples', 'weldor_trials', 'weldor_payrolls',

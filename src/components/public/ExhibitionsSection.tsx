@@ -120,7 +120,7 @@ export const ExhibitionsSection: React.FC = () => {
   };
 
   const processedExhibitions = useMemo(() => {
-    const rawList = (exhibitions && exhibitions.length > 0) ? exhibitions : OFFICIAL_WELDOR_EXHIBITIONS;
+    const rawList = exhibitions || [];
     return rawList.filter(Boolean).map(expo => ({
       ...expo,
       meta: getExpoEffectiveStatus(expo),
@@ -269,12 +269,18 @@ export const ExhibitionsSection: React.FC = () => {
         </div>
 
         {/* Horizontal Smooth Slider Track */}
-        <div 
-          ref={expoSliderRef}
-          className="flex gap-5 overflow-x-auto scrollbar-none scroll-smooth snap-x snap-mandatory py-2 px-1 -mx-1"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {filteredExhibitions.map((expo) => (
+        {filteredExhibitions.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-500 space-y-2">
+            <p className="text-sm font-semibold">No exhibitions currently scheduled in this category.</p>
+            <p className="text-xs text-slate-400">Check back soon or contact our sales team directly for trade show schedules.</p>
+          </div>
+        ) : (
+          <div 
+            ref={expoSliderRef}
+            className="flex gap-5 overflow-x-auto scrollbar-none scroll-smooth snap-x snap-mandatory py-2 px-1 -mx-1"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {filteredExhibitions.map((expo) => (
             <div 
               key={expo.id}
               onClick={() => handleOpenModal(expo)}
@@ -381,6 +387,7 @@ export const ExhibitionsSection: React.FC = () => {
             </div>
           ))}
         </div>
+      )}
 
       </div>
 

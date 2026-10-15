@@ -52,10 +52,10 @@ mongoose.connection.on('disconnected', () => {
   console.warn('⚠️  MongoDB disconnected. Using in-memory & file storage fallback.');
 });
 
-// Auto-seed collections from bundled JSON files into MongoDB (ONLY for products, categories, roles, settings)
+// Auto-seed collections from bundled JSON files into MongoDB
 const autoSeedFromLocalData = async () => {
   try {
-    const ALLOWED_SEED_COLLECTIONS = ['products', 'categories', 'roles', 'settings'];
+    const ALLOWED_SEED_COLLECTIONS = ['categories', 'roles', 'settings', 'products', 'gallery', 'exhibitions', 'banners'];
     for (const [key, Model] of Object.entries(COLLECTION_MODELS)) {
       if (!ALLOWED_SEED_COLLECTIONS.includes(key)) continue;
       const count = await Model.countDocuments();
@@ -241,23 +241,27 @@ export const db = {
 
     const index = items.findIndex((i) => i.id === id);
     if (index === -1) {
-      // If not in current array, also check MongoDB directly
+      // Upsert: Item not found in current list, create it directly
+      const newItem = {
+        ...updates,
+        id,
+        createdAt: updates.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      items.unshift(newItem);
+      inMemoryStore.set(collection, items);
+      writeToFile(collection, items);
+
       const Model = COLLECTION_MODELS[collection];
       if (isMongoConnected && Model) {
         try {
           const query = { $or: [{ id }, ...(mongoose.isValidObjectId(id) ? [{ _id: id }] : [])] };
-          const existing = await Model.findOne(query).lean();
-          if (existing) {
-            const updated = { ...existing, ...updates, id: existing.id || id, updatedAt: new Date().toISOString() };
-            await Model.findOneAndUpdate(query, { $set: updated }, { upsert: true });
-            items.unshift(updated);
-            inMemoryStore.set(collection, items);
-            writeToFile(collection, items);
-            return updated;
-          }
-        } catch (e) {}
+          await Model.findOneAndUpdate(query, { $set: newItem }, { upsert: true });
+        } catch (e) {
+          console.warn(`MongoDB upsert error on ${collection}:`, e.message);
+        }
       }
-      return null;
+      return newItem;
     }
 
     const updatedItem = {
@@ -288,9 +292,9 @@ export const db = {
   delete: async (collection, id) => {
     await ensureDbConnected().catch(() => {});
     const items = await db.get(collection, []);
-    if (!Array.isArray(items)) return false;
+    const list = Array.isArray(items) ? items : [];
 
-    const filtered = items.filter((i) => i.id !== id);
+    const filtered = list.filter((i) => i.id !== id);
     inMemoryStore.set(collection, filtered);
     writeToFile(collection, filtered);
 
@@ -299,7 +303,7 @@ export const db = {
     if (isMongoConnected && Model) {
       try {
         const query = { $or: [{ id }, ...(mongoose.isValidObjectId(id) ? [{ _id: id }] : [])] };
-        await Model.deleteOne(query);
+        await Model.deleteMany(query);
       } catch (err) {
         console.warn(`MongoDB delete error on ${collection}:`, err.message);
       }

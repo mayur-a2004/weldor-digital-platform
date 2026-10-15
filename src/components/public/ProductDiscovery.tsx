@@ -192,20 +192,26 @@ export const ProductDiscovery: React.FC = () => {
             <div className="w-14 h-14 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center mx-auto">
               <Box className="w-7 h-7" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">No matching products found</h3>
+            <h3 className="text-base font-bold text-slate-900">
+              {products.length === 0 ? 'Product Catalog Clean & Ready' : 'No matching products found'}
+            </h3>
             <p className="text-xs text-slate-600">
-              Try adjusting your search query or select another category tab above.
+              {products.length === 0 
+                ? 'No products added yet. Add your official products via CRM Admin Catalog Manager.' 
+                : 'Try adjusting your search query or select another category tab above.'}
             </p>
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setSelectedCategoryTab('All');
-                setSelectedIndustry('All');
-              }}
-              className="btn-secondary text-xs px-4 py-2 cursor-pointer font-bold"
-            >
-              Reset Filters
-            </button>
+            {products.length > 0 && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedCategoryTab('All');
+                  setSelectedIndustry('All');
+                }}
+                className="btn-secondary text-xs px-4 py-2 cursor-pointer font-bold"
+              >
+                Reset Filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

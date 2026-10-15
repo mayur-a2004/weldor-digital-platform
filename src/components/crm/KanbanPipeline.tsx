@@ -54,6 +54,7 @@ export const KanbanPipeline: React.FC = () => {
   const [lostReasonInput, setLostReasonInput] = useState<string>('Pricing not competitive');
   const [newActivityNote, setNewActivityNote] = useState<string>('');
   const [searchFilter, setSearchFilter] = useState<string>('');
+  const [confirmDeleteLeadId, setConfirmDeleteLeadId] = useState<string | null>(null);
 
   // Lead Simulator Modal State
   const [isSimulateModalOpen, setIsSimulateModalOpen] = useState(false);
@@ -396,18 +397,46 @@ export const KanbanPipeline: React.FC = () => {
                             Lost
                           </button>
 
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (window.confirm(`Delete lead "${lead.companyName || lead.leadNumber}"?`)) {
-                                deleteLead(lead.id);
-                              }
-                            }}
-                            className="p-1 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
-                            title="Delete Lead"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {confirmDeleteLeadId === lead.id ? (
+                            <div 
+                              className="flex items-center gap-1 bg-red-50 p-1 rounded-lg border border-red-200"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <span className="text-[10px] font-bold text-red-700 px-1">Delete?</span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setConfirmDeleteLeadId(null);
+                                  deleteLead(lead.id);
+                                }}
+                                className="px-1.5 py-0.5 bg-red-600 text-white rounded text-[10px] font-bold hover:bg-red-700 shadow-xs"
+                              >
+                                Yes
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setConfirmDeleteLeadId(null);
+                                }}
+                                className="px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded text-[10px] font-bold hover:bg-slate-300"
+                              >
+                                No
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmDeleteLeadId(lead.id);
+                              }}
+                              className="p-1 rounded-lg bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                              title="Delete Lead"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
 
                       </div>

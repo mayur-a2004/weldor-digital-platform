@@ -438,15 +438,15 @@ export const OrdersManager: React.FC = () => {
               {/* Itemized Products & Financial Breakdown (matching Commercial Quotation) */}
               {(() => {
                 const items = ord.items || (ord as any).lineItems || [];
-                const grandTotalINR = (ord as any).grandTotalINR || Math.round((ord.totalValueUSD || 0) * 85);
+                const grandTotalINR = (ord as any).grandTotalINR || Math.round(ord.totalValueUSD || 0);
                 const taxableINR = (ord as any).taxableTotalUSD 
-                  ? Math.round((ord as any).taxableTotalUSD * 85) 
+                  ? Math.round((ord as any).taxableTotalUSD) 
                   : Math.round(grandTotalINR / 1.18);
                 const taxINR = (ord as any).totalTaxUSD 
-                  ? Math.round((ord as any).totalTaxUSD * 85) 
+                  ? Math.round((ord as any).totalTaxUSD) 
                   : Math.max(0, grandTotalINR - taxableINR);
-                const freightINR = Math.round(((ord as any).freightCostUSD || 0) * 85);
-                const packagingINR = Math.round(((ord as any).packagingCostUSD || 0) * 85);
+                const freightINR = Math.round((ord as any).freightCostUSD || 0);
+                const packagingINR = Math.round((ord as any).packagingCostUSD || 0);
 
                 return (
                   <>
@@ -771,8 +771,8 @@ export const OrdersManager: React.FC = () => {
                       </td>
                       <td className="p-3 text-slate-600">8412.21.00</td>
                       <td className="p-3 text-right font-bold">{item.quantity} PCS</td>
-                      <td className="p-3 text-right">₹{Math.round((item.unitPriceUSD || item.unitPrice || 0) * 85).toLocaleString('en-IN')}</td>
-                      <td className="p-3 text-right font-bold text-slate-900">₹{Math.round((item.totalPriceUSD || (item.quantity * (item.unitPriceUSD || item.unitPrice || 0)) || 0) * 85).toLocaleString('en-IN')}</td>
+                      <td className="p-3 text-right">₹{Math.round(item.unitPriceUSD || item.unitPrice || 0).toLocaleString('en-IN')}</td>
+                      <td className="p-3 text-right font-bold text-slate-900">₹{Math.round(item.totalPriceUSD || (item.quantity * (item.unitPriceUSD || item.unitPrice || 0)) || 0).toLocaleString('en-IN')}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -780,14 +780,14 @@ export const OrdersManager: React.FC = () => {
 
               {/* Calculation Summary */}
               {(() => {
-                const grandTotal = (selectedOrderForInvoice as any).grandTotalINR || Math.round((selectedOrderForInvoice.totalValueUSD || 0) * 85);
+                const grandTotal = (selectedOrderForInvoice as any).grandTotalINR || Math.round(selectedOrderForInvoice.totalValueUSD || 0);
                 const taxableVal = (selectedOrderForInvoice as any).taxableTotalUSD 
-                  ? Math.round((selectedOrderForInvoice as any).taxableTotalUSD * 85) 
+                  ? Math.round((selectedOrderForInvoice as any).taxableTotalUSD) 
                   : Math.round(grandTotal / 1.18);
                 const taxVal = (selectedOrderForInvoice as any).totalTaxUSD 
-                  ? Math.round((selectedOrderForInvoice as any).totalTaxUSD * 85) 
+                  ? Math.round((selectedOrderForInvoice as any).totalTaxUSD) 
                   : Math.max(0, grandTotal - taxableVal);
-                const freightVal = Math.round(((selectedOrderForInvoice as any).freightCostUSD || 0) * 85);
+                const freightVal = Math.round((selectedOrderForInvoice as any).freightCostUSD || 0);
 
                 return (
                   <div className="flex justify-end pt-2">

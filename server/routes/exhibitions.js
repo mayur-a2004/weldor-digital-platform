@@ -99,8 +99,7 @@ router.put('/:id', async (req, res) => {
 // DELETE exhibition
 router.delete('/:id', async (req, res) => {
   try {
-    const deleted = await db.delete('exhibitions', req.params.id);
-    if (!deleted) return res.status(404).json({ success: false, message: 'Exhibition not found' });
+    await db.delete('exhibitions', req.params.id);
     res.json({ success: true, message: 'Exhibition deleted' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to delete exhibition', error: err.message });

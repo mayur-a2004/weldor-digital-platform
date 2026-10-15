@@ -148,7 +148,7 @@ const adaptToCommercialQuotation = (q: any): CommercialQuotationData => {
   const taxTotalUSD = Number(q.taxTotalUSD) || (taxableTotalUSD * 0.18);
   const freightCostUSD = Number(q.freightCostUSD) || 0;
   const grandTotalUSD = Number(q.grandTotalUSD) || (taxableTotalUSD + taxTotalUSD + freightCostUSD);
-  const grandTotalINR = Number(q.grandTotalINR) || Math.round(grandTotalUSD * 87.0);
+  const grandTotalINR = Number(q.grandTotalINR) || Math.round(grandTotalUSD);
 
   return {
     id: q.id,
@@ -365,8 +365,8 @@ export const QuotationBuilder: React.FC = () => {
     warrantyTerms: companySettings?.defaultTerms?.warrantyTerms || '18 Months replacement warranty against manufacturing defects',
     packagingTerms: companySettings?.defaultTerms?.packagingTerms || 'Seaworthy Fumigated Wooden Case with VCI Corrosion Bag',
     inspectionTerms: companySettings?.defaultTerms?.inspectionTerms || '100% Hydrostatic Test & EN 10204 3.1 Mill Certificate included',
-    freightCostUSD: 120,
-    packagingCostUSD: 60,
+    freightCostUSD: 0,
+    packagingCostUSD: 0,
   });
 
   // Sync terms whenever companySettings defaultTerms change
@@ -384,26 +384,15 @@ export const QuotationBuilder: React.FC = () => {
     }
   }, [companySettings?.defaultTerms]);
 
-  const [lineItems, setLineItems] = useState([
-    {
-      productName: 'ISO 15552 Heavy-Duty Pneumatic Actuator Cylinder (Ø63mm x 200mm)',
-      sku: 'WEL-PNC-63-200',
-      hsnCode: '84123100',
-      quantity: 20,
-      unit: 'PCS',
-      unitPriceUSD: 85,
-      discountPct: 5,
-    },
-    {
-      productName: '700 Bar Solenoid Directional Hydraulic Control Valve CETOP 3',
-      sku: 'WEL-HYV-700B',
-      hsnCode: '84812000',
-      quantity: 5,
-      unit: 'PCS',
-      unitPriceUSD: 280,
-      discountPct: 0,
-    }
-  ]);
+  const [lineItems, setLineItems] = useState<Array<{
+    productName: string;
+    sku: string;
+    hsnCode: string;
+    quantity: number;
+    unit: string;
+    unitPriceUSD: number;
+    discountPct: number;
+  }>>([]);
 
   // Live Math Calculations
   const calculatedItems = lineItems.map((item, idx) => {
@@ -439,9 +428,13 @@ export const QuotationBuilder: React.FC = () => {
   const sgstTotalUSD = taxableTotalUSD * (sgstRate / 100);
   const igstTotalUSD = taxableTotalUSD * (igstRate / 100);
   const totalTaxUSD = cgstTotalUSD + sgstTotalUSD + igstTotalUSD;
+  const taxTotalUSD = totalTaxUSD;
+  const freightCost = Number(commercialTermsForm.freightCostUSD) || 0;
+  const packagingCost = Number(commercialTermsForm.packagingCostUSD) || 0;
 
-  const grandTotalUSD = taxableTotalUSD + totalTaxUSD + (Number(commercialTermsForm.freightCostUSD) || 0) + (Number(commercialTermsForm.packagingCostUSD) || 0);
-  const grandTotalINR = Math.round(grandTotalUSD * 87.0);
+  // GRAND TOTAL in pure Indian Rupees (INR ₹) - 1:1 direct calculation (No USD multiplier)
+  const grandTotalINR = Math.round(taxableTotalUSD + totalTaxUSD + freightCost + packagingCost);
+  const grandTotalUSD = grandTotalINR;
 
   let calculatedAgentCommissionUSD = 0;
   if (agentForm.hasAgent) {
@@ -559,22 +552,18 @@ export const QuotationBuilder: React.FC = () => {
     setLineItems(prev => [
       ...prev,
       {
-        productName: 'Custom 5-Axis CNC Precision Manifold Block AL7075',
-        sku: 'WEL-CNC-MF-NEW',
-        hsnCode: '84819090',
-        quantity: 5,
+        productName: '',
+        sku: '',
+        hsnCode: '',
+        quantity: 1,
         unit: 'PCS',
-        unitPriceUSD: 195,
+        unitPriceUSD: 0,
         discountPct: 0,
       }
     ]);
   };
 
   const handleRemoveItemRow = (idx: number) => {
-    if (lineItems.length <= 1) {
-      showNotification('At least one product line item is required in the quotation!', 'warning');
-      return;
-    }
     setLineItems(prev => prev.filter((_, i) => i !== idx));
   };
 
@@ -585,6 +574,11 @@ export const QuotationBuilder: React.FC = () => {
     const buyerCompany = (buyerForm.companyName || '').trim();
     if (!buyerCompany) {
       showNotification('Buyer Company Name is mandatory!', 'warning');
+      return;
+    }
+
+    if (lineItems.length === 0 || !lineItems.some(it => (it.productName || '').trim())) {
+      showNotification('Please add at least one product item to the quotation!', 'warning');
       return;
     }
 
@@ -728,7 +722,7 @@ export const QuotationBuilder: React.FC = () => {
           <span className="text-[11px] font-mono text-slate-500 block uppercase font-bold">Total Quoted Value</span>
           <div className="flex items-baseline justify-between mt-1">
             <span className="text-2xl font-black text-orange-600 font-mono">
-              ₹{quotesList.reduce((sum, q) => sum + (q.grandTotalINR || Math.round((q.grandTotalUSD || 0) * 85)), 0).toLocaleString('en-IN')}
+              ₹{quotesList.reduce((sum, q) => sum + (q.grandTotalINR || q.grandTotalUSD || 0), 0).toLocaleString('en-IN')}
             </span>
             <span className="text-[11px] font-mono text-slate-400">INR</span>
           </div>
@@ -738,7 +732,7 @@ export const QuotationBuilder: React.FC = () => {
           <span className="text-[11px] font-mono text-slate-500 block uppercase font-bold">Total GST Tax Quoted</span>
           <div className="flex items-baseline justify-between mt-1">
             <span className="text-2xl font-black text-slate-800 font-mono">
-              ₹{Math.round(quotesList.reduce((sum, q) => sum + (q.totalTaxUSD || 0), 0) * 85).toLocaleString('en-IN')}
+              ₹{Math.round(quotesList.reduce((sum, q) => sum + (q.totalTaxUSD || 0), 0)).toLocaleString('en-IN')}
             </span>
             <span className="text-[11px] font-mono text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded">CGST+SGST/IGST</span>
           </div>
@@ -748,7 +742,7 @@ export const QuotationBuilder: React.FC = () => {
           <span className="text-[11px] font-mono text-slate-500 block uppercase font-bold">Broker Commission Quoted</span>
           <div className="flex items-baseline justify-between mt-1">
             <span className="text-2xl font-black text-purple-700 font-mono">
-              ₹{Math.round(quotesList.reduce((sum, q) => sum + (q.agent?.commissionAmountUSD || 0), 0) * 85).toLocaleString('en-IN')}
+              ₹{Math.round(quotesList.reduce((sum, q) => sum + (q.agent?.commissionAmountUSD || 0), 0)).toLocaleString('en-IN')}
             </span>
             <span className="text-[10px] font-mono text-purple-600 bg-purple-50 px-2 py-0.5 rounded font-bold">Agent Payout</span>
           </div>
@@ -835,7 +829,7 @@ export const QuotationBuilder: React.FC = () => {
                   <div className="text-right">
                     <span className="text-[10px] font-mono text-slate-400 block uppercase font-bold">Grand Total (Incl. GST)</span>
                     <span className="text-lg font-mono font-black text-orange-600">
-                      ₹{(quote.grandTotalINR || Math.round((quote.grandTotalUSD || 0) * 85)).toLocaleString('en-IN')}
+                      ₹{(quote.grandTotalINR || quote.grandTotalUSD || 0).toLocaleString('en-IN')}
                     </span>
                   </div>
 
@@ -925,10 +919,10 @@ export const QuotationBuilder: React.FC = () => {
                 <div>
                   <span className="text-slate-400 text-[10px] uppercase block font-bold">Tax & Freight Calculation</span>
                   <p className="text-slate-700 mt-0.5">
-                    Taxable: <strong className="text-slate-900">₹{Math.round((quote.taxableTotalUSD || 0) * 85).toLocaleString('en-IN')}</strong> | Tax: <strong className="text-emerald-700">₹{Math.round((quote.totalTaxUSD || 0) * 85).toLocaleString('en-IN')}</strong>
+                    Taxable: <strong className="text-slate-900">₹{Math.round(quote.taxableTotalUSD || 0).toLocaleString('en-IN')}</strong> | Tax: <strong className="text-emerald-700">₹{Math.round(quote.totalTaxUSD || 0).toLocaleString('en-IN')}</strong>
                   </p>
                   <p className="text-[11px] text-slate-500">
-                    Freight: ₹{Math.round((quote.freightCostUSD || 0) * 85)} | Packaging: ₹{Math.round((quote.packagingCostUSD || 0) * 85)}
+                    Freight: ₹{Math.round(quote.freightCostUSD || 0)} | Packaging: ₹{Math.round(quote.packagingCostUSD || 0)}
                   </p>
                 </div>
 
@@ -936,7 +930,7 @@ export const QuotationBuilder: React.FC = () => {
                   <span className="text-slate-400 text-[10px] uppercase block font-bold">Agent Commission / Sales Terms</span>
                   {quote.agent?.hasAgent ? (
                     <p className="text-purple-700 font-bold mt-0.5">
-                      {quote.agent.agentName} ({quote.agent.commissionRate}% = ₹{Math.round(quote.agent.commissionAmountUSD * 85).toLocaleString('en-IN')})
+                      {quote.agent.agentName} ({quote.agent.commissionRate}% = ₹{Math.round(quote.agent.commissionAmountUSD).toLocaleString('en-IN')})
                     </p>
                   ) : (
                     <p className="text-slate-500 mt-0.5">Direct Factory Sale (No Agent)</p>
@@ -1117,10 +1111,10 @@ export const QuotationBuilder: React.FC = () => {
                           </td>
                           <td className="p-2.5 border border-slate-300 text-center text-slate-700 font-bold">{item.hsnCode || '8481.80.30'}</td>
                           <td className="p-2.5 border border-slate-300 text-center text-slate-800 font-bold">{qty} {item.unit || 'PCS'}</td>
-                          <td className="p-2.5 border border-slate-300 text-right text-slate-800">₹{Math.round(unitRate * 85).toLocaleString('en-IN')}</td>
+                          <td className="p-2.5 border border-slate-300 text-right text-slate-800">₹{Math.round(unitRate).toLocaleString('en-IN')}</td>
                           <td className="p-2.5 border border-slate-300 text-center text-slate-600">{disc > 0 ? `${disc}%` : '-'}</td>
                           <td className="p-2.5 border border-slate-300 text-right font-bold text-slate-900">
-                            ₹{Math.round(taxableUSD * 85).toLocaleString('en-IN')}
+                            ₹{Math.round(taxableUSD).toLocaleString('en-IN')}
                           </td>
                         </tr>
                       );
@@ -1151,17 +1145,17 @@ export const QuotationBuilder: React.FC = () => {
                 <div className="space-y-1.5 text-xs font-mono">
                   <div className="flex justify-between py-1 border-b border-slate-200">
                     <span className="text-slate-600">Gross Item Subtotal:</span>
-                    <span className="text-slate-900 font-bold">₹{Math.round((activePDFQuotation.subtotalUSD || 0) * 85).toLocaleString('en-IN')}</span>
+                    <span className="text-slate-900 font-bold">₹{Math.round(activePDFQuotation.subtotalUSD || 0).toLocaleString('en-IN')}</span>
                   </div>
                   {(activePDFQuotation.totalDiscountUSD || 0) > 0 && (
                     <div className="flex justify-between py-1 border-b border-slate-200 text-rose-600">
                       <span>Total Discount Savings:</span>
-                      <span>- ₹{Math.round((activePDFQuotation.totalDiscountUSD || 0) * 85).toLocaleString('en-IN')}</span>
+                      <span>- ₹{Math.round(activePDFQuotation.totalDiscountUSD || 0).toLocaleString('en-IN')}</span>
                     </div>
                   )}
                   <div className="flex justify-between py-1 border-b border-slate-200">
                     <span className="text-slate-700 font-bold">Taxable Amount:</span>
-                    <span className="text-slate-900 font-bold">₹{Math.round((activePDFQuotation.taxableTotalUSD || activePDFQuotation.subtotalUSD || 0) * 85).toLocaleString('en-IN')}</span>
+                    <span className="text-slate-900 font-bold">₹{Math.round(activePDFQuotation.taxableTotalUSD || activePDFQuotation.subtotalUSD || 0).toLocaleString('en-IN')}</span>
                   </div>
 
                   {/* GST Split */}
@@ -1169,11 +1163,11 @@ export const QuotationBuilder: React.FC = () => {
                     <>
                       <div className="flex justify-between py-1 border-b border-slate-200 text-slate-700">
                         <span>CGST ({((activePDFQuotation.gstRatePct || 18) / 2)}%):</span>
-                        <span>₹{Math.round((activePDFQuotation.cgstTotalUSD || 0) * 85).toLocaleString('en-IN')}</span>
+                        <span>₹{Math.round(activePDFQuotation.cgstTotalUSD || 0).toLocaleString('en-IN')}</span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-slate-200 text-slate-700">
                         <span>SGST ({((activePDFQuotation.gstRatePct || 18) / 2)}%):</span>
-                        <span>₹{Math.round((activePDFQuotation.sgstTotalUSD || 0) * 85).toLocaleString('en-IN')}</span>
+                        <span>₹{Math.round(activePDFQuotation.sgstTotalUSD || 0).toLocaleString('en-IN')}</span>
                       </div>
                     </>
                   )}
@@ -1181,7 +1175,7 @@ export const QuotationBuilder: React.FC = () => {
                   {activePDFQuotation.taxType === 'INTER_STATE' && (
                     <div className="flex justify-between py-1 border-b border-slate-200 text-slate-700">
                       <span>IGST ({activePDFQuotation.gstRatePct || 18}%):</span>
-                      <span>₹{Math.round((activePDFQuotation.igstTotalUSD || 0) * 85).toLocaleString('en-IN')}</span>
+                      <span>₹{Math.round(activePDFQuotation.igstTotalUSD || 0).toLocaleString('en-IN')}</span>
                     </div>
                   )}
 
@@ -1194,16 +1188,16 @@ export const QuotationBuilder: React.FC = () => {
 
                   <div className="flex justify-between py-1 border-b border-slate-200">
                     <span className="text-slate-600">Freight & Logistics:</span>
-                    <span className="text-slate-900">₹{Math.round((activePDFQuotation.freightCostUSD || 0) * 85).toLocaleString('en-IN')}</span>
+                    <span className="text-slate-900">₹{Math.round(activePDFQuotation.freightCostUSD || 0).toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-slate-200">
-                    <span className="text-slate-600">Export Packaging:</span>
-                    <span className="text-slate-900">₹{Math.round((activePDFQuotation.packagingCostUSD || 0) * 85).toLocaleString('en-IN')}</span>
+                    <span className="text-slate-600">Packaging:</span>
+                    <span className="text-slate-900">₹{Math.round(activePDFQuotation.packagingCostUSD || 0).toLocaleString('en-IN')}</span>
                   </div>
 
                   <div className="flex justify-between py-2 border-t-2 border-slate-900 text-sm font-black text-orange-700">
                     <span>Grand Total (INR):</span>
-                    <span>₹{(activePDFQuotation.grandTotalINR || Math.round((activePDFQuotation.grandTotalUSD || 0) * 85)).toLocaleString('en-IN')}</span>
+                    <span>₹{(activePDFQuotation.grandTotalINR || activePDFQuotation.grandTotalUSD || 0).toLocaleString('en-IN')}</span>
                   </div>
                 </div>
               </div>
@@ -1399,7 +1393,7 @@ export const QuotationBuilder: React.FC = () => {
 
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-mono text-slate-600 font-bold">GST Tax Rate:</span>
-                    {[5, 12, 18, 28].map(rate => (
+                    {[0, 5, 12, 18, 28].map(rate => (
                       <button
                         key={rate}
                         type="button"
@@ -1460,7 +1454,7 @@ export const QuotationBuilder: React.FC = () => {
                         </div>
                       </div>
                       <div className="col-span-2 text-[11px] text-purple-700 font-bold bg-purple-50 p-2 rounded-lg border border-purple-200">
-                        Calculated Agent Payout: ₹{Math.round(calculatedAgentCommissionUSD * 85).toLocaleString('en-IN')}
+                        Calculated Agent Payout: ₹{Math.round(calculatedAgentCommissionUSD).toLocaleString('en-IN')}
                       </div>
                     </div>
                   ) : (
@@ -1533,7 +1527,22 @@ export const QuotationBuilder: React.FC = () => {
                 </div>
 
                 <div className="space-y-2.5">
-                  {lineItems.map((item, idx) => (
+                  {lineItems.length === 0 ? (
+                    <div className="bg-white p-6 rounded-xl border border-dashed border-slate-300 text-center space-y-2">
+                      <p className="text-xs font-mono text-slate-500">
+                        No product items in this quotation yet.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleAddItemRow}
+                        className="px-3 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 font-mono text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer border border-orange-200 transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Product Row</span>
+                      </button>
+                    </div>
+                  ) : (
+                    lineItems.map((item, idx) => (
                     <div key={idx} className="bg-white p-3 rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2 items-center text-xs">
                       <div className="sm:col-span-4">
                         <div className="flex items-center justify-between mb-1">
@@ -1662,16 +1671,17 @@ export const QuotationBuilder: React.FC = () => {
                           type="number"
                           min="0"
                           required
-                          value={item.unitPriceUSD}
+                          placeholder="0"
+                          value={item.unitPriceUSD === 0 ? '' : item.unitPriceUSD}
                           onChange={e => {
-                            const val = Number(e.target.value) || 0;
+                            const val = e.target.value === '' ? 0 : Number(e.target.value);
                             setLineItems(prev => {
                               const updated = [...prev];
-                              updated[idx] = { ...updated[idx], unitPriceUSD: val };
+                              updated[idx] = { ...updated[idx], unitPriceUSD: isNaN(val) ? 0 : val };
                               return updated;
                             });
                           }}
-                          className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs font-mono"
+                          className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs font-mono font-bold"
                         />
                       </div>
                       <div className="sm:col-span-1">
@@ -1680,12 +1690,13 @@ export const QuotationBuilder: React.FC = () => {
                           type="number"
                           min="0"
                           max="100"
-                          value={item.discountPct}
+                          placeholder="0"
+                          value={item.discountPct === 0 ? '' : item.discountPct}
                           onChange={e => {
-                            const val = Number(e.target.value) || 0;
+                            const val = e.target.value === '' ? 0 : Number(e.target.value);
                             setLineItems(prev => {
                               const updated = [...prev];
-                              updated[idx] = { ...updated[idx], discountPct: val };
+                              updated[idx] = { ...updated[idx], discountPct: isNaN(val) ? 0 : val };
                               return updated;
                             });
                           }}
@@ -1693,19 +1704,18 @@ export const QuotationBuilder: React.FC = () => {
                         />
                       </div>
                       <div className="sm:col-span-1 flex justify-end pt-3">
-                        {lineItems.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveItemRow(idx)}
-                            className="text-rose-500 hover:text-rose-700 p-1 cursor-pointer"
-                            title="Remove row"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveItemRow(idx)}
+                          className="text-rose-500 hover:text-rose-700 p-1 cursor-pointer"
+                          title="Remove row"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-                  ))}
+                  ))
+                )}
                 </div>
               </div>
 
@@ -1715,8 +1725,12 @@ export const QuotationBuilder: React.FC = () => {
                   <label className="block font-mono font-bold text-slate-700 mb-1">Freight / Shipping (₹)</label>
                   <input
                     type="number"
-                    value={commercialTermsForm.freightCostUSD}
-                    onChange={e => setCommercialTermsForm(prev => ({ ...prev, freightCostUSD: Number(e.target.value) || 0 }))}
+                    value={commercialTermsForm.freightCostUSD === 0 ? '' : commercialTermsForm.freightCostUSD}
+                    placeholder="0"
+                    onChange={e => {
+                      const val = e.target.value === '' ? 0 : Number(e.target.value);
+                      setCommercialTermsForm(prev => ({ ...prev, freightCostUSD: isNaN(val) ? 0 : val }));
+                    }}
                     className="w-full px-3 py-1.5 rounded-xl border border-slate-200 font-mono"
                   />
                 </div>
@@ -1724,8 +1738,12 @@ export const QuotationBuilder: React.FC = () => {
                   <label className="block font-mono font-bold text-slate-700 mb-1">Packaging Cost (₹)</label>
                   <input
                     type="number"
-                    value={commercialTermsForm.packagingCostUSD}
-                    onChange={e => setCommercialTermsForm(prev => ({ ...prev, packagingCostUSD: Number(e.target.value) || 0 }))}
+                    value={commercialTermsForm.packagingCostUSD === 0 ? '' : commercialTermsForm.packagingCostUSD}
+                    placeholder="0"
+                    onChange={e => {
+                      const val = e.target.value === '' ? 0 : Number(e.target.value);
+                      setCommercialTermsForm(prev => ({ ...prev, packagingCostUSD: isNaN(val) ? 0 : val }));
+                    }}
                     className="w-full px-3 py-1.5 rounded-xl border border-slate-200 font-mono"
                   />
                 </div>
@@ -1771,11 +1789,11 @@ export const QuotationBuilder: React.FC = () => {
               <div className="bg-slate-900 text-white p-4 rounded-xl font-mono text-xs flex flex-wrap items-center justify-between gap-4">
                 <div className="space-y-0.5">
                   <span className="text-slate-400 text-[10px] uppercase">Taxable Subtotal:</span>
-                  <p className="text-base font-bold">₹{Math.round(taxableTotalUSD * 85).toLocaleString('en-IN')}</p>
+                  <p className="text-base font-bold">₹{Math.round(taxableTotalUSD).toLocaleString('en-IN')}</p>
                 </div>
                 <div className="space-y-0.5">
                   <span className="text-slate-400 text-[10px] uppercase">Total GST ({taxConfig.gstRatePct}%):</span>
-                  <p className="text-base font-bold text-blue-400">₹{Math.round(totalTaxUSD * 85).toLocaleString('en-IN')}</p>
+                  <p className="text-base font-bold text-blue-400">₹{Math.round(totalTaxUSD).toLocaleString('en-IN')}</p>
                 </div>
                 <div className="space-y-0.5">
                   <span className="text-slate-400 text-[10px] uppercase">Grand Total (INR):</span>

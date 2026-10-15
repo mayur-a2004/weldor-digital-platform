@@ -43,6 +43,7 @@ export const RFQManager: React.FC = () => {
   const [selectedRfqForCad, setSelectedRfqForCad] = useState<RFQRequirement | null>(null);
   const [isAddRfqModalOpen, setIsAddRfqModalOpen] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<UploadedFileMeta | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // New RFQ form state
   const [newRfqData, setNewRfqData] = useState({
@@ -177,10 +178,8 @@ export const RFQManager: React.FC = () => {
       showNotification('No blank RFQs found! All entries have complete data.', 'info');
       return;
     }
-    if (window.confirm(`Found ${emptyOnes.length} incomplete/empty RFQ entries. Do you want to delete them?`)) {
-      emptyOnes.forEach(r => deleteRFQ(r.id));
-      showNotification(`Deleted ${emptyOnes.length} incomplete RFQ entries.`, 'success');
-    }
+    emptyOnes.forEach(r => deleteRFQ(r.id));
+    showNotification(`Deleted ${emptyOnes.length} incomplete RFQ entries.`, 'success');
   };
 
   return (
@@ -297,17 +296,36 @@ export const RFQManager: React.FC = () => {
                     ● {rfq.status}
                   </span>
 
-                  <button
-                    onClick={() => {
-                      if (window.confirm(`Are you sure you want to delete this RFQ from ${rfq.companyName || rfq.email}?`)) {
-                        deleteRFQ(rfq.id);
-                      }
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                    title="Delete RFQ"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {confirmDeleteId === rfq.id ? (
+                    <div className="flex items-center gap-1 bg-red-50 p-1 rounded-lg border border-red-200">
+                      <span className="text-[10px] font-bold text-red-700 px-1">Delete RFQ?</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setConfirmDeleteId(null);
+                          deleteRFQ(rfq.id);
+                        }}
+                        className="px-1.5 py-0.5 bg-red-600 text-white rounded text-[10px] font-bold hover:bg-red-700 shadow-xs"
+                      >
+                        Yes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded text-[10px] font-bold hover:bg-slate-300"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmDeleteId(rfq.id)}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      title="Delete RFQ"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 

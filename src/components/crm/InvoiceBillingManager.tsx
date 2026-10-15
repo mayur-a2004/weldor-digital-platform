@@ -219,20 +219,10 @@ export const InvoiceBillingManager: React.FC = () => {
     unit: string;
     unitPriceUSD: number;
     discountPct: number;
-  }>>([
-    {
-      description: 'ISO 15552 Heavy-Duty Pneumatic Cylinder',
-      sku: 'WEL-PNC-63-200',
-      hsnCode: '84123100',
-      quantity: 20,
-      unit: 'PCS',
-      unitPriceUSD: 95,
-      discountPct: 5
-    }
-  ]);
+  }>>([]);
 
-  const [formFreightUSD, setFormFreightUSD] = useState(150);
-  const [formPackagingUSD, setFormPackagingUSD] = useState(50);
+  const [formFreightUSD, setFormFreightUSD] = useState(0);
+  const [formPackagingUSD, setFormPackagingUSD] = useState(0);
   const [formPaymentTerms, setFormPaymentTerms] = useState(companySettings?.defaultTerms?.paymentTerms || '50% Advance, Balance against Proforma Invoice');
   const [formDeliveryTerms, setFormDeliveryTerms] = useState(companySettings?.defaultTerms?.deliveryTerms || 'Ex-Works Jamnagar (7-10 Business Days)');
   const [formDispatchThrough, setFormDispatchThrough] = useState('Road Transport Cargo / Courier');
@@ -250,12 +240,12 @@ export const InvoiceBillingManager: React.FC = () => {
     setFormItems(prev => [
       ...prev,
       {
-        description: '700 Bar Solenoid Hydraulic Directional Valve CETOP 3',
-        sku: 'WEL-HYV-700B',
-        hsnCode: '84812000',
-        quantity: 5,
+        description: '',
+        sku: '',
+        hsnCode: '',
+        quantity: 1,
         unit: 'PCS',
-        unitPriceUSD: 290,
+        unitPriceUSD: 0,
         discountPct: 0
       }
     ]);
@@ -313,7 +303,7 @@ export const InvoiceBillingManager: React.FC = () => {
 
     const totalTaxUSD = cgstTotalUSD + sgstTotalUSD + igstTotalUSD;
     const grandTotalUSD = taxableTotalUSD + totalTaxUSD + Number(formFreightUSD) + Number(formPackagingUSD);
-    const grandTotalINR = Math.round(grandTotalUSD * 85);
+    const grandTotalINR = Math.round(grandTotalUSD);
 
     let commissionAmountUSD = 0;
     if (formAgent.hasAgent) {
@@ -399,12 +389,12 @@ export const InvoiceBillingManager: React.FC = () => {
   };
 
   const handleStartEdit = (inv: TaxInvoice) => {
-    const grandTotal = inv.grandTotalINR || Math.round((inv.grandTotalUSD || 0) * 85);
+    const grandTotal = inv.grandTotalINR || Math.round(inv.grandTotalUSD || 0);
     const safeTaxable = (inv.taxableTotalUSD && inv.taxableTotalUSD > 0)
       ? inv.taxableTotalUSD
       : (inv.subtotalUSD && inv.subtotalUSD > 0
           ? inv.subtotalUSD - (inv.totalDiscountUSD || 0)
-          : (inv.grandTotalUSD ? inv.grandTotalUSD / 1.18 : grandTotal / (85 * 1.18)));
+          : (inv.grandTotalUSD ? inv.grandTotalUSD / 1.18 : grandTotal / 1.18));
 
     const safeItems = (inv.items && inv.items.length > 0)
       ? inv.items.map((it, idx) => ({
@@ -456,7 +446,7 @@ export const InvoiceBillingManager: React.FC = () => {
       },
       items: safeItems,
       taxType: inv.taxType || 'INTER_STATE',
-      gstRatePct: inv.gstRatePct || 18,
+      gstRatePct: inv.gstRatePct ?? 18,
       agent: inv.agent || {
         hasAgent: false,
         agentName: '',
@@ -517,7 +507,7 @@ export const InvoiceBillingManager: React.FC = () => {
 
     const totalTaxUSD = cgstTotalUSD + sgstTotalUSD + igstTotalUSD;
     const grandTotalUSD = taxableTotalUSD + totalTaxUSD + Number(editingInvoice.freightCostUSD || 0) + Number(editingInvoice.packagingCostUSD || 0);
-    const grandTotalINR = Math.round(grandTotalUSD * 85);
+    const grandTotalINR = Math.round(grandTotalUSD);
 
     return {
       calculatedItems,
@@ -661,14 +651,14 @@ export const InvoiceBillingManager: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredInvoices.map(inv => {
-                const grandTotal = inv.grandTotalINR || Math.round((inv.grandTotalUSD || 0) * 85);
+                const grandTotal = inv.grandTotalINR || Math.round(inv.grandTotalUSD || 0);
                 const taxableValue = (inv.taxableTotalUSD && inv.taxableTotalUSD > 0)
-                  ? Math.round(inv.taxableTotalUSD * 85)
+                  ? Math.round(inv.taxableTotalUSD)
                   : (inv.subtotalUSD && inv.subtotalUSD > 0
-                      ? Math.round((inv.subtotalUSD - (inv.totalDiscountUSD || 0)) * 85)
-                      : (inv.grandTotalUSD ? Math.round((inv.grandTotalUSD / (1 + (inv.gstRatePct || 18) / 100)) * 85) : Math.round(grandTotal / (1 + (inv.gstRatePct || 18) / 100))));
+                      ? Math.round(inv.subtotalUSD - (inv.totalDiscountUSD || 0))
+                      : (inv.grandTotalUSD ? Math.round(inv.grandTotalUSD / (1 + (inv.gstRatePct ?? 18) / 100)) : Math.round(grandTotal / (1 + (inv.gstRatePct ?? 18) / 100))));
                 const totalTax = (inv.totalTaxUSD && inv.totalTaxUSD > 0)
-                  ? Math.round(inv.totalTaxUSD * 85)
+                  ? Math.round(inv.totalTaxUSD)
                   : Math.max(0, grandTotal - taxableValue);
 
                 return (
@@ -686,11 +676,11 @@ export const InvoiceBillingManager: React.FC = () => {
                     </td>
                     <td className="p-3 font-mono">
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
-                        {inv.taxType === 'INTRA_STATE' ? `CGST+SGST (${inv.gstRatePct || 18}%)` : `IGST (${inv.gstRatePct || 18}%)`}
+                        {inv.taxType === 'INTRA_STATE' ? `CGST+SGST (${inv.gstRatePct ?? 18}%)` : `IGST (${inv.gstRatePct ?? 18}%)`}
                       </span>
                       {inv.agent?.hasAgent && (
                         <p className="text-[10px] text-amber-700 font-bold mt-0.5">
-                          Broker: {inv.agent?.agentName} (₹{Math.round((inv.agent?.commissionAmountUSD || 0) * 85).toLocaleString('en-IN')})
+                          Broker: {inv.agent?.agentName} (₹{Math.round(inv.agent?.commissionAmountUSD || 0).toLocaleString('en-IN')})
                         </p>
                       )}
                     </td>
@@ -937,7 +927,7 @@ export const InvoiceBillingManager: React.FC = () => {
 
                   <div className="flex items-center gap-2 pt-1">
                     <span className="text-[11px] font-mono text-slate-600 font-bold">Standard GST Rate:</span>
-                    {[5, 12, 18, 28].map(rate => (
+                    {[0, 5, 12, 18, 28].map(rate => (
                       <button
                         key={rate}
                         type="button"
@@ -990,7 +980,7 @@ export const InvoiceBillingManager: React.FC = () => {
                           <input
                             type="text"
                             readOnly
-                            value={`₹${Math.round(previewFinancials.commissionAmountUSD * 85).toLocaleString('en-IN')}`}
+                            value={`₹${Math.round(previewFinancials.commissionAmountUSD).toLocaleString('en-IN')}`}
                             className="w-full px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-lg text-xs font-mono font-bold text-amber-800"
                           />
                         </div>
@@ -1056,7 +1046,20 @@ export const InvoiceBillingManager: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  {formItems.map((item, idx) => (
+                  {formItems.length === 0 ? (
+                    <div className="bg-white p-6 rounded-xl border border-dashed border-slate-300 text-center space-y-2">
+                      <p className="text-xs font-mono text-slate-500">No items added to invoice yet.</p>
+                      <button
+                        type="button"
+                        onClick={handleAddItem}
+                        className="px-3 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 font-mono text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer border border-orange-200 transition-colors"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Item Row</span>
+                      </button>
+                    </div>
+                  ) : (
+                    formItems.map((item, idx) => (
                     <div key={idx} className="bg-white p-3 rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2 items-center text-xs">
                       <div className="sm:col-span-4">
                         <div className="flex items-center justify-between mb-1">
@@ -1169,12 +1172,13 @@ export const InvoiceBillingManager: React.FC = () => {
                           type="number"
                           min="0"
                           required
-                          value={item.unitPriceUSD}
+                          value={item.unitPriceUSD === 0 ? '' : item.unitPriceUSD}
+                          placeholder="0"
                           onChange={e => {
-                            const val = Number(e.target.value) || 0;
+                            const val = e.target.value === '' ? 0 : Number(e.target.value);
                             setFormItems(prev => {
                               const copy = [...prev];
-                              copy[idx] = { ...copy[idx], unitPriceUSD: val };
+                              copy[idx] = { ...copy[idx], unitPriceUSD: isNaN(val) ? 0 : val };
                               return copy;
                             });
                           }}
@@ -1187,12 +1191,13 @@ export const InvoiceBillingManager: React.FC = () => {
                           type="number"
                           min="0"
                           max="100"
-                          value={item.discountPct}
+                          value={item.discountPct === 0 ? '' : item.discountPct}
+                          placeholder="0"
                           onChange={e => {
-                            const val = Number(e.target.value) || 0;
+                            const val = e.target.value === '' ? 0 : Number(e.target.value);
                             setFormItems(prev => {
                               const copy = [...prev];
-                              copy[idx] = { ...copy[idx], discountPct: val };
+                              copy[idx] = { ...copy[idx], discountPct: isNaN(val) ? 0 : val };
                               return copy;
                             });
                           }}
@@ -1200,18 +1205,17 @@ export const InvoiceBillingManager: React.FC = () => {
                         />
                       </div>
                       <div className="sm:col-span-1 flex justify-end pt-3">
-                        {formItems.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveItem(idx)}
-                            className="text-rose-500 hover:text-rose-700 p-1"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveItem(idx)}
+                          className="text-rose-500 hover:text-rose-700 p-1 cursor-pointer"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-                  ))}
+                  ))
+                )}
                 </div>
               </div>
 
@@ -1224,8 +1228,12 @@ export const InvoiceBillingManager: React.FC = () => {
                       <label className="text-[10px] font-mono text-slate-600 block">Freight / Shipping (₹)</label>
                       <input
                         type="number"
-                        value={formFreightUSD}
-                        onChange={e => setFormFreightUSD(Number(e.target.value) || 0)}
+                        value={formFreightUSD === 0 ? '' : formFreightUSD}
+                        placeholder="0"
+                        onChange={e => {
+                          const val = e.target.value === '' ? 0 : Number(e.target.value);
+                          setFormFreightUSD(isNaN(val) ? 0 : val);
+                        }}
                         className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-mono"
                       />
                     </div>
@@ -1233,8 +1241,12 @@ export const InvoiceBillingManager: React.FC = () => {
                       <label className="text-[10px] font-mono text-slate-600 block">Packaging & Forwarding (₹)</label>
                       <input
                         type="number"
-                        value={formPackagingUSD}
-                        onChange={e => setFormPackagingUSD(Number(e.target.value) || 0)}
+                        value={formPackagingUSD === 0 ? '' : formPackagingUSD}
+                        placeholder="0"
+                        onChange={e => {
+                          const val = e.target.value === '' ? 0 : Number(e.target.value);
+                          setFormPackagingUSD(isNaN(val) ? 0 : val);
+                        }}
                         className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-mono"
                       />
                     </div>
@@ -1255,40 +1267,40 @@ export const InvoiceBillingManager: React.FC = () => {
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-1.5 text-xs font-mono">
                   <div className="flex justify-between text-slate-600">
                     <span>Subtotal:</span>
-                    <span className="font-bold text-slate-900">₹{Math.round(previewFinancials.subtotalUSD * 85).toLocaleString('en-IN')}</span>
+                    <span className="font-bold text-slate-900">₹{Math.round(previewFinancials.subtotalUSD).toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between text-orange-700 font-bold">
                     <span>Discount:</span>
-                    <span>-₹{Math.round(previewFinancials.totalDiscountUSD * 85).toLocaleString('en-IN')}</span>
+                    <span>-₹{Math.round(previewFinancials.totalDiscountUSD).toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between text-slate-700 border-t border-slate-200 pt-1">
                     <span>Taxable Amount:</span>
-                    <span className="font-bold">₹{Math.round(previewFinancials.taxableTotalUSD * 85).toLocaleString('en-IN')}</span>
+                    <span className="font-bold">₹{Math.round(previewFinancials.taxableTotalUSD).toLocaleString('en-IN')}</span>
                   </div>
                   {formTaxType === 'INTRA_STATE' ? (
                     <>
                       <div className="flex justify-between text-slate-600">
                         <span>CGST ({formGstRatePct / 2}%):</span>
-                        <span>₹{Math.round(previewFinancials.cgstTotalUSD * 85).toLocaleString('en-IN')}</span>
+                        <span>₹{Math.round(previewFinancials.cgstTotalUSD).toLocaleString('en-IN')}</span>
                       </div>
                       <div className="flex justify-between text-slate-600">
                         <span>SGST ({formGstRatePct / 2}%):</span>
-                        <span>₹{Math.round(previewFinancials.sgstTotalUSD * 85).toLocaleString('en-IN')}</span>
+                        <span>₹{Math.round(previewFinancials.sgstTotalUSD).toLocaleString('en-IN')}</span>
                       </div>
                     </>
                   ) : (
                     <div className="flex justify-between text-slate-600">
                       <span>IGST ({formGstRatePct}%):</span>
-                      <span>₹{Math.round(previewFinancials.igstTotalUSD * 85).toLocaleString('en-IN')}</span>
+                      <span>₹{Math.round(previewFinancials.igstTotalUSD).toLocaleString('en-IN')}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-slate-600">
                     <span>Freight & Packaging:</span>
-                    <span>₹{Math.round((Number(formFreightUSD) + Number(formPackagingUSD)) * 85).toLocaleString('en-IN')}</span>
+                    <span>₹{Math.round(Number(formFreightUSD) + Number(formPackagingUSD)).toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between pt-2 border-t border-slate-300 font-black text-sm text-orange-700">
                     <span>Grand Total:</span>
-                    <span>₹{(previewFinancials.grandTotalINR || Math.round(previewFinancials.grandTotalUSD * 85)).toLocaleString('en-IN')}</span>
+                    <span>₹{(previewFinancials.grandTotalINR || Math.round(previewFinancials.grandTotalUSD)).toLocaleString('en-IN')}</span>
                   </div>
                 </div>
 
@@ -1505,10 +1517,11 @@ export const InvoiceBillingManager: React.FC = () => {
                     onChange={e => setEditingInvoice(prev => prev ? { ...prev, gstRatePct: Number(e.target.value) } : null)}
                     className="w-full mt-1 px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-bold bg-white font-mono"
                   >
-                    <option value="18">18% (Standard Engineering & Valves)</option>
-                    <option value="12">12% (Concessional Industrial)</option>
-                    <option value="28">28% (Luxury / High Pressure Systems)</option>
+                    <option value="0">0% (Nil / Exempted / Zero Rate)</option>
                     <option value="5">5% (Essential Raw Metals)</option>
+                    <option value="12">12% (Concessional Industrial)</option>
+                    <option value="18">18% (Standard Engineering & Valves)</option>
+                    <option value="28">28% (Luxury / High Pressure Systems)</option>
                   </select>
                 </div>
               </div>
@@ -1629,13 +1642,14 @@ export const InvoiceBillingManager: React.FC = () => {
                           type="number"
                           min="0"
                           required
-                          value={item.unitPriceUSD}
+                          value={item.unitPriceUSD === 0 ? '' : item.unitPriceUSD}
+                          placeholder="0"
                           onChange={e => {
-                            const val = Number(e.target.value) || 0;
+                            const val = e.target.value === '' ? 0 : Number(e.target.value);
                             setEditingInvoice(prev => {
                               if (!prev) return null;
                               const copy = [...prev.items];
-                              copy[idx] = { ...copy[idx], unitPriceUSD: val };
+                              copy[idx] = { ...copy[idx], unitPriceUSD: isNaN(val) ? 0 : val };
                               return { ...prev, items: copy };
                             });
                           }}
@@ -1648,13 +1662,14 @@ export const InvoiceBillingManager: React.FC = () => {
                           type="number"
                           min="0"
                           max="100"
-                          value={item.discountPct}
+                          value={item.discountPct === 0 ? '' : item.discountPct}
+                          placeholder="0"
                           onChange={e => {
-                            const val = Number(e.target.value) || 0;
+                            const val = e.target.value === '' ? 0 : Number(e.target.value);
                             setEditingInvoice(prev => {
                               if (!prev) return null;
                               const copy = [...prev.items];
-                              copy[idx] = { ...copy[idx], discountPct: val };
+                              copy[idx] = { ...copy[idx], discountPct: isNaN(val) ? 0 : val };
                               return { ...prev, items: copy };
                             });
                           }}
@@ -1694,18 +1709,26 @@ export const InvoiceBillingManager: React.FC = () => {
                       <label className="text-[10px] font-mono text-slate-600 block">Freight / Shipping (₹)</label>
                       <input
                         type="number"
-                        value={editingInvoice.freightCostUSD || 0}
-                        onChange={e => setEditingInvoice(prev => prev ? { ...prev, freightCostUSD: Number(e.target.value) || 0 } : null)}
-                        className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs font-mono"
+                        value={editingInvoice.freightCostUSD === 0 ? '' : (editingInvoice.freightCostUSD ?? '')}
+                        placeholder="0"
+                        onChange={e => {
+                          const val = e.target.value === '' ? 0 : Number(e.target.value);
+                          setEditingInvoice(prev => prev ? { ...prev, freightCostUSD: isNaN(val) ? 0 : val } : null);
+                        }}
+                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-mono"
                       />
                     </div>
                     <div>
                       <label className="text-[10px] font-mono text-slate-600 block">Packaging (₹)</label>
                       <input
                         type="number"
-                        value={editingInvoice.packagingCostUSD || 0}
-                        onChange={e => setEditingInvoice(prev => prev ? { ...prev, packagingCostUSD: Number(e.target.value) || 0 } : null)}
-                        className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs font-mono"
+                        value={editingInvoice.packagingCostUSD === 0 ? '' : (editingInvoice.packagingCostUSD ?? '')}
+                        placeholder="0"
+                        onChange={e => {
+                          const val = e.target.value === '' ? 0 : Number(e.target.value);
+                          setEditingInvoice(prev => prev ? { ...prev, packagingCostUSD: isNaN(val) ? 0 : val } : null);
+                        }}
+                        className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-mono"
                       />
                     </div>
                   </div>
@@ -1715,7 +1738,7 @@ export const InvoiceBillingManager: React.FC = () => {
                       type="text"
                       value={editingInvoice.paymentTerms || ''}
                       onChange={e => setEditingInvoice(prev => prev ? { ...prev, paymentTerms: e.target.value } : null)}
-                      className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs"
+                      className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs"
                     />
                   </div>
                   <div>
@@ -1724,7 +1747,7 @@ export const InvoiceBillingManager: React.FC = () => {
                       type="text"
                       value={editingInvoice.deliveryTerms || ''}
                       onChange={e => setEditingInvoice(prev => prev ? { ...prev, deliveryTerms: e.target.value } : null)}
-                      className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-xs"
+                      className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs"
                     />
                   </div>
                 </div>
@@ -1740,15 +1763,15 @@ export const InvoiceBillingManager: React.FC = () => {
                       </span>
                       <div className="flex justify-between text-slate-600">
                         <span>Net Taxable Value:</span>
-                        <strong className="text-slate-900">₹{Math.round(fin.taxableTotalUSD * 85).toLocaleString('en-IN')}</strong>
+                        <strong className="text-slate-900">₹{Math.round(fin.taxableTotalUSD).toLocaleString('en-IN')}</strong>
                       </div>
                       <div className="flex justify-between text-slate-600">
                         <span>GST Tax Total ({editingInvoice.gstRatePct}%):</span>
-                        <strong className="text-emerald-700 font-bold">₹{Math.round(fin.totalTaxUSD * 85).toLocaleString('en-IN')}</strong>
+                        <strong className="text-emerald-700 font-bold">₹{Math.round(fin.totalTaxUSD).toLocaleString('en-IN')}</strong>
                       </div>
                       <div className="flex justify-between text-slate-600">
                         <span>Freight & Packaging:</span>
-                        <strong>₹{Math.round(((editingInvoice.freightCostUSD || 0) + (editingInvoice.packagingCostUSD || 0)) * 85).toLocaleString('en-IN')}</strong>
+                        <strong>₹{Math.round((editingInvoice.freightCostUSD || 0) + (editingInvoice.packagingCostUSD || 0)).toLocaleString('en-IN')}</strong>
                       </div>
                       <div className="flex justify-between pt-2 border-t border-orange-200 text-sm font-black text-orange-900">
                         <span>Grand Total (INR):</span>
@@ -1889,15 +1912,15 @@ export const InvoiceBillingManager: React.FC = () => {
               </thead>
               <tbody>
                 {(activePrintInvoice.items || []).map((item, i) => {
-                  const itemRate = Math.round((item.unitPriceUSD || 0) * 85);
+                  const itemRate = Math.round(item.unitPriceUSD || 0);
                   const itemTaxable = (item.taxableAmountUSD && item.taxableAmountUSD > 0)
-                    ? Math.round(item.taxableAmountUSD * 85)
+                    ? Math.round(item.taxableAmountUSD)
                     : Math.round(item.quantity * itemRate * (1 - (item.discountPct || 0) / 100));
                   const itemTax = ((item.cgstAmountUSD || 0) + (item.sgstAmountUSD || 0) + (item.igstAmountUSD || 0)) > 0
-                    ? Math.round(((item.cgstAmountUSD || 0) + (item.sgstAmountUSD || 0) + (item.igstAmountUSD || 0)) * 85)
-                    : Math.round(itemTaxable * ((activePrintInvoice.gstRatePct || 18) / 100));
+                    ? Math.round((item.cgstAmountUSD || 0) + (item.sgstAmountUSD || 0) + (item.igstAmountUSD || 0))
+                    : Math.round(itemTaxable * ((activePrintInvoice.gstRatePct ?? 18) / 100));
                   const itemTotal = (item.totalUSD && item.totalUSD > 0)
-                    ? Math.round(item.totalUSD * 85)
+                    ? Math.round(item.totalUSD)
                     : itemTaxable + itemTax;
 
                   return (
@@ -1944,17 +1967,17 @@ export const InvoiceBillingManager: React.FC = () => {
               {/* Totals Breakdown */}
               <div className="flex justify-end">
                 {(() => {
-                  const viewGrandTotal = activePrintInvoice.grandTotalINR || Math.round((activePrintInvoice.grandTotalUSD || 0) * 85);
+                  const viewGrandTotal = activePrintInvoice.grandTotalINR || Math.round(activePrintInvoice.grandTotalUSD || 0);
                   const viewTaxable = (activePrintInvoice.taxableTotalUSD && activePrintInvoice.taxableTotalUSD > 0)
-                    ? Math.round(activePrintInvoice.taxableTotalUSD * 85)
+                    ? Math.round(activePrintInvoice.taxableTotalUSD)
                     : (activePrintInvoice.subtotalUSD && activePrintInvoice.subtotalUSD > 0
-                        ? Math.round((activePrintInvoice.subtotalUSD - (activePrintInvoice.totalDiscountUSD || 0)) * 85)
-                        : Math.round(viewGrandTotal / (1 + (activePrintInvoice.gstRatePct || 18) / 100)));
+                        ? Math.round(activePrintInvoice.subtotalUSD - (activePrintInvoice.totalDiscountUSD || 0))
+                        : Math.round(viewGrandTotal / (1 + (activePrintInvoice.gstRatePct ?? 18) / 100)));
                   const viewTax = (activePrintInvoice.totalTaxUSD && activePrintInvoice.totalTaxUSD > 0)
-                    ? Math.round(activePrintInvoice.totalTaxUSD * 85)
+                    ? Math.round(activePrintInvoice.totalTaxUSD)
                     : Math.max(0, viewGrandTotal - viewTaxable);
                   const viewSubtotal = (activePrintInvoice.subtotalUSD && activePrintInvoice.subtotalUSD > 0)
-                    ? Math.round(activePrintInvoice.subtotalUSD * 85)
+                    ? Math.round(activePrintInvoice.subtotalUSD)
                     : viewTaxable;
 
                   return (
@@ -1965,7 +1988,7 @@ export const InvoiceBillingManager: React.FC = () => {
                       </div>
                       <div className="flex justify-between text-orange-700 font-bold">
                         <span>Discount Total:</span>
-                        <span>-₹{Math.round((activePrintInvoice.totalDiscountUSD || 0) * 85).toLocaleString('en-IN')}</span>
+                        <span>-₹{Math.round(activePrintInvoice.totalDiscountUSD || 0).toLocaleString('en-IN')}</span>
                       </div>
                       <div className="flex justify-between border-t border-slate-200 pt-1 font-bold">
                         <span>Taxable Value:</span>
@@ -1974,23 +1997,23 @@ export const InvoiceBillingManager: React.FC = () => {
                       {activePrintInvoice.taxType === 'INTRA_STATE' ? (
                         <>
                           <div className="flex justify-between text-slate-600">
-                            <span>CGST ({((activePrintInvoice.gstRatePct || 18) / 2)}%):</span>
+                            <span>CGST ({((activePrintInvoice.gstRatePct ?? 18) / 2)}%):</span>
                             <span>₹{Math.round(viewTax / 2).toLocaleString('en-IN')}</span>
                           </div>
                           <div className="flex justify-between text-slate-600">
-                            <span>SGST ({((activePrintInvoice.gstRatePct || 18) / 2)}%):</span>
+                            <span>SGST ({((activePrintInvoice.gstRatePct ?? 18) / 2)}%):</span>
                             <span>₹{Math.round(viewTax / 2).toLocaleString('en-IN')}</span>
                           </div>
                         </>
                       ) : (
                         <div className="flex justify-between text-slate-600">
-                          <span>IGST ({activePrintInvoice.gstRatePct || 18}%):</span>
+                          <span>IGST ({activePrintInvoice.gstRatePct ?? 18}%):</span>
                           <span>₹{viewTax.toLocaleString('en-IN')}</span>
                         </div>
                       )}
                       <div className="flex justify-between text-slate-600">
                         <span>Freight &amp; Forwarding:</span>
-                        <span>₹{Math.round(((activePrintInvoice.freightCostUSD || 0) + (activePrintInvoice.packagingCostUSD || 0)) * 85).toLocaleString('en-IN')}</span>
+                        <span>₹{Math.round((activePrintInvoice.freightCostUSD || 0) + (activePrintInvoice.packagingCostUSD || 0)).toLocaleString('en-IN')}</span>
                       </div>
                       <div className="flex justify-between pt-2 border-t-2 border-slate-900 font-black text-base text-orange-700">
                         <span>Grand Total (INR):</span>

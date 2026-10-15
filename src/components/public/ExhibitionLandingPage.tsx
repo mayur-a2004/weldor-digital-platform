@@ -23,8 +23,8 @@ import { OFFICIAL_WELDOR_EXHIBITIONS } from '../../config/catalogData';
 export const ExhibitionLandingPage: React.FC = () => {
   const { exhibitions, selectedExpoSlug, addPublicRFQLead, setActiveView, showNotification } = useApp();
 
-  const expoList = (exhibitions && exhibitions.length > 0) ? exhibitions : OFFICIAL_WELDOR_EXHIBITIONS;
-  const activeExpo = expoList.find(e => e.qrSlug === selectedExpoSlug) || expoList[0] || OFFICIAL_WELDOR_EXHIBITIONS[0];
+  const expoList = exhibitions || [];
+  const activeExpo = expoList.find(e => e.qrSlug === selectedExpoSlug) || expoList[0] || null;
 
   const [companyName, setCompanyName] = useState('L&T Heavy Engineering');
   const [contactName, setContactName] = useState('Ramesh Kulkarni');

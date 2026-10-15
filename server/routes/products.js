@@ -99,10 +99,7 @@ router.put('/:id', async (req, res) => {
 // DELETE product
 router.delete('/:id', async (req, res) => {
   try {
-    const deleted = await db.delete('products', req.params.id);
-    if (!deleted) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
-    }
+    await db.delete('products', req.params.id);
     res.json({ success: true, message: 'Product deleted successfully from database' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to delete product', error: err.message });

@@ -52,6 +52,7 @@ export const GalleryMediaManager: React.FC = () => {
   const [defaultBatchCategory, setDefaultBatchCategory] = useState<GalleryMedia['category']>('Factory Floor');
   const [editingMedia, setEditingMedia] = useState<GalleryMedia | null>(null);
   const [viewingMedia, setViewingMedia] = useState<GalleryMedia | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Form State
   const [formData, setFormData] = useState<{
@@ -159,6 +160,7 @@ export const GalleryMediaManager: React.FC = () => {
     }
 
     setIsAddEditModalOpen(false);
+    setEditingMedia(null);
   };
 
   const handleAddTag = () => {
@@ -557,31 +559,64 @@ export const GalleryMediaManager: React.FC = () => {
               {/* Actions Footer */}
               <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between">
                 <button
+                  type="button"
                   onClick={() => setViewingMedia(m)}
-                  className="text-xs font-mono font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1"
+                  className="text-xs font-mono font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1 cursor-pointer"
                 >
                   <Eye className="w-3.5 h-3.5" /> View
                 </button>
 
                 <div className="flex items-center gap-1">
                   <button
-                    onClick={() => handleOpenEditModal(m)}
-                    className="p-1.5 rounded-lg text-orange-600 hover:bg-orange-50 transition-colors"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenEditModal(m);
+                    }}
+                    className="p-1.5 rounded-lg text-orange-600 hover:bg-orange-50 transition-colors cursor-pointer"
                     title="Edit Media"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                   </button>
-                  <button
-                    onClick={() => {
-                      if (confirm(`Delete media "${m.title}"?`)) {
-                        deleteGalleryMedia(m.id);
-                      }
-                    }}
-                    className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors"
-                    title="Delete Media"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+
+                  {confirmDeleteId === m.id ? (
+                    <div className="flex items-center gap-1 bg-rose-50 border border-rose-300 p-1 rounded-lg shadow-xs animate-in fade-in zoom-in-95">
+                      <span className="text-[10px] text-rose-800 font-bold px-1 font-mono">Delete?</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteGalleryMedia(m.id);
+                          setConfirmDeleteId(null);
+                        }}
+                        className="px-2 py-0.5 rounded bg-rose-600 text-white text-[10px] font-bold cursor-pointer hover:bg-rose-700 transition-colors"
+                      >
+                        Yes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmDeleteId(null);
+                        }}
+                        className="px-1.5 py-0.5 rounded bg-white text-slate-700 text-[10px] cursor-pointer hover:bg-slate-100 border border-slate-200 transition-colors"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDeleteId(m.id);
+                      }}
+                      className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 transition-colors cursor-pointer"
+                      title="Delete Media"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -933,6 +968,66 @@ export const GalleryMediaManager: React.FC = () => {
                   ))}
                 </div>
               )}
+
+              {/* Lightbox Actions */}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = viewingMedia;
+                      setViewingMedia(null);
+                      setEditingMedia(target);
+                      setIsAddEditModalOpen(true);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-slate-600" />
+                    <span>Edit Details</span>
+                  </button>
+
+                  {confirmDeleteId === viewingMedia.id ? (
+                    <div className="flex items-center gap-1.5 bg-red-50 p-1 rounded-lg border border-red-200">
+                      <span className="text-[11px] font-bold text-red-700 px-1">Delete item?</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const id = viewingMedia.id;
+                          setViewingMedia(null);
+                          deleteGalleryMedia(id);
+                        }}
+                        className="px-2 py-1 bg-red-600 text-white rounded text-[11px] font-bold hover:bg-red-700 shadow-xs"
+                      >
+                        Yes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="px-2 py-1 bg-slate-200 text-slate-700 rounded text-[11px] font-bold hover:bg-slate-300"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteId(viewingMedia.id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-bold transition-colors border border-red-200/50"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete</span>
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setViewingMedia(null)}
+                  className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-bold transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
 
           </div>

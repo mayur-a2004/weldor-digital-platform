@@ -37,6 +37,7 @@ export const CMSManager: React.FC = () => {
   const [editingBanner, setEditingBanner] = useState<HeroBanner | null>(null);
   const [isUploadingBg, setIsUploadingBg] = useState(false);
   const [isUploadingProduct, setIsUploadingProduct] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Form State
   const [formData, setFormData] = useState<Omit<HeroBanner, 'id'>>({
@@ -447,21 +448,46 @@ export const CMSManager: React.FC = () => {
                   </button>
 
                   {/* Delete */}
-                  <button
-                    onClick={() => {
-                      if (banners.length <= 1) {
-                        showNotification('You must keep at least 1 hero banner slide.', 'warning');
-                        return;
-                      }
-                      if (confirm(`Delete banner slide "${banner.title}"?`)) {
-                        deleteBanner(banner.id);
-                      }
-                    }}
-                    className="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200 transition-colors"
-                    title="Delete Slide"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {confirmDeleteId === banner.id ? (
+                    <div className="flex items-center gap-1 bg-red-50 p-1 rounded-xl border border-red-200">
+                      <span className="text-[10px] font-bold text-red-700 px-1">Delete?</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setConfirmDeleteId(null);
+                          if (banners.length <= 1) {
+                            showNotification('You must keep at least 1 hero banner slide.', 'warning');
+                            return;
+                          }
+                          deleteBanner(banner.id);
+                        }}
+                        className="px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold hover:bg-red-700 shadow-xs"
+                      >
+                        Yes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="px-2 py-1 bg-slate-200 text-slate-700 rounded text-[10px] font-bold hover:bg-slate-300"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        if (banners.length <= 1) {
+                          showNotification('You must keep at least 1 hero banner slide.', 'warning');
+                          return;
+                        }
+                        setConfirmDeleteId(banner.id);
+                      }}
+                      className="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200 transition-colors"
+                      title="Delete Slide"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
 
               </div>

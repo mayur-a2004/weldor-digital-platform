@@ -12,7 +12,7 @@ import {
   ChevronRight,
   Sparkles
 } from 'lucide-react';
-import { OFFICIAL_WELDOR_CATEGORIES } from '../../config/catalogData';
+
 
 export const CategoriesShowcase: React.FC = () => {
   const { categories, products, setActiveView } = useApp();
@@ -21,8 +21,8 @@ export const CategoriesShowcase: React.FC = () => {
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [activeIdx, setActiveIdx] = useState(0);
 
-  // Fallback to official categories if empty
-  const activeCategories = (categories && categories.length > 0) ? categories : OFFICIAL_WELDOR_CATEGORIES;
+  // Use live categories from backend state
+  const activeCategories = categories || [];
 
   // Helper for category metadata, icons, and theme accents
   const getCategoryMeta = (catName: string, iconName?: string) => {
@@ -110,6 +110,8 @@ export const CategoriesShowcase: React.FC = () => {
       behavior: 'smooth'
     });
   };
+
+  if (activeCategories.length === 0) return null;
 
   return (
     <section className="py-10 sm:py-12 bg-gradient-to-b from-white via-slate-50/70 to-[#FAF9F6] border-b border-slate-200 relative overflow-hidden">

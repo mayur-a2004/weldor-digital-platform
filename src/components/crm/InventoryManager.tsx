@@ -1112,19 +1112,38 @@ export const InventoryManager: React.FC = () => {
                 >
                   Deselect All
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (window.confirm(`Are you sure you want to delete ${selectedItemIds.length} selected items?`)) {
-                      bulkDeleteInventory(selectedItemIds);
-                      setSelectedItemIds([]);
-                    }
-                  }}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-xs transition-all cursor-pointer"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Delete Selected ({selectedItemIds.length})</span>
-                </button>
+                {isBulkDeleteModalOpen ? (
+                  <div className="flex items-center gap-1.5 bg-red-50 p-1 rounded-xl border border-red-200">
+                    <span className="text-[11px] font-bold text-red-700 px-1">Delete {selectedItemIds.length} items?</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        bulkDeleteInventory(selectedItemIds);
+                        setSelectedItemIds([]);
+                        setIsBulkDeleteModalOpen(false);
+                      }}
+                      className="px-2.5 py-1 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 shadow-xs"
+                    >
+                      Yes, Delete
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsBulkDeleteModalOpen(false)}
+                      className="px-2.5 py-1 bg-slate-200 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-300"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsBulkDeleteModalOpen(true)}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-xs transition-all cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Selected ({selectedItemIds.length})</span>
+                  </button>
+                )}
               </div>
             </div>
           )}

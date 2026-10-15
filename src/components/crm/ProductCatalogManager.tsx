@@ -55,6 +55,7 @@ export const ProductCatalogManager: React.FC = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [activeFormTab, setActiveFormTab] = useState<'vital' | 'bullets' | 'media' | 'specs' | 'pricing' | 'seo'>('vital');
 
   // Form State (Amazon-Style Listing Fields)
@@ -99,16 +100,10 @@ export const ProductCatalogManager: React.FC = () => {
     subCategory: '',
     tagline: '',
     description: '',
-    bulletPoints: [
-      'Engineered to precision industrial tolerances for maximum cycle endurance.',
-      'High-grade anti-corrosion surface finish for harsh operating environments.',
-      '100% factory pressure hold and dimensional CMM inspection certified.',
-      'Universal ISO standard mounting interface for seamless OEM replacement.',
-      'Complete MTC 3.1 material test certificate included with dispatch.'
-    ],
-    industries: ['Automotive', 'Automation & Robotics', 'Heavy Engineering'],
-    applications: ['Robotic Fixture', 'Hydraulic Press', 'Assembly Line'],
-    materials: ['Hard Anodized Aluminum', 'SS304 Piston Rod', 'Viton Seals'],
+    bulletPoints: [],
+    industries: [],
+    applications: [],
+    materials: [],
     image: '',
     gallery: [],
     videoUrl: '',
@@ -116,21 +111,16 @@ export const ProductCatalogManager: React.FC = () => {
     catalogPdfUrl: '',
     datasheetUrl: '',
     cadDrawingUrl: '',
-    priceUSD: 150,
-    priceINR: 12500,
-    minOrderQty: 5,
+    priceUSD: 0,
+    priceINR: 0,
+    minOrderQty: 1,
     standardLeadTimeDays: 7,
     inStock: true,
-    featured: true,
+    featured: false,
     status: 'Active',
-    certifications: ['ISO 9001:2015', 'CE Certified'],
-    specifications: [
-      { label: 'Max Operating Pressure', value: '10 Bar' },
-      { label: 'Operating Temperature', value: '-20°C to +80°C' },
-      { label: 'Bore Size Range', value: '32 mm – 320 mm' },
-      { label: 'Leakage Testing', value: '100% Nitrogen Bubble Tested' }
-    ],
-    seoKeywords: ['pneumatic cylinder', 'iso 15552 air actuator', 'heavy industrial valve', 'double acting ram'],
+    certifications: [],
+    specifications: [],
+    seoKeywords: [],
     seoMetaTitle: '',
     seoMetaDescription: ''
   });
@@ -174,20 +164,14 @@ export const ProductCatalogManager: React.FC = () => {
       sku: `WEL-${Date.now().toString().slice(-4)}`,
       modelNumber: '',
       brand: 'WELDOR PRECISION',
-      category: categories[0]?.name || 'Pneumatic Components',
+      category: categories[0]?.name || 'Industrial Components',
       subCategory: '',
       tagline: '',
       description: '',
-      bulletPoints: [
-        'Engineered to precision industrial tolerances for maximum cycle endurance.',
-        'High-grade anti-corrosion surface finish for harsh operating environments.',
-        '100% factory pressure hold and dimensional CMM inspection certified.',
-        'Universal ISO standard mounting interface for seamless OEM replacement.',
-        'Complete MTC 3.1 material test certificate included with dispatch.'
-      ],
-      industries: ['Automotive', 'Automation & Robotics', 'Heavy Engineering'],
-      applications: ['Robotic Fixture', 'Hydraulic Press', 'Assembly Line'],
-      materials: ['Hard Anodized Aluminum', 'SS304 Piston Rod', 'Viton Seals'],
+      bulletPoints: [],
+      industries: [],
+      applications: [],
+      materials: [],
       image: '',
       gallery: [],
       videoUrl: '',
@@ -195,21 +179,16 @@ export const ProductCatalogManager: React.FC = () => {
       catalogPdfUrl: '',
       datasheetUrl: '',
       cadDrawingUrl: '',
-      priceUSD: 150,
-      priceINR: 12500,
-      minOrderQty: 5,
+      priceUSD: 0,
+      priceINR: 0,
+      minOrderQty: 1,
       standardLeadTimeDays: 7,
       inStock: true,
-      featured: true,
+      featured: false,
       status: 'Active',
-      certifications: ['ISO 9001:2015', 'CE Certified'],
-      specifications: [
-        { label: 'Max Operating Pressure', value: '10 Bar' },
-        { label: 'Operating Temperature', value: '-20°C to +80°C' },
-        { label: 'Bore Size Range', value: '32 mm – 320 mm' },
-        { label: 'Leakage Testing', value: '100% Nitrogen Bubble Tested' }
-      ],
-      seoKeywords: ['pneumatic cylinder', 'iso 15552 air actuator', 'heavy industrial valve', 'double acting ram'],
+      certifications: [],
+      specifications: [],
+      seoKeywords: [],
       seoMetaTitle: '',
       seoMetaDescription: ''
     });
@@ -926,22 +905,63 @@ export const ProductCatalogManager: React.FC = () => {
                       >
                         <Edit3 className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => {
-                          if (confirm(`Are you sure you want to delete "${p.name}"?`)) {
-                            deleteProduct(p.id);
-                          }
-                        }}
-                        className="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-colors"
-                        title="Delete Product"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {confirmDeleteId === p.id ? (
+                        <div className="flex items-center gap-1 bg-red-50 p-1 rounded-lg border border-red-200">
+                          <span className="text-[10px] font-bold text-red-700 px-1">Delete?</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setConfirmDeleteId(null);
+                              deleteProduct(p.id);
+                            }}
+                            className="px-1.5 py-0.5 bg-red-600 text-white rounded text-[10px] font-bold hover:bg-red-700 shadow-xs"
+                          >
+                            Yes
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded text-[10px] font-bold hover:bg-slate-300"
+                          >
+                            No
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDeleteId(p.id)}
+                          className="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-colors"
+                          title="Delete Product"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
 
                 </tr>
               ))}
+              {filteredProducts.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="p-12 text-center">
+                    <div className="max-w-md mx-auto text-center space-y-3">
+                      <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center mx-auto">
+                        <Box className="w-6 h-6" />
+                      </div>
+                      <h4 className="text-sm font-bold text-slate-900">No Products in Catalog</h4>
+                      <p className="text-xs text-slate-500">
+                        No product listings found. Click "Add New Product" to create your first listing or import via Bulk CSV.
+                      </p>
+                      <button
+                        onClick={handleOpenAddModal}
+                        className="btn-primary text-xs py-2 px-4 inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add New Product</span>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

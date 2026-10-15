@@ -101,6 +101,7 @@ export const RBACManager: React.FC = () => {
   // Edit Role Info Modal state
   const [isEditRoleModalOpen, setIsEditRoleModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
+  const [confirmDeleteRoleId, setConfirmDeleteRoleId] = useState<string | null>(null);
 
   const selectedRole = roles.find(r => r.id === selectedRoleId) || roles[0];
 
@@ -581,20 +582,48 @@ export const RBACManager: React.FC = () => {
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (window.confirm(`Delete custom role "${role.name}"?`)) {
-                                deleteRole(role.id);
-                                showNotification(`Role deleted`, 'info');
-                              }
-                            }}
-                            className="p-1 text-slate-400 hover:text-rose-600"
-                            title="Delete Role"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {confirmDeleteRoleId === role.id ? (
+                            <div 
+                              className="flex items-center gap-1 bg-red-50 p-1 rounded-lg border border-red-200"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <span className="text-[10px] font-bold text-red-700 px-1">Delete?</span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setConfirmDeleteRoleId(null);
+                                  deleteRole(role.id);
+                                  showNotification(`Role deleted`, 'info');
+                                }}
+                                className="px-1.5 py-0.5 bg-red-600 text-white rounded text-[10px] font-bold hover:bg-red-700 shadow-xs"
+                              >
+                                Yes
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setConfirmDeleteRoleId(null);
+                                }}
+                                className="px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded text-[10px] font-bold hover:bg-slate-300"
+                              >
+                                No
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmDeleteRoleId(role.id);
+                              }}
+                              className="p-1 text-slate-400 hover:text-rose-600"
+                              title="Delete Role"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
