@@ -1,19 +1,19 @@
 [
   {
-    "id": "prod-reg-nitrogen",
+    "id": "prod-reg-argon",
     "applications": [
-      "Pressure Testing",
-      "System Purging",
-      "Laser Cutting Shielding",
-      "Inert Tank Blanketing"
+      "TIG Shielding Gas Control",
+      "MIG Aluminum Welding",
+      "Plasma Arc Welding Gas",
+      "Purging Root Welds"
     ],
     "brand": "WELDOR",
     "bulletPoints": [
-      "Max Inlet Pressure: 300 Bar rating for ultra-high cylinder pressures",
-      "Max Outlet Pressure: 10 Bar stable delivery for refrigeration line testing",
+      "Max Inlet Pressure: 300 Bar; Max Outlet Pressure: 2 Bar for laminar shielding",
+      "High sensitivity control valve prevents gas turbulence at the weld puddle",
       "Inlet Connection: 5/8\" BSP R/H (Male); Outlet: 3/8\" BSP R/H (Male)",
-      "Forged brass high-density body resisting pressure cycles and temperature swings",
-      "Ideal for pipe pressure holding tests, air conditioning leak detection, and inert blanketing"
+      "Heavy forged brass body with calibrated flow/pressure dial gauges",
+      "Engineered for zero gas leakage and maximum gas economy on high-purity argon cylinders"
     ],
     "catalogPdfUrl": "/catalog/Weldor_Welding_Catalog_CDN.pdf",
     "category": "Industrial Gas Pressure Regulators",
@@ -23,42 +23,43 @@
       "Make in India"
     ],
     "createdAt": "2026-10-15T12:00:00.000Z",
-    "description": "High-pressure forged brass Nitrogen gas regulator engineered with 300 Bar inlet capacity and 10 Bar controlled outlet for HVAC pressure testing and inert purging.",
+    "description": "Precision dual-gauge forged brass Argon gas pressure regulator with 300 Bar inlet and sensitive 2 Bar outlet delivery for high-integrity TIG and pulsed MIG welding.",
     "featured": false,
     "gallery": [
-      "/products/catalog/weldor_nitrogen_regulator.png",
+      "/products/catalog/weldor_argon_regulator.png",
       "/catalog_pages/page_9.png"
     ],
-    "image": "/products/catalog/weldor_nitrogen_regulator.png",
+    "image": "/products/catalog/weldor_argon_regulator.png",
     "inStock": true,
     "industries": [
-      "HVAC & Refrigeration",
-      "Aviation Tire Inflation",
-      "Chemical Blanketing",
-      "Oil & Gas Pipeline Testing"
+      "Aerospace & Defense",
+      "Stainless Steel Fabrication",
+      "Alloy Pipe Welding",
+      "Semiconductor Tooling"
     ],
     "materials": [
-      "Forged Brass IS 319",
-      "Neoprene High-Pressure Diaphragm"
+      "Forged Brass",
+      "Sintered Bronze Filter",
+      "Precision Metering Needle"
     ],
     "minOrderQty": 5,
-    "modelNumber": "WEL-REG-N2",
-    "name": "Nitrogen (N2) Gas Pressure Regulator",
-    "priceINR": 2650,
-    "priceUSD": 34,
+    "modelNumber": "WEL-REG-AR",
+    "name": "Argon (AR) Gas Pressure Regulator",
+    "priceINR": 2500,
+    "priceUSD": 32,
     "seoKeywords": [
-      "nitrogen regulator",
-      "N2 regulator 300 bar",
-      "HVAC testing regulator",
-      "purging gas regulator"
+      "argon regulator",
+      "TIG argon regulator",
+      "shielding gas regulator",
+      "argon flow gauge"
     ],
-    "seoMetaDescription": "Forged brass 300 Bar Nitrogen regulator for HVAC leak testing, pipeline purging, and industrial blanketing.",
-    "seoMetaTitle": "Nitrogen (N2) Gas Pressure Regulator (300 Bar) | Weldor Industries",
-    "sku": "WLD-REG-N2-300B",
+    "seoMetaDescription": "High-accuracy forged brass Argon gas regulator for clean, porosity-free TIG and MIG welding.",
+    "seoMetaTitle": "Argon (AR) Gas Pressure Regulator (300 Bar) | Weldor Industries",
+    "sku": "WLD-REG-AR-300B",
     "specifications": [
       {
         "label": "Type of Gas",
-        "value": "Nitrogen (N2)"
+        "value": "Argon (AR)"
       },
       {
         "label": "Max Inlet Pressure",
@@ -66,7 +67,7 @@
       },
       {
         "label": "Max Outlet Pressure",
-        "value": "10 Bar"
+        "value": "2 Bar"
       },
       {
         "label": "Inlet Connection",
@@ -78,7 +79,7 @@
       },
       {
         "label": "Application",
-        "value": "HVAC, Purging & Pressure Testing"
+        "value": "TIG Welding & Shielding Gas Control"
       },
       {
         "label": "Standard",
@@ -87,8 +88,8 @@
     ],
     "standardLeadTimeDays": 7,
     "status": "Active",
-    "subCategory": "Nitrogen High-Pressure Regulators",
-    "tagline": "300 Bar High-Pressure Nitrogen & HVAC Testing Regulator",
+    "subCategory": "Argon / CO2 Flowmeters",
+    "tagline": "Precision Argon Shielding Gas Regulator for TIG & MIG",
     "updatedAt": "2026-10-15T12:00:00.000Z"
   },
   {
@@ -1078,99 +1079,6 @@
     "updatedAt": "2026-10-15T12:00:00.000Z"
   },
   {
-    "id": "prod-reg-argon",
-    "applications": [
-      "TIG Shielding Gas Control",
-      "MIG Aluminum Welding",
-      "Plasma Arc Welding Gas",
-      "Purging Root Welds"
-    ],
-    "brand": "WELDOR",
-    "bulletPoints": [
-      "Max Inlet Pressure: 300 Bar; Max Outlet Pressure: 2 Bar for laminar shielding",
-      "High sensitivity control valve prevents gas turbulence at the weld puddle",
-      "Inlet Connection: 5/8\" BSP R/H (Male); Outlet: 3/8\" BSP R/H (Male)",
-      "Heavy forged brass body with calibrated flow/pressure dial gauges",
-      "Engineered for zero gas leakage and maximum gas economy on high-purity argon cylinders"
-    ],
-    "catalogPdfUrl": "/catalog/Weldor_Welding_Catalog_CDN.pdf",
-    "category": "Industrial Gas Pressure Regulators",
-    "categoryId": "cat-reg-03",
-    "certifications": [
-      "ISO 9001:2015",
-      "Make in India"
-    ],
-    "createdAt": "2026-10-15T12:00:00.000Z",
-    "description": "Precision dual-gauge forged brass Argon gas pressure regulator with 300 Bar inlet and sensitive 2 Bar outlet delivery for high-integrity TIG and pulsed MIG welding.",
-    "featured": false,
-    "gallery": [
-      "/products/catalog/weldor_argon_regulator.png",
-      "/catalog_pages/page_9.png"
-    ],
-    "image": "/products/catalog/weldor_argon_regulator.png",
-    "inStock": true,
-    "industries": [
-      "Aerospace & Defense",
-      "Stainless Steel Fabrication",
-      "Alloy Pipe Welding",
-      "Semiconductor Tooling"
-    ],
-    "materials": [
-      "Forged Brass",
-      "Sintered Bronze Filter",
-      "Precision Metering Needle"
-    ],
-    "minOrderQty": 5,
-    "modelNumber": "WEL-REG-AR",
-    "name": "Argon (AR) Gas Pressure Regulator",
-    "priceINR": 2500,
-    "priceUSD": 32,
-    "seoKeywords": [
-      "argon regulator",
-      "TIG argon regulator",
-      "shielding gas regulator",
-      "argon flow gauge"
-    ],
-    "seoMetaDescription": "High-accuracy forged brass Argon gas regulator for clean, porosity-free TIG and MIG welding.",
-    "seoMetaTitle": "Argon (AR) Gas Pressure Regulator (300 Bar) | Weldor Industries",
-    "sku": "WLD-REG-AR-300B",
-    "specifications": [
-      {
-        "label": "Type of Gas",
-        "value": "Argon (AR)"
-      },
-      {
-        "label": "Max Inlet Pressure",
-        "value": "300 Bar"
-      },
-      {
-        "label": "Max Outlet Pressure",
-        "value": "2 Bar"
-      },
-      {
-        "label": "Inlet Connection",
-        "value": "5/8\" BSP R/H (Male)"
-      },
-      {
-        "label": "Outlet Connection",
-        "value": "3/8\" BSP R/H (Male)"
-      },
-      {
-        "label": "Application",
-        "value": "TIG Welding & Shielding Gas Control"
-      },
-      {
-        "label": "Standard",
-        "value": "ISO 9001:2015"
-      }
-    ],
-    "standardLeadTimeDays": 7,
-    "status": "Active",
-    "subCategory": "Argon / CO2 Flowmeters",
-    "tagline": "Precision Argon Shielding Gas Regulator for TIG & MIG",
-    "updatedAt": "2026-10-15T12:00:00.000Z"
-  },
-  {
     "id": "prod-mig-24kd",
     "applications": [
       "CO2 Welding",
@@ -1269,11 +1177,107 @@
     "status": "Active",
     "subCategory": "24KD MIG Torches",
     "tagline": "Air-Cooled 250A Heavy-Duty Ergonomic MIG Torch",
-    "updatedAt": "2026-10-15T18:47:30.623Z",
-    "videoUrl": "",
-    "videoThumbnail": "",
+    "updatedAt": "2026-10-15T18:47:30.681Z",
+    "cadDrawingUrl": "",
     "datasheetUrl": "",
-    "cadDrawingUrl": ""
+    "videoThumbnail": "",
+    "videoUrl": ""
+  },
+  {
+    "id": "prod-reg-nitrogen",
+    "applications": [
+      "Pressure Testing",
+      "System Purging",
+      "Laser Cutting Shielding",
+      "Inert Tank Blanketing"
+    ],
+    "brand": "WELDOR",
+    "bulletPoints": [
+      "Max Inlet Pressure: 300 Bar rating for ultra-high cylinder pressures",
+      "Max Outlet Pressure: 10 Bar stable delivery for refrigeration line testing",
+      "Inlet Connection: 5/8\" BSP R/H (Male); Outlet: 3/8\" BSP R/H (Male)",
+      "Forged brass high-density body resisting pressure cycles and temperature swings",
+      "Ideal for pipe pressure holding tests, air conditioning leak detection, and inert blanketing"
+    ],
+    "catalogPdfUrl": "/catalog/Weldor_Welding_Catalog_CDN.pdf",
+    "category": "Industrial Gas Pressure Regulators",
+    "categoryId": "cat-reg-03",
+    "certifications": [
+      "ISO 9001:2015",
+      "Make in India"
+    ],
+    "createdAt": "2026-10-15T12:00:00.000Z",
+    "description": "High-pressure forged brass Nitrogen gas regulator engineered with 300 Bar inlet capacity and 10 Bar controlled outlet for HVAC pressure testing and inert purging.",
+    "featured": false,
+    "gallery": [
+      "/products/catalog/weldor_nitrogen_regulator.png",
+      "/catalog_pages/page_9.png"
+    ],
+    "image": "/products/catalog/weldor_nitrogen_regulator.png",
+    "inStock": true,
+    "industries": [
+      "HVAC & Refrigeration",
+      "Aviation Tire Inflation",
+      "Chemical Blanketing",
+      "Oil & Gas Pipeline Testing"
+    ],
+    "materials": [
+      "Forged Brass IS 319",
+      "Neoprene High-Pressure Diaphragm"
+    ],
+    "minOrderQty": 5,
+    "modelNumber": "WEL-REG-N2",
+    "name": "Nitrogen (N2) Gas Pressure Regulator",
+    "priceINR": 2650,
+    "priceUSD": 34,
+    "seoKeywords": [
+      "nitrogen regulator",
+      "N2 regulator 300 bar",
+      "HVAC testing regulator",
+      "purging gas regulator"
+    ],
+    "seoMetaDescription": "Forged brass 300 Bar Nitrogen regulator for HVAC leak testing, pipeline purging, and industrial blanketing.",
+    "seoMetaTitle": "Nitrogen (N2) Gas Pressure Regulator (300 Bar) | Weldor Industries",
+    "sku": "WLD-REG-N2-300Bcc",
+    "specifications": [
+      {
+        "label": "Type of Gas",
+        "value": "Nitrogen (N2)"
+      },
+      {
+        "label": "Max Inlet Pressure",
+        "value": "300 Bar"
+      },
+      {
+        "label": "Max Outlet Pressure",
+        "value": "10 Bar"
+      },
+      {
+        "label": "Inlet Connection",
+        "value": "5/8\" BSP R/H (Male)"
+      },
+      {
+        "label": "Outlet Connection",
+        "value": "3/8\" BSP R/H (Male)"
+      },
+      {
+        "label": "Application",
+        "value": "HVAC, Purging & Pressure Testing"
+      },
+      {
+        "label": "Standard",
+        "value": "ISO 9001:2015"
+      }
+    ],
+    "standardLeadTimeDays": 7,
+    "status": "Active",
+    "subCategory": "Nitrogen High-Pressure Regulators",
+    "tagline": "300 Bar High-Pressure Nitrogen & HVAC Testing Regulator",
+    "updatedAt": "2026-10-16T05:36:57.356Z",
+    "cadDrawingUrl": "",
+    "datasheetUrl": "",
+    "videoThumbnail": "",
+    "videoUrl": ""
   },
   {
     "id": "prod-reg-acetylene",

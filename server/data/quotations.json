@@ -1,1 +1,78 @@
-[]
+[
+  {
+    "id": "quote-1792137735728",
+    "quotationNumber": "WEL-QT-2026-3439",
+    "seller": {
+      "companyName": "Earth Metal Industries",
+      "address": "588, GIDC, PHASE-2, DARED, JAMNAGAR, GUJARAT-361004. INDIA",
+      "gstin": "24AGGPL9330C1ZP",
+      "pan": "AGGPL9330C",
+      "state": "Gujarat",
+      "stateCode": "24",
+      "email": "brm@weldorindustries.com",
+      "phone": "+91 87800 98088",
+      "bankName": "BANK OF INDIA",
+      "accountNo": "325130110000097",
+      "ifscCode": "BKID0003251",
+      "branch": "HOSPITAL ROAD JAMNAGAR"
+    },
+    "buyer": {
+      "companyName": "vbvhhg njfbv vhjvhjv ",
+      "contactName": "divyang kachhdiya",
+      "designation": "Procurement Head",
+      "billingAddress": "C 705 sarita residency 3",
+      "shippingAddress": "C 705 sarita residency 3",
+      "gstin": "zcvbn",
+      "pan": "",
+      "state": "Maharashtra",
+      "stateCode": "27",
+      "email": "procurement@client.com",
+      "phone": "1234567890-0"
+    },
+    "taxType": "INTER_STATE",
+    "gstRatePct": 18,
+    "agent": {
+      "hasAgent": false,
+      "agentName": "",
+      "agentPhone": "",
+      "commissionType": "PERCENT",
+      "commissionRate": 2,
+      "commissionAmountUSD": 0
+    },
+    "items": [
+      {
+        "id": "q-item-1",
+        "productName": "MIG Cylindrical Welding Nozzle",
+        "sku": "WLD-MIG-NOZ-CYL",
+        "hsnCode": "84123100",
+        "quantity": 1,
+        "unit": "PCS",
+        "unitPriceUSD": 4.5,
+        "discountPct": 0,
+        "taxableAmountUSD": 4.5,
+        "totalUSD": 4.5
+      }
+    ],
+    "paymentTerms": "100% Advance against Proforma, before Dispatch",
+    "deliveryTerms": "Ex-Factory Jamnagar / Ready Dispatch within 7-10 Business Days",
+    "validityDays": 7,
+    "warrantyTerms": "replacement warranty against manufacturing defects",
+    "packagingTerms": "BOX",
+    "inspectionTerms": "100% Hydrostatic Test & EN 10204 3.1 Mill Certificate included",
+    "subtotalUSD": 4.5,
+    "totalDiscountUSD": 0,
+    "taxableTotalUSD": 4.5,
+    "cgstTotalUSD": 0,
+    "sgstTotalUSD": 0,
+    "igstTotalUSD": 0.8099999999999999,
+    "totalTaxUSD": 0.8099999999999999,
+    "freightCostUSD": 0,
+    "packagingCostUSD": 0,
+    "grandTotalUSD": 5,
+    "grandTotalINR": 5,
+    "status": "Approved",
+    "createdAt": "2026-10-16T08:02:15.728Z",
+    "expiryDate": "2026-10-23",
+    "updatedAt": "2026-10-16T08:02:15.743Z"
+  }
+]

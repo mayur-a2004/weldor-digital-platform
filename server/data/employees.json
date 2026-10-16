@@ -2,7 +2,7 @@
   {
     "id": "emp-root-superadmin",
     "createdAt": "2026-09-19T07:23:02.304Z",
-    "updatedAt": "2026-10-15T19:24:34.850Z",
+    "updatedAt": "2026-10-16T07:45:34.901Z",
     "employeeId": "WEL-1001",
     "employeeCode": "WLD-001",
     "name": "Super Admin",
@@ -52,8 +52,8 @@
       "state": "Gujarat",
       "pincode": "360021"
     },
-    "activeSessionToken": "weldor_sess_2f90e0f7d426563eaef895be1bddb6df71428c1a37488c15_1792092274773",
-    "lastLoginAt": "2026-10-15T19:24:34.773Z",
+    "activeSessionToken": "weldor_sess_69d75345825c94ee1728fa94f18b3745f194f997f1511764_1792136734841",
+    "lastLoginAt": "2026-10-16T07:45:34.841Z",
     "lastLoginDevice": "Google Chrome (Workstation)"
   }
 ]

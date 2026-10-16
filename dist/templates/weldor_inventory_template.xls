@@ -1,0 +1,153 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <Styles>
+  <Style ss:ID="Header">
+   <Font ss:FontName="Calibri" ss:Size="11" ss:Color="#FFFFFF" ss:Bold="1"/>
+   <Interior ss:Color="#E65100" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="Data">
+   <Font ss:FontName="Calibri" ss:Size="11"/>
+   <Alignment ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="Number">
+   <Font ss:FontName="Calibri" ss:Size="11"/>
+   <NumberFormat ss:Format="#,##0.00"/>
+   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="Integer">
+   <Font ss:FontName="Calibri" ss:Size="11"/>
+   <NumberFormat ss:Format="#,##0"/>
+   <Alignment ss:Horizontal="Right" ss:Vertical="Center"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="InventoryMaster">
+  <Table ss:DefaultRowHeight="20">
+   <Column ss:Width="110"/>
+   <Column ss:Width="230"/>
+   <Column ss:Width="160"/>
+   <Column ss:Width="90"/>
+   <Column ss:Width="60"/>
+   <Column ss:Width="100"/>
+   <Column ss:Width="100"/>
+   <Column ss:Width="100"/>
+   <Column ss:Width="80"/>
+   <Column ss:Width="90"/>
+   <Column ss:Width="90"/>
+   <Column ss:Width="70"/>
+   <Column ss:Width="180"/>
+   <Column ss:Width="180"/>
+   <Column ss:Width="240"/>
+   <Row ss:Height="24" ss:StyleID="Header">
+    <Cell><Data ss:Type="String">sku</Data></Cell>
+    <Cell><Data ss:Type="String">name</Data></Cell>
+    <Cell><Data ss:Type="String">category</Data></Cell>
+    <Cell><Data ss:Type="String">hsnCode</Data></Cell>
+    <Cell><Data ss:Type="String">unit</Data></Cell>
+    <Cell><Data ss:Type="String">unitPriceINR</Data></Cell>
+    <Cell><Data ss:Type="String">unitPriceUSD</Data></Cell>
+    <Cell><Data ss:Type="String">costPriceINR</Data></Cell>
+    <Cell><Data ss:Type="String">gstRatePct</Data></Cell>
+    <Cell><Data ss:Type="String">currentStock</Data></Cell>
+    <Cell><Data ss:Type="String">minStockAlert</Data></Cell>
+    <Cell><Data ss:Type="String">isPublic</Data></Cell>
+    <Cell><Data ss:Type="String">warehouseLocation</Data></Cell>
+    <Cell><Data ss:Type="String">supplierName</Data></Cell>
+    <Cell><Data ss:Type="String">description</Data></Cell>
+   </Row>
+   <Row ss:StyleID="Data">
+    <Cell><Data ss:Type="String">WLD-TIP-1.0-M6</Data></Cell>
+    <Cell><Data ss:Type="String">MIG Contact Tip 1.0mm CuCrZr M6</Data></Cell>
+    <Cell><Data ss:Type="String">MIG Consumables &amp; Spares</Data></Cell>
+    <Cell><Data ss:Type="String">85159000</Data></Cell>
+    <Cell><Data ss:Type="String">PCS</Data></Cell>
+    <Cell ss:StyleID="Number"><Data ss:Type="Number">45.00</Data></Cell>
+    <Cell ss:StyleID="Number"><Data ss:Type="Number">0.55</Data></Cell>
+    <Cell ss:StyleID="Number"><Data ss:Type="Number">25.00</Data></Cell>
+    <Cell ss:StyleID="Integer"><Data ss:Type="Number">18</Data></Cell>
+    <Cell ss:StyleID="Integer"><Data ss:Type="Number">500</Data></Cell>
+    <Cell ss:StyleID="Integer"><Data ss:Type="Number">100</Data></Cell>
+    <Cell><Data ss:Type="String">FALSE</Data></Cell>
+    <Cell><Data ss:Type="String">Jamnagar Godown A - Rack B12</Data></Cell>
+    <Cell><Data ss:Type="String">Earth Metal Industries In-House</Data></Cell>
+    <Cell><Data ss:Type="String">Heavy-duty copper contact tip for MIG torches</Data></Cell>
+   </Row>
+   <Row ss:StyleID="Data">
+    <Cell><Data ss:Type="String">WLD-NOZ-250A</Data></Cell>
+    <Cell><Data ss:Type="String">MIG Gas Nozzle 250A Conical</Data></Cell>
+    <Cell><Data ss:Type="String">MIG Consumables &amp; Spares</Data></Cell>
+    <Cell><Data ss:Type="String">85159000</Data></Cell>
+    <Cell><Data ss:Type="String">PCS</Data></Cell>
+    <Cell ss:StyleID="Number"><Data ss:Type="Number">180.00</Data></Cell>
+    <Cell ss:StyleID="Number"><Data ss:Type="Number">2.15</Data></Cell>
+    <Cell ss:StyleID="Number"><Data ss:Type="Number">110.00</Data></Cell>
+    <Cell ss:StyleID="Integer"><Data ss:Type="Number">18</Data></Cell>
+    <Cell ss:StyleID="Integer"><Data ss:Type="Number">40</Data></Cell>
+    <Cell ss:StyleID="Integer"><Data ss:Type="Number">15</Data></Cell>
+    <Cell><Data ss:Type="String">FALSE</Data></Cell>
+    <Cell><Data ss:Type="String">Jamnagar Godown A - Bin C02</Data></Cell>
+    <Cell><Data ss:Type="String">Earth Metal Industries Pressings</Data></Cell>
+    <Cell><Data ss:Type="String">Conical gas shielding nozzle</Data></Cell>
+   </Row>
+   <Row ss:StyleID="Data">
+    <Cell><Data ss:Type="String">WLD-VALV-12V</Data></Cell>
+    <Cell><Data ss:Type="String">Direct Solenoid Valve 12V DC 1/8&quot;</Data></Cell>
+    <Cell><Data ss:Type="String">Pneumatic Automation Valves</Data></Cell>
+    <Cell><Data ss:Type="String">84818030</Data></Cell>
+    <Cell><Data ss:Type="String">PCS</Data></Cell>
+    <Cell ss:StyleID="Number"><Data ss:Type="Number">1250.00</Data></Cell>
+    <Cell ss:StyleID="Number"><Data ss:Type="Number">15.00</Data></Cell>
+    <Cell ss:StyleID="Number"><Data ss:Type="Number">800.00</Data></Cell>
+    <Cell ss:StyleID="Integer"><Data ss:Type="Number">18</Data></Cell>
+    <Cell ss:StyleID="Integer"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="Integer"><Data ss:Type="Number">5</Data></Cell>
+    <Cell><Data ss:Type="String">FALSE</Data></Cell>
+    <Cell><Data ss:Type="String">Automation Assembly Rack E1</Data></Cell>
+    <Cell><Data ss:Type="String">Earth Pneumatics Sub-Assembly</Data></Cell>
+    <Cell><Data ss:Type="String">Compact pilot-operated solenoid valve</Data></Cell>
+   </Row>
+   <Row ss:StyleID="Data">
+    <Cell><Data ss:Type="String">WLD-FT-8MM</Data></Cell>
+    <Cell><Data ss:Type="String">Brass Male Push-In 8mm OD x 1/8&quot; BSPT</Data></Cell>
+    <Cell><Data ss:Type="String">Brass Pneumatic Fittings</Data></Cell>
+    <Cell><Data ss:Type="String">74122019</Data></Cell>
+    <Cell><Data ss:Type="String">PCS</Data></Cell>
+    <Cell ss:StyleID="Number"><Data ss:Type="Number">58.00</Data></Cell>
+    <Cell ss:StyleID="Number"><Data ss:Type="Number">0.70</Data></Cell>
+    <Cell ss:StyleID="Number"><Data ss:Type="Number">32.00</Data></Cell>
+    <Cell ss:StyleID="Integer"><Data ss:Type="Number">18</Data></Cell>
+    <Cell ss:StyleID="Integer"><Data ss:Type="Number">1200</Data></Cell>
+    <Cell ss:StyleID="Integer"><Data ss:Type="Number">200</Data></Cell>
+    <Cell><Data ss:Type="String">TRUE</Data></Cell>
+    <Cell><Data ss:Type="String">Jamnagar Brass Yard Bay 2</Data></Cell>
+    <Cell><Data ss:Type="String">Earth Metal Jamnagar Foundry</Data></Cell>
+    <Cell><Data ss:Type="String">Nickel-plated precision brass push-in fitting</Data></Cell>
+   </Row>
+   <Row ss:StyleID="Data">
+    <Cell><Data ss:Type="String">WLD-ROD-HEX20</Data></Cell>
+    <Cell><Data ss:Type="String">Brass Hex Rod CW617N 20mm (3 Mtr)</Data></Cell>
+    <Cell><Data ss:Type="String">Raw Materials &amp; Extrusions</Data></Cell>
+    <Cell><Data ss:Type="String">74072110</Data></Cell>
+    <Cell><Data ss:Type="String">KG</Data></Cell>
+    <Cell ss:StyleID="Number"><Data ss:Type="Number">690.00</Data></Cell>
+    <Cell ss:StyleID="Number"><Data ss:Type="Number">8.25</Data></Cell>
+    <Cell ss:StyleID="Number"><Data ss:Type="Number">590.00</Data></Cell>
+    <Cell ss:StyleID="Integer"><Data ss:Type="Number">18</Data></Cell>
+    <Cell ss:StyleID="Integer"><Data ss:Type="Number">25</Data></Cell>
+    <Cell ss:StyleID="Integer"><Data ss:Type="Number">10</Data></Cell>
+    <Cell><Data ss:Type="String">FALSE</Data></Cell>
+    <Cell><Data ss:Type="String">Raw Yard Bay 1</Data></Cell>
+    <Cell><Data ss:Type="String">Earth Extrusions Plant</Data></Cell>
+    <Cell><Data ss:Type="String">High-machinability forging grade brass rod</Data></Cell>
+   </Row>
+  </Table>
+ </Worksheet>
+</Workbook>

@@ -1,0 +1,28 @@
+[
+  {
+    "id": "inv-log-1792133939073",
+    "itemId": "inv-1792133939057-124",
+    "timestamp": "2026-10-16T06:58:59.057Z",
+    "changeType": "INWARD",
+    "deltaQuantity": 10,
+    "remainingStock": 10,
+    "reason": "Initial Opening Stock Entry",
+    "performedBy": "Super Admin",
+    "referenceNumber": "INITIAL-OPENING",
+    "createdAt": "2026-10-16T06:58:59.425Z",
+    "updatedAt": "2026-10-16T06:58:59.425Z"
+  },
+  {
+    "id": "inv-log-1792131292984",
+    "createdAt": "2026-10-16T06:14:53.429Z",
+    "updatedAt": "2026-10-16T06:14:53.429Z",
+    "itemId": "inv-1792131292962-857",
+    "timestamp": "2026-10-16T06:14:52.962Z",
+    "changeType": "INWARD",
+    "deltaQuantity": 50,
+    "remainingStock": 50,
+    "reason": "Initial Opening Stock Entry",
+    "performedBy": "Super Admin",
+    "referenceNumber": "INITIAL-OPENING"
+  }
+]
