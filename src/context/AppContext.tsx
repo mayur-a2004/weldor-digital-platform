@@ -375,8 +375,7 @@ if (typeof window !== 'undefined') {
         'weldor_leads', 'weldor_rfqs', 'weldor_quotations', 'weldor_orders',
         'weldor_invoices', 'weldor_commercial_quotes',
         'weldor_samples', 'weldor_trials', 'weldor_payrolls',
-        'weldor_attendance', 'weldor_leaves', 'weldor_audit', 'weldor_wal',
-        'weldor_employees', 'weldor_exhibitions'
+        'weldor_attendance', 'weldor_leaves', 'weldor_audit', 'weldor_employees', 'weldor_exhibitions'
       ].forEach(k => localStorage.removeItem(k));
       if (token) localStorage.setItem('weldor_session_token', token);
       if (user) localStorage.setItem('weldor_current_user', user);
@@ -440,7 +439,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         'weldor_leaves',
         'weldor_settings',
         'weldor_roles',
-        'weldor_wal',
         'weldor_commercial_quotes'
       ];
       keysToPurge.forEach(k => {
@@ -459,19 +457,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Pure MongoDB Atlas Architecture: business data is stored exclusively in live MongoDB
   };
 
-  const WAL_KEY = 'weldor_wal';
-  type WalEntry = { collection: string; id: string; data: any; clientTs: number; op: 'upsert' | 'delete' };
-
-  const walGet = (): WalEntry[] => [];
-  const walAdd = (_entry: WalEntry) => {};
-  const walRemoveSynced = (_collection: string, _ids: string[]) => {};
-
-  const applyWal = <T extends { id?: string }>(_collection: string, dataArray: T[]): T[] => {
-    return Array.isArray(dataArray) ? dataArray : [];
-  };
-
-  const walRegister = (_collection: string, _id: string, _data: any, _op: 'upsert' | 'delete' = 'upsert') => {};
-
   const mergeArrayData = <T extends { id?: string; updatedAt?: string; createdAt?: string }>(
     backendData: T[],
     _localData: T[],
@@ -479,11 +464,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   ): T[] => {
     return Array.isArray(backendData) ? backendData : [];
   };
-
-  const loadLocalWithWal = <T extends { id?: string; createdAt?: string }>(_key: string, fallback: T[], _collection: string): T[] => {
-    return fallback;
-  };
-
 
   const [roles, setRoles] = useState<Role[]>(() => loadLocal('weldor_roles', INITIAL_ROLES));
   const [currentRole, setCurrentRole] = useState<Role>(() => loadLocal('weldor_roles', INITIAL_ROLES)[0] || INITIAL_ROLES[0]);
@@ -524,7 +504,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const [employees, setEmployees] = useState<Employee[]>(() => 
-    loadLocalWithWal('weldor_employees', [DEFAULT_EMPLOYEE], 'employees').map(normalizeEmployee)
+    [DEFAULT_EMPLOYEE].map(normalizeEmployee)
   );
   const [currentEmployee, setCurrentEmployee] = useState<Employee>(() => currentUser || DEFAULT_EMPLOYEE);
 
@@ -640,13 +620,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const [categories, setCategories] = useState<ProductCategory[]>(() => 
-    loadLocalWithWal('weldor_categories', OFFICIAL_WELDOR_CATEGORIES, 'categories').map(normalizeCategory)
+    OFFICIAL_WELDOR_CATEGORIES.map(normalizeCategory)
   );
   const [products, setProducts] = useState<Product[]>(() => 
-    loadLocalWithWal('weldor_products', OFFICIAL_WELDOR_PRODUCTS, 'products').map(normalizeProduct)
+    OFFICIAL_WELDOR_PRODUCTS.map(normalizeProduct)
   );
-  const [galleryMedia, setGalleryMedia] = useState<GalleryMedia[]>(() => loadLocalWithWal('weldor_gallery', OFFICIAL_WELDOR_GALLERY, 'gallery'));
-  const [banners, setBanners] = useState<HeroBanner[]>(() => loadLocalWithWal('weldor_banners', OFFICIAL_WELDOR_BANNERS, 'banners'));
+  const [galleryMedia, setGalleryMedia] = useState<GalleryMedia[]>(() => OFFICIAL_WELDOR_GALLERY);
+  const [banners, setBanners] = useState<HeroBanner[]>(() => OFFICIAL_WELDOR_BANNERS);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [compareList, setCompareList] = useState<Product[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState<boolean>(false);
@@ -676,121 +656,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const [leads, setLeads] = useState<Lead[]>(() => {
-    const loaded = loadLocalWithWal<Lead>('weldor_leads', [], 'leads')
+    const loaded = []
       .filter((l: any) => l && (l.companyName || l.contactName || l.contactEmail || l.title));
     return loaded.map(normalizeLead);
   });
   const [rfqs, setRfqs] = useState<RFQRequirement[]>(() => 
-    loadLocalWithWal<RFQRequirement>('weldor_rfqs', [], 'rfqs')
+    []
       .filter((r: any) => r && (r.companyName || r.email || r.title || r.contactPerson))
       .map(normalizeRFQ)
   );
-  const [samples, setSamples] = useState<SampleRequest[]>(() => loadLocalWithWal('weldor_samples', [], 'samples'));
-  const [trials, setTrials] = useState<TechnicalTrial[]>(() => loadLocalWithWal('weldor_trials', [], 'trials'));
-  const [quotations, setQuotations] = useState<Quotation[]>(() => loadLocalWithWal('weldor_quotations', [], 'quotations'));
+  const [samples, setSamples] = useState<SampleRequest[]>(() => []);
+  const [trials, setTrials] = useState<TechnicalTrial[]>(() => []);
+  const [quotations, setQuotations] = useState<Quotation[]>(() => []);
   
   // Master Inventory & B2B Spares Ledger
   const [inventory, setInventory] = useState<InventoryItem[]>(() => 
-    loadLocalWithWal<InventoryItem>('weldor_inventory', INITIAL_INVENTORY_ITEMS, 'inventory')
+    INITIAL_INVENTORY_ITEMS
   );
   const [inventoryLogs, setInventoryLogs] = useState<InventoryStockLog[]>(() => 
-    loadLocalWithWal<InventoryStockLog>('weldor_inventory_logs', [], 'inventory_logs')
+    []
   );
 
-  const [orders, setOrders] = useState<Order[]>(() => {
-    const raw = loadLocalWithWal<Order>('weldor_orders', [], 'orders');
-    const seenIds = new Set<string>();
-    const seenNumbers = new Set<string>();
-    const seenQuoteIds = new Set<string>();
-    const seenSignatures = new Set<string>();
-    const deduped: Order[] = [];
-
-    for (const ord of raw) {
-      if (!ord || !ord.id) continue;
-      const num = (ord.orderNumber || '').trim().toUpperCase();
-      const qId = (ord.quotationId || '').trim();
-      const sig = `${(ord.companyName || '').trim()}_${ord.totalValueUSD}_${(ord.items || []).length}`;
-
-      if (seenIds.has(ord.id)) continue;
-      if (num && seenNumbers.has(num)) continue;
-      if (qId && seenQuoteIds.has(qId)) continue;
-      if (sig && (ord.companyName || '').trim() && seenSignatures.has(sig)) continue;
-
-      seenIds.add(ord.id);
-      if (num) seenNumbers.add(num);
-      if (qId) seenQuoteIds.add(qId);
-      if ((ord.companyName || '').trim()) seenSignatures.add(sig);
-      deduped.push(ord);
-    }
-
-    // Auto-heal missing buyer details, item lists, and totals from commercial quotations
-    let commercialQuotes: any[] = [];
-    try {
-      const qRaw = localStorage.getItem('weldor_commercial_quotes');
-      if (qRaw) commercialQuotes = JSON.parse(qRaw);
-    } catch (e) {}
-
-    const healedOrders = deduped.map(ord => {
-      const qId = ord.quotationId;
-      const matchedQ = commercialQuotes.find((q: any) => q.id === qId || q.quotationNumber === qId) as any;
-      if (matchedQ) {
-        const cName = (!ord.companyName || ord.companyName === 'Customer') 
-          ? (matchedQ.buyer?.companyName || matchedQ.companyName || ord.companyName || 'Enterprise Client')
-          : ord.companyName;
-
-        const pName = (!ord.contactName || ord.contactName === 'Contact')
-          ? (matchedQ.buyer?.contactName || matchedQ.contactName || ord.contactName || 'Purchasing Dept')
-          : ord.contactName;
-
-        const rawItems = (ord.items && ord.items.length > 0 && ord.items[0].productName) ? ord.items : (matchedQ.items || []);
-        const items = rawItems.map((i: any) => ({
-          productId: i.productId || i.id || `prod-${Math.random()}`,
-          productName: i.productName || i.description || 'Precision Consumable',
-          sku: i.sku || 'WEL-SKU',
-          quantity: Number(i.quantity) || 1,
-          unit: i.unit || 'PCS',
-          unitPriceUSD: Number(i.unitPriceUSD || i.unitPrice) || 0,
-          totalPriceUSD: Number(i.totalPriceUSD || i.totalUSD) || ((Number(i.quantity) || 1) * (Number(i.unitPriceUSD || i.unitPrice) || 0)),
-          hsnCode: i.hsnCode || '84122100'
-        }));
-
-        const grandTotalINR = (ord as any).grandTotalINR || matchedQ.grandTotalINR || (matchedQ.grandTotalUSD ? Math.round(Number(matchedQ.grandTotalUSD) * 85) : 0);
-        const totalValueUSD = Number(matchedQ.grandTotalUSD) || (grandTotalINR ? Math.round(grandTotalINR / 85) : ord.totalValueUSD);
-
-        return {
-          ...ord,
-          companyName: cName,
-          contactName: pName,
-          buyer: matchedQ.buyer || (ord as any).buyer,
-          gstin: (ord as any).gstin || matchedQ.buyer?.gstin || '',
-          state: (ord as any).state || matchedQ.buyer?.state || '',
-          stateCode: (ord as any).stateCode || matchedQ.buyer?.stateCode || '',
-          billingAddress: (ord as any).billingAddress || matchedQ.buyer?.billingAddress || '',
-          shippingAddress: (ord as any).shippingAddress || matchedQ.buyer?.shippingAddress || 'Client Factory Gate',
-          items,
-          totalValueUSD,
-          grandTotalINR,
-          taxableTotalUSD: Number(matchedQ.taxableTotalUSD) || (ord as any).taxableTotalUSD,
-          totalTaxUSD: Number(matchedQ.totalTaxUSD) || (ord as any).totalTaxUSD,
-          freightCostUSD: Number(matchedQ.freightCostUSD) || (ord as any).freightCostUSD,
-          packagingCostUSD: Number(matchedQ.packagingCostUSD) || (ord as any).packagingCostUSD
-        };
-      }
-      return ord;
-    });
-
-    saveLocal('weldor_orders', healedOrders);
-    return healedOrders;
-  });
-  const [invoices, setInvoices] = useState<any[]>(() => loadLocalWithWal('weldor_invoices', [], 'invoices'));
-  const [exhibitions, setExhibitions] = useState<Exhibition[]>(() => loadLocalWithWal('weldor_exhibitions', OFFICIAL_WELDOR_EXHIBITIONS, 'exhibitions'));
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [invoices, setInvoices] = useState<any[]>(() => []);
+  const [exhibitions, setExhibitions] = useState<Exhibition[]>(() => OFFICIAL_WELDOR_EXHIBITIONS);
   const [selectedExpoSlug, setSelectedExpoSlug] = useState<string | null>(null);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => loadLocalWithWal('weldor_audit', [], 'audit'));
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => []);
 
   // HRMS, Payroll & Settings State
-  const [payrolls, setPayrolls] = useState<PayrollRecord[]>(() => loadLocalWithWal('weldor_payrolls', [], 'payrolls'));
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>(() => loadLocalWithWal('weldor_attendance', [], 'attendances'));
-  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(() => loadLocalWithWal('weldor_leaves', [], 'leaves'));
+  const [payrolls, setPayrolls] = useState<PayrollRecord[]>(() => []);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>(() => []);
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(() => []);
   const [companySettings, setCompanySettings] = useState<CompanySettings>(() => loadLocal('weldor_settings', BLANK_SETTINGS));
 
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' | 'warning' } | null>(null);
@@ -850,9 +746,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           };
 
           if (!res?.success || !Array.isArray(res.data)) {
-            // Only if backend is offline or network failed, fallback to local state with WAL
-            const walApplied = applyWal<T>(collection, currentLocal).map(normalizeItem);
-            setter(walApplied);
             return;
           }
 
@@ -864,16 +757,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return true;
           }).map(normalizeItem);
 
-          // 2. Apply pending WAL updates (only local uncommitted changes)
-          const walAppliedBackend = applyWal<T>(collection, validData);
-
-          // 3. Enforce WAL deletes so deleted items never re-appear
-          const walDeletes = walGet().filter(e => e.collection === collection && e.op === 'delete');
           const finalMap = new Map<string, T>();
-          walAppliedBackend.forEach(item => {
+          validData.forEach(item => {
             if (item && item.id) finalMap.set(item.id, item);
           });
-          walDeletes.forEach(d => finalMap.delete(d.id));
 
           // 4. Automatic Deduplication Guard: ensures single records never duplicate
           const seenDocNumbers = new Set<string>();
@@ -1149,7 +1036,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Employee HRMS Handlers
   const addEmployee = (emp: Omit<Employee, 'id'>) => {
     const newEmp: Employee = { ...emp, id: `emp-${Date.now()}` };
-    walRegister('employees', newEmp.id, newEmp, 'upsert');
     setEmployees(prev => {
       const next = [newEmp, ...prev];
       saveLocal('weldor_employees', next);
@@ -1161,7 +1047,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateEmployee = (id: string, updatedFields: Partial<Employee>) => {
-    walRegister('employees', id, updatedFields, 'upsert');
     setEmployees(prev => {
       const next = prev.map(e => e.id === id ? { ...e, ...updatedFields } : e);
       saveLocal('weldor_employees', next);
@@ -1174,7 +1059,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteEmployee = (id: string) => {
     const emp = employees.find(e => e.id === id);
-    walRegister('employees', id, {}, 'delete');
     setEmployees(prev => {
       const next = prev.filter(e => e.id !== id);
       saveLocal('weldor_employees', next);
@@ -1188,7 +1072,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Payroll Handlers
   const addPayrollRecord = (rec: Omit<PayrollRecord, 'id'>) => {
     const newRec: PayrollRecord = { ...rec, id: `pay-${Date.now()}` };
-    walRegister('payrolls', newRec.id, newRec, 'upsert');
     setPayrolls(prev => {
       const next = [newRec, ...prev];
       saveLocal('weldor_payrolls', next);
@@ -1200,7 +1083,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updatePayrollRecord = (id: string, updatedFields: Partial<PayrollRecord>) => {
-    walRegister('payrolls', id, updatedFields, 'upsert');
     setPayrolls(prev => {
       const next = prev.map(p => p.id === id ? { ...p, ...updatedFields } : p);
       saveLocal('weldor_payrolls', next);
@@ -1212,7 +1094,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deletePayrollRecord = (id: string) => {
-    walRegister('payrolls', id, {}, 'delete');
     setPayrolls(prev => {
       const next = prev.filter(p => p.id !== id);
       saveLocal('weldor_payrolls', next);
@@ -1321,7 +1202,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
 
-    newRecords.forEach(r => walRegister('payrolls', r.id, r, 'upsert'));
     setPayrolls(prev => {
       const next = [...newRecords, ...prev];
       saveLocal('weldor_payrolls', next);
@@ -1333,7 +1213,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const approvePayrollRecord = (id: string) => {
-    walRegister('payrolls', id, { status: 'Approved' }, 'upsert');
     setPayrolls(prev => {
       const next = prev.map(p => p.id === id ? { ...p, status: 'Approved' as const } : p);
       saveLocal('weldor_payrolls', next);
@@ -1350,7 +1229,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       showNotification(`No draft payslips found to approve for ${month}.`, 'info');
       return;
     }
-    draftRecords.forEach(r => walRegister('payrolls', r.id, { status: 'Approved' }, 'upsert'));
     setPayrolls(prev => {
       const next = prev.map(p => (p.payrollMonth === month && p.status === 'Draft') ? {
         ...p,
@@ -1371,7 +1249,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const disbursePayrollRecord = (id: string, ref?: string) => {
     const txRef = ref || `CMS-DISB-${Date.now()}`;
     const timestamp = new Date().toISOString();
-    walRegister('payrolls', id, { status: 'Paid', transactionReference: txRef, disbursedAt: timestamp }, 'upsert');
     setPayrolls(prev => {
       const next = prev.map(p => p.id === id ? {
         ...p,
@@ -1395,7 +1272,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const txBatch = `CMS-BATCH-NEFT-${Date.now()}`;
     const timestamp = new Date().toISOString();
     const recordsToUpdate = payrolls.filter(p => p.payrollMonth === month && p.status !== 'Paid');
-    recordsToUpdate.forEach(r => walRegister('payrolls', r.id, { status: 'Paid', transactionReference: txBatch, disbursedAt: timestamp }, 'upsert'));
     
     setPayrolls(prev => {
       const next = prev.map(p => (p.payrollMonth === month && p.status !== 'Paid') ? {
@@ -1423,7 +1299,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Attendance & Leaves Handlers
   const logAttendance = (rec: Omit<AttendanceRecord, 'id'>) => {
     const newRec: AttendanceRecord = { ...rec, id: `att-${Date.now()}` };
-    walRegister('attendances', newRec.id, newRec, 'upsert');
     setAttendance(prev => {
       const next = [newRec, ...prev];
       saveLocal('weldor_attendance', next);
@@ -1435,7 +1310,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateAttendance = (id: string, rec: Partial<AttendanceRecord>) => {
-    walRegister('attendances', id, rec, 'upsert');
     setAttendance(prev => {
       const next = prev.map(a => a.id === id ? { ...a, ...rec } : a);
       saveLocal('weldor_attendance', next);
@@ -1447,7 +1321,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const applyLeaveRequest = (req: Omit<LeaveRequest, 'id'>) => {
     const newReq: LeaveRequest = { ...req, id: `lev-${Date.now()}` };
-    walRegister('leaves', newReq.id, newReq, 'upsert');
     setLeaveRequests(prev => {
       const next = [newReq, ...prev];
       saveLocal('weldor_leaves', next);
@@ -1459,7 +1332,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateLeaveRequestStatus = (id: string, status: LeaveRequest['status'], approvedBy?: string) => {
-    walRegister('leaves', id, { status, approvedBy: approvedBy || currentEmployee.name }, 'upsert');
     setLeaveRequests(prev => {
       const next = prev.map(l => l.id === id ? {
         ...l,
@@ -1499,7 +1371,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         factoryPlantAddress: factory,
       };
       saveLocal('weldor_settings', next);
-      walRegister('settings', 'company', next, 'upsert');
       return next;
     });
     api.updateSettings(settings).catch(() => {});
@@ -1511,7 +1382,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addProduct = (p: Omit<Product, 'id'>) => {
     const now = new Date().toISOString();
     const newProd: Product = { ...p, id: `prod-${Date.now()}`, createdAt: p.createdAt || now, updatedAt: now };
-    walRegister('products', newProd.id, newProd, 'upsert');
     setProducts(prev => {
       const next = [newProd, ...prev];
       saveLocal('weldor_products', next);
@@ -1524,7 +1394,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateProduct = (id: string, updatedFields: Partial<Product>) => {
     const updatedAt = new Date().toISOString();
-    walRegister('products', id, { ...updatedFields, updatedAt }, 'upsert');
     setProducts(prev => {
       const next = prev.map(p => p.id === id ? { ...p, ...updatedFields, updatedAt } : p);
       saveLocal('weldor_products', next);
@@ -1537,7 +1406,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteProduct = (id: string) => {
     const prod = products.find(p => p.id === id);
-    walRegister('products', id, {}, 'delete');
     setProducts(prev => {
       const next = prev.filter(p => p.id !== id);
       saveLocal('weldor_products', next);
@@ -1552,7 +1420,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addCategory = (c: Omit<ProductCategory, 'id'>) => {
     const now = new Date().toISOString();
     const newCat: ProductCategory = { ...c, id: `cat-${Date.now()}`, createdAt: (c as any).createdAt || now, updatedAt: now };
-    walRegister('categories', newCat.id, newCat, 'upsert');
     setCategories(prev => {
       const next = [...prev, newCat];
       saveLocal('weldor_categories', next);
@@ -1565,7 +1432,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateCategory = (id: string, updatedFields: Partial<ProductCategory>) => {
     const updatedAt = new Date().toISOString();
-    walRegister('categories', id, { ...updatedFields, updatedAt }, 'upsert');
     setCategories(prev => {
       const next = prev.map(c => c.id === id ? { ...c, ...updatedFields, updatedAt } : c);
       saveLocal('weldor_categories', next);
@@ -1578,7 +1444,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteCategory = (id: string) => {
     const cat = categories.find(c => c.id === id);
-    walRegister('categories', id, {}, 'delete');
     setCategories(prev => {
       const next = prev.filter(c => c.id !== id);
       saveLocal('weldor_categories', next);
@@ -1592,7 +1457,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Gallery Media CRUD
   const addGalleryMedia = (item: Omit<GalleryMedia, 'id'>) => {
     const newItem: GalleryMedia = { ...item, id: `gal-${Date.now()}`, createdAt: new Date().toISOString() };
-    walRegister('gallery', newItem.id, newItem, 'upsert');
     setGalleryMedia(prev => {
       const next = [newItem, ...prev];
       saveLocal('weldor_gallery', next);
@@ -1605,7 +1469,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateGalleryMedia = (id: string, updatedFields: Partial<GalleryMedia>) => {
     const updatedAt = new Date().toISOString();
-    walRegister('gallery', id, { ...updatedFields, updatedAt }, 'upsert');
     setGalleryMedia(prev => {
       const next = prev.map(m => m.id === id ? { ...m, ...updatedFields, updatedAt } : m);
       saveLocal('weldor_gallery', next);
@@ -1617,7 +1480,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteGalleryMedia = (id: string) => {
-    walRegister('gallery', id, {}, 'delete');
     setGalleryMedia(prev => {
       const next = prev.filter(m => m.id !== id);
       saveLocal('weldor_gallery', next);
@@ -1636,7 +1498,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString(),
       displayOrder: banner.displayOrder || banners.length + 1
     };
-    walRegister('banners', newBanner.id, newBanner, 'upsert');
     setBanners(prev => {
       const next = [...prev, newBanner];
       saveLocal('weldor_banners', next);
@@ -1649,7 +1510,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateBanner = (id: string, updatedFields: Partial<HeroBanner>) => {
     const updatedAt = new Date().toISOString();
-    walRegister('banners', id, { ...updatedFields, updatedAt }, 'upsert');
     setBanners(prev => {
       const next = prev.map(b => b.id === id ? { ...b, ...updatedFields, updatedAt } : b);
       saveLocal('weldor_banners', next);
@@ -1662,7 +1522,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteBanner = (id: string) => {
     const banner = banners.find(b => b.id === id);
-    walRegister('banners', id, {}, 'delete');
     setBanners(prev => {
       const next = prev.filter(b => b.id !== id);
       saveLocal('weldor_banners', next);
@@ -1675,7 +1534,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const reorderBanners = (bannerIds: string[]) => {
     bannerIds.forEach((id, index) => {
-      walRegister('banners', id, { displayOrder: index + 1 }, 'upsert');
     });
     setBanners(prev => {
       const bannerMap = new Map(prev.map(b => [b.id, b]));
@@ -1694,7 +1552,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const toggleBannerStatus = (id: string) => {
     const b = banners.find(item => item.id === id);
     if (b) {
-      walRegister('banners', id, { active: !b.active }, 'upsert');
     }
     setBanners(prev => {
       const next = prev.map(b => {
@@ -1715,7 +1572,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Exhibition CRUD
   const addExhibition = (expo: Omit<Exhibition, 'id'>) => {
     const newExpo: Exhibition = { ...expo, id: `expo-${Date.now()}` };
-    walRegister('exhibitions', newExpo.id, newExpo, 'upsert');
     setExhibitions(prev => {
       const next = [newExpo, ...prev];
       saveLocal('weldor_exhibitions', next);
@@ -1728,7 +1584,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateExhibition = (id: string, updatedExpo: Partial<Exhibition>) => {
     const updatedAt = new Date().toISOString();
-    walRegister('exhibitions', id, { ...updatedExpo, updatedAt }, 'upsert');
     setExhibitions(prev => {
       const next = prev.map(expo => {
         if (expo.id === id) {
@@ -1746,7 +1601,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteExhibition = (id: string) => {
     const target = exhibitions.find(e => e.id === id);
-    walRegister('exhibitions', id, {}, 'delete');
     setExhibitions(prev => {
       const next = prev.filter(expo => expo.id !== id);
       saveLocal('weldor_exhibitions', next);
@@ -1764,7 +1618,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     dispatchDetails?: { courierTrackingNo?: string; courierPartner?: string; dispatchDate?: string }
   ) => {
     const updatedAt = new Date().toISOString();
-    walRegister('orders', orderId, { stage: newStage, updatedAt, ...(dispatchDetails || {}) }, 'upsert');
     setOrders(prev => {
       const next = prev.map(ord => {
         if (ord.id === orderId) {
@@ -1805,7 +1658,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 const minAlert = invItem.minStockAlert;
                 const status: InventoryItem['status'] = newStock <= 0 ? 'Out of Stock' : newStock <= minAlert ? 'Low Stock' : 'In Stock';
                 const updatedItem: InventoryItem = { ...invItem, currentStock: newStock, status, lastUpdated: new Date().toISOString() };
-                walRegister('inventory', updatedItem.id, updatedItem, 'upsert');
 
                 const logEntry: InventoryStockLog = {
                   id: `inv-log-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -1818,7 +1670,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                   performedBy: currentEmployee?.name || 'Dispatch Logistics',
                   referenceNumber: targetOrder.orderNumber
                 };
-                walRegister('inventory_logs', logEntry.id, logEntry, 'upsert');
                 setInventoryLogs(logs => {
                   const nextLogs = [logEntry, ...logs];
                   saveLocal('weldor_inventory_logs', nextLogs);
@@ -1859,7 +1710,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateLeadStage = (leadId: string, newStage: LeadStage, lostReason?: string) => {
-    walRegister('leads', leadId, { stage: newStage, lostReason, updatedAt: new Date().toISOString() }, 'upsert');
     setLeads(prev => {
       const next = prev.map(lead => {
         if (lead.id === leadId) {
@@ -1896,7 +1746,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const assignLead = (leadId: string, employeeId: string) => {
     const targetEmp = employees.find(e => e.id === employeeId);
     if (!targetEmp) return;
-    walRegister('leads', leadId, { assignedEmployeeId: targetEmp.id, assignedEmployeeName: targetEmp.name, updatedAt: new Date().toISOString() }, 'upsert');
     setLeads(prev => {
       const next = prev.map(lead => {
         if (lead.id === leadId) {
@@ -1975,7 +1824,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ],
     };
 
-    walRegister('leads', newLead.id, newLead, 'upsert');
     setLeads(prev => {
       const next = [newLead, ...prev];
       saveLocal('weldor_leads', next);
@@ -2002,7 +1850,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'Pending Review',
       createdAt: new Date().toISOString(),
     };
-    walRegister('rfqs', newRfq.id, newRfq, 'upsert');
     setRfqs(prev => {
       const next = [newRfq, ...prev];
       saveLocal('weldor_rfqs', next);
@@ -2030,7 +1877,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString(),
     };
 
-    walRegister('samples', newSample.id, newSample, 'upsert');
     setSamples(prev => {
       const next = [newSample, ...prev];
       saveLocal('weldor_samples', next);
@@ -2040,7 +1886,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await api.createSample(newSample);
       if (res?.data?.id) {
         newSample.id = res.data.id;
-        walRegister('samples', newSample.id, newSample, 'upsert');
       }
     } catch (e) {
       console.warn('API sync failed for sample creation', e);
@@ -2051,7 +1896,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateSampleStage = (sampleId: string, stage: SampleRequest['stage']) => {
-    walRegister('samples', sampleId, { stage }, 'upsert');
     setSamples(prev => {
       const next = prev.map(s => s.id === sampleId ? { ...s, stage } : s);
       saveLocal('weldor_samples', next);
@@ -2063,7 +1907,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteSampleRequest = (sampleId: string) => {
-    walRegister('samples', sampleId, {}, 'delete');
     setSamples(prev => {
       const next = prev.filter(s => s.id !== sampleId);
       saveLocal('weldor_samples', next);
@@ -2093,7 +1936,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       completionDate: data.completionDate || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
     };
 
-    walRegister('trials', newTrial.id, newTrial, 'upsert');
     setTrials(prev => {
       const next = [newTrial, ...prev];
       saveLocal('weldor_trials', next);
@@ -2103,7 +1945,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await api.createTrial(newTrial);
       if (res?.data?.id) {
         newTrial.id = res.data.id;
-        walRegister('trials', newTrial.id, newTrial, 'upsert');
       }
     } catch (e) {
       console.warn('API sync failed for trial creation', e);
@@ -2114,7 +1955,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateTrialStatus = (trialId: string, status: TechnicalTrial['status'], failureReason?: string) => {
-    walRegister('trials', trialId, { status, failureReason }, 'upsert');
     setTrials(prev => {
       const next = prev.map(t => t.id === trialId ? { ...t, status, failureReason } : t);
       saveLocal('weldor_trials', next);
@@ -2126,7 +1966,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteTechnicalTrial = (trialId: string) => {
-    walRegister('trials', trialId, {}, 'delete');
     setTrials(prev => {
       const next = prev.filter(t => t.id !== trialId);
       saveLocal('weldor_trials', next);
@@ -2229,7 +2068,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       sentAt: requiresApproval ? undefined : new Date().toISOString(),
     };
 
-    walRegister('quotations', newQuotation.id, newQuotation, 'upsert');
     setQuotations(prev => {
       const filtered = prev.filter(q => q.id !== newQuotation.id && q.quotationNumber !== newQuotation.quotationNumber);
       const next = [newQuotation, ...filtered];
@@ -2256,7 +2094,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addCommercialQuotation = (quotation: any) => {
     if (!quotation || !quotation.id) return;
-    walRegister('quotations', quotation.id, quotation, 'upsert');
     setQuotations(prev => {
       const filtered = prev.filter(q => q.id !== quotation.id && (q as any).quotationNumber !== quotation.quotationNumber);
       const next = [quotation, ...filtered];
@@ -2275,11 +2112,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const approveQuotation = (quotationId: string, notes?: string) => {
-    walRegister('quotations', quotationId, {
-      status: 'Approved',
-      approvalNotes: notes || `Approved by ${currentEmployee.name} (${currentRole.name})`,
-      sentAt: new Date().toISOString(),
-    }, 'upsert');
     setQuotations(prev => {
       const next = prev.map(q => {
         if (q.id === quotationId) {
@@ -2404,7 +2236,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString(),
     };
 
-    walRegister('orders', newOrder.id, newOrder, 'upsert');
     setOrders(prev => {
       if (prev.some(o => o.id === newOrder.id || (newOrder.quotationId && o.quotationId === newOrder.quotationId))) {
         return prev;
@@ -2431,9 +2262,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteOrder = (orderId: string) => {
     const target = orders.find(o => o.id === orderId);
-    walRegister('orders', orderId, {}, 'delete');
     if (target?.orderNumber) {
-      walRegister('orders', target.orderNumber, {}, 'delete');
     }
     setOrders(prev => {
       const next = prev.filter(o => {
@@ -2462,10 +2291,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const rejectQuotation = (quotationId: string, reason?: string) => {
-    walRegister('quotations', quotationId, {
-      status: 'Rejected',
-      approvalNotes: reason || `Marked as Rejected / Revision Requested by ${currentEmployee.name}`,
-    }, 'upsert');
     setQuotations(prev => {
       const next = prev.map(q => {
         if (q.id === quotationId) {
@@ -2490,9 +2315,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteQuotation = (quotationId: string) => {
     const target = quotations.find(q => q.id === quotationId);
-    walRegister('quotations', quotationId, {}, 'delete');
     if (target?.quotationNumber) {
-      walRegister('quotations', target.quotationNumber, {}, 'delete');
     }
     setQuotations(prev => {
       const next = prev.filter(q => {
@@ -2521,7 +2344,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteLead = (leadId: string) => {
-    walRegister('leads', leadId, {}, 'delete');
     setLeads(prev => {
       const next = prev.filter(l => l.id !== leadId);
       saveLocal('weldor_leads', next);
@@ -2533,7 +2355,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteRFQ = (rfqId: string) => {
-    walRegister('rfqs', rfqId, {}, 'delete');
     setRfqs(prev => {
       const next = prev.filter(r => r.id !== rfqId);
       saveLocal('weldor_rfqs', next);
@@ -2545,7 +2366,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addInvoice = async (invoice: any) => {
-    walRegister('invoices', invoice.id, invoice, 'upsert');
     setInvoices(prev => {
       const filtered = prev.filter(inv => inv.id !== invoice.id && inv.invoiceNumber !== invoice.invoiceNumber);
       const next = [invoice, ...filtered];
@@ -2558,7 +2378,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateInvoice = async (id: string, invoice: any) => {
-    walRegister('invoices', id, invoice, 'upsert');
     setInvoices(prev => {
       const next = prev.map(inv => inv.id === id ? { ...inv, ...invoice } : inv);
       saveLocal('weldor_invoices', next);
@@ -2570,9 +2389,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteInvoice = async (id: string) => {
     const target = invoices.find(inv => inv.id === id);
-    walRegister('invoices', id, {}, 'delete');
     if (target?.invoiceNumber) {
-      walRegister('invoices', target.invoiceNumber, {}, 'delete');
     }
     setInvoices(prev => {
       const next = prev.filter(inv => {
@@ -2606,7 +2423,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status,
       lastUpdated: now
     };
-    walRegister('inventory', newItem.id, newItem, 'upsert');
     setInventory(prev => {
       const filtered = prev.filter(i => i.id !== newItem.id && i.sku.trim().toUpperCase() !== newItem.sku.trim().toUpperCase());
       const next = [newItem, ...filtered];
@@ -2628,7 +2444,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         performedBy: currentEmployee?.name || 'Administrator',
         referenceNumber: 'INITIAL-OPENING'
       };
-      walRegister('inventory_logs', logEntry.id, logEntry, 'upsert');
       setInventoryLogs(logs => {
         const nextLogs = [logEntry, ...logs];
         saveLocal('weldor_inventory_logs', nextLogs);
@@ -2652,7 +2467,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const minStock = Number(updated.minStockAlert) || 0;
           updated.status = curStock <= 0 ? 'Out of Stock' : curStock <= minStock ? 'Low Stock' : 'In Stock';
           updatedPayload = updated;
-          walRegister('inventory', id, updated, 'upsert');
           return updated;
         }
         return item;
@@ -2670,7 +2484,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteInventoryItem = (id: string) => {
     const target = inventory.find(i => i.id === id);
-    walRegister('inventory', id, {}, 'delete');
     setInventory(prev => {
       const next = prev.filter(i => i.id !== id);
       saveLocal('weldor_inventory', next);
@@ -2684,7 +2497,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const clearAllInventory = () => {
     setInventory(prev => {
       for (const item of prev) {
-        walRegister('inventory', item.id, item, 'delete');
         api.deleteInventory(item.id).catch(() => {});
       }
       saveLocal('weldor_inventory', []);
@@ -2717,7 +2529,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const remaining: InventoryItem[] = [];
       for (const item of prev) {
         if (idSet.has(item.id)) {
-          walRegister('inventory', item.id, item, 'delete');
           api.deleteInventory(item.id).catch(() => {});
         } else {
           remaining.push(item);
@@ -2748,7 +2559,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const minAlert = item.minStockAlert;
           const status: InventoryItem['status'] = newStock <= 0 ? 'Out of Stock' : newStock <= minAlert ? 'Low Stock' : 'In Stock';
           updatedItem = { ...item, currentStock: newStock, status, lastUpdated: now };
-          walRegister('inventory', id, updatedItem, 'upsert');
           return updatedItem;
         }
         return item;
@@ -2771,7 +2581,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         performedBy: currentEmployee?.name || 'Godown Manager',
         referenceNumber: referenceNumber || ''
       };
-      walRegister('inventory_logs', logEntry.id, logEntry, 'upsert');
       setInventoryLogs(logs => {
         const nextLogs = [logEntry, ...logs];
         saveLocal('weldor_inventory_logs', nextLogs);
