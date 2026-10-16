@@ -1,6 +1,21 @@
 [
   {
+    "id": "aud-1792126415392",
+    "timestamp": "2026-10-16T04:53:39.462Z",
+    "userName": "Super Admin",
+    "userRole": "Super Admin",
+    "action": "INVENTORY_ITEM_DELETED",
+    "module": "inventory",
+    "targetId": "inv-1792091821855-49-388",
+    "ipAddress": "192.168.1.15",
+    "details": "Deleted inventory item: Oxygen Gauge 16KG",
+    "createdAt": "2026-10-16T04:53:39.462Z",
+    "updatedAt": "2026-10-16T04:53:39.462Z"
+  },
+  {
     "id": "aud-1792092101250",
+    "createdAt": "2026-10-15T19:28:23.700Z",
+    "updatedAt": "2026-10-15T19:28:23.700Z",
     "timestamp": "2026-10-15T19:28:23.700Z",
     "userName": "Super Admin",
     "userRole": "Super Admin",
@@ -8,9 +23,59 @@
     "module": "inventory",
     "targetId": "inv-1792091492578-4816",
     "ipAddress": "192.168.1.15",
-    "details": "Deleted inventory item: MIG Nozzle",
-    "createdAt": "2026-10-15T19:28:23.700Z",
-    "updatedAt": "2026-10-15T19:28:23.700Z"
+    "details": "Deleted inventory item: MIG Nozzle"
+  },
+  {
+    "id": "aud-1792092101248",
+    "createdAt": "2026-10-15T19:28:23.540Z",
+    "updatedAt": "2026-10-15T19:28:23.540Z",
+    "timestamp": "2026-10-15T19:28:23.540Z",
+    "userName": "Super Admin",
+    "userRole": "Super Admin",
+    "action": "INVENTORY_ITEM_DELETED",
+    "module": "inventory",
+    "targetId": "inv-1792091492677-3411",
+    "ipAddress": "192.168.1.15",
+    "details": "Deleted inventory item: MIG Nozzle"
+  },
+  {
+    "id": "aud-1792092101247",
+    "createdAt": "2026-10-15T19:28:23.369Z",
+    "updatedAt": "2026-10-15T19:28:23.369Z",
+    "timestamp": "2026-10-15T19:28:23.369Z",
+    "userName": "Super Admin",
+    "userRole": "Super Admin",
+    "action": "INVENTORY_ITEM_DELETED",
+    "module": "inventory",
+    "targetId": "inv-1792091826214-58-100",
+    "ipAddress": "192.168.1.15",
+    "details": "Deleted inventory item: MIG Nozzle"
+  },
+  {
+    "id": "aud-1792092101245",
+    "createdAt": "2026-10-15T19:28:23.245Z",
+    "updatedAt": "2026-10-15T19:28:23.245Z",
+    "timestamp": "2026-10-15T19:28:23.245Z",
+    "userName": "Super Admin",
+    "userRole": "Super Admin",
+    "action": "INVENTORY_ITEM_DELETED",
+    "module": "inventory",
+    "targetId": "inv-1792091829419-58-429",
+    "ipAddress": "192.168.1.15",
+    "details": "Deleted inventory item: MIG Nozzle"
+  },
+  {
+    "id": "aud-1792092101244",
+    "createdAt": "2026-10-15T19:28:19.445Z",
+    "updatedAt": "2026-10-15T19:28:19.445Z",
+    "timestamp": "2026-10-15T19:28:19.445Z",
+    "userName": "Super Admin",
+    "userRole": "Super Admin",
+    "action": "INVENTORY_ITEM_DELETED",
+    "module": "inventory",
+    "targetId": "inv-1792091492596-7069",
+    "ipAddress": "192.168.1.15",
+    "details": "Deleted inventory item: Spatter Guard"
   },
   {
     "id": "aud-1792092101243",

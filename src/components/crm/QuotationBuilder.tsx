@@ -116,23 +116,8 @@ export interface CommercialQuotationData {
 }
 
 
-const loadQuotes = (): CommercialQuotationData[] => {
-  if (typeof window !== 'undefined') {
-    try {
-      const saved = localStorage.getItem('weldor_commercial_quotes');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
-  }
-  return [];
-};
-
-const saveQuotes = (data: CommercialQuotationData[]) => {
-  if (typeof window !== 'undefined') {
-    try {
-      localStorage.setItem('weldor_commercial_quotes', JSON.stringify(data));
-    } catch (e) {}
-  }
-};
+const loadQuotes = (): CommercialQuotationData[] => [];
+const saveQuotes = (_data: CommercialQuotationData[]) => {};
 
 const adaptToCommercialQuotation = (q: any): CommercialQuotationData => {
   if (q.seller && q.buyer && Array.isArray(q.items)) {
@@ -286,23 +271,15 @@ export const QuotationBuilder: React.FC = () => {
     };
   }, [companySettings]);
   
-  // Unified quotes list: syncs directly from AppContext.quotations (WAL + Backend Database) + local
-  // Strictly deduplicated by both ID and Quotation Number to eliminate duplicate records
+  // Unified quotes list: syncs directly from AppContext.quotations (100% Live MongoDB Atlas)
+  // Strictly deduplicated by Quotation Number to eliminate duplicate records
   const quotesList = useMemo<CommercialQuotationData[]>(() => {
     const fromContext = (quotations || []).map(adaptToCommercialQuotation);
-    const fromLocal = loadQuotes();
     const mapById = new Map<string, CommercialQuotationData>();
     const seenNumbers = new Set<string>();
 
     fromContext.forEach(q => {
       if (q && q.id) {
-        mapById.set(q.id, q);
-        if (q.quotationNumber) seenNumbers.add(q.quotationNumber.trim().toUpperCase());
-      }
-    });
-
-    fromLocal.forEach(q => {
-      if (q && q.id && !mapById.has(q.id)) {
         const qNum = (q.quotationNumber || '').trim().toUpperCase();
         if (!qNum || !seenNumbers.has(qNum)) {
           mapById.set(q.id, q);

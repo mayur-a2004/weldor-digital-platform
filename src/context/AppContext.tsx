@@ -416,56 +416,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Local cache persistence helpers for seamless offline & refresh support
-  const loadLocal = <T,>(key: string, fallback: T): T => {
-    if (typeof window === 'undefined') return fallback;
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) return fallback;
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(fallback) && fallback.length > 0 && Array.isArray(parsed) && parsed.length === 0) {
-        return fallback;
-      }
-      if (key === 'weldor_products' && Array.isArray(parsed)) {
-        const cleaned = parsed.filter((p: any) => p && p.id && !String(p.id).startsWith('prod_'));
-        if (cleaned.length > 0) return cleaned as unknown as T;
-        return fallback;
-      }
-      return parsed !== null && parsed !== undefined ? parsed : fallback;
-    } catch (e) {
-      return fallback;
-    }
-  };
-
-  const saveLocal = (key: string, data: any) => {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(key, JSON.stringify(data));
-    } catch (e) {}
-  };
-
-  // ─── Write-Ahead Log (WAL) ──────────────────────────────────────────────────
-  // Every user edit is registered here with a client-side timestamp.
-  // On refresh, WAL entries ALWAYS override what the backend returns.
-  // This completely prevents the backend's server-side updatedAt from winning
-  // over fresh user edits (backend stamps updatedAt AFTER network round-trip,
-  // so it always appears "newer" — WAL bypasses this entirely).
-  const WAL_KEY = 'weldor_wal';
-  type WalEntry = { collection: string; id: string; data: any; clientTs: number; op: 'upsert' | 'delete' };
-
-  // Purge any stale WAL cache to guarantee 100% pure live MongoDB sync
+  // ─── Pure Direct MongoDB Atlas Architecture: ZERO Browser Business Data Caching ───
+  // Purge any stale cached data from previous browser sessions to guarantee 100% real-time database sync
   if (typeof window !== 'undefined') {
     try {
-      localStorage.removeItem(WAL_KEY);
-      localStorage.removeItem('weldor_wal');
+      const keysToPurge = [
+        'weldor_inventory',
+        'weldor_inventory_logs',
+        'weldor_products',
+        'weldor_categories',
+        'weldor_gallery',
+        'weldor_exhibitions',
+        'weldor_quotations',
+        'weldor_orders',
+        'weldor_leads',
+        'weldor_rfqs',
+        'weldor_invoices',
+        'weldor_banners',
+        'weldor_audit',
+        'weldor_employees',
+        'weldor_payrolls',
+        'weldor_attendance',
+        'weldor_leaves',
+        'weldor_settings',
+        'weldor_roles',
+        'weldor_wal',
+        'weldor_commercial_quotes'
+      ];
+      keysToPurge.forEach(k => {
+        try { localStorage.removeItem(k); } catch {}
+      });
     } catch {}
   }
+
+  // Pure in-memory fallback loader: NEVER loads business data from browser localStorage
+  const loadLocal = <T,>(_key: string, fallback: T): T => {
+    return fallback;
+  };
+
+  // Strictly disabled: ZERO business data is EVER written to browser localStorage
+  const saveLocal = (_key: string, _data: any) => {
+    // Pure MongoDB Atlas Architecture: business data is stored exclusively in live MongoDB
+  };
+
+  const WAL_KEY = 'weldor_wal';
+  type WalEntry = { collection: string; id: string; data: any; clientTs: number; op: 'upsert' | 'delete' };
 
   const walGet = (): WalEntry[] => [];
   const walAdd = (_entry: WalEntry) => {};
   const walRemoveSynced = (_collection: string, _ids: string[]) => {};
 
-  // Pure database bypass: data is never mutated by ghost local edits
   const applyWal = <T extends { id?: string }>(_collection: string, dataArray: T[]): T[] => {
     return Array.isArray(dataArray) ? dataArray : [];
   };
@@ -480,10 +480,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return Array.isArray(backendData) ? backendData : [];
   };
 
-  const loadLocalWithWal = <T extends { id?: string; createdAt?: string }>(key: string, fallback: T[], _collection: string): T[] => {
-    const loaded = loadLocal(key, fallback);
-    const arr = Array.isArray(loaded) ? loaded : fallback;
-    return arr;
+  const loadLocalWithWal = <T extends { id?: string; createdAt?: string }>(_key: string, fallback: T[], _collection: string): T[] => {
+    return fallback;
   };
 
 
@@ -961,36 +959,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         smartSync(attRes, 'weldor_attendance', attendance, setAttendance, 'attendances');
         smartSync(leaveRes, 'weldor_leaves', leaveRequests, setLeaveRequests, 'leaves');
         smartSync(audRes, 'weldor_audit', auditLogs, setAuditLogs, 'audit');
-        // Inventory: MongoDB Atlas is the single source of truth + auto-migrate local data if DB is fresh
-        if (inventoryRes?.success && Array.isArray(inventoryRes.data)) {
-          if (inventoryRes.data.length > 0) {
-            smartSync(inventoryRes, 'weldor_inventory', inventory, setInventory, 'inventory');
-          } else {
-            // Check if this browser has inventory items from a prior upload
-            const rawLocal = loadLocal<InventoryItem[]>('weldor_inventory', []);
-            if (Array.isArray(rawLocal) && rawLocal.length > 0) {
-              // Deduplicate by clean SKU and clean Name
-              const seenMap = new Map<string, InventoryItem>();
-              for (const item of rawLocal) {
-                if (!item) continue;
-                const key = (item.sku || item.name || '').trim().toUpperCase();
-                if (!key) continue;
-                if (!seenMap.has(key)) {
-                  seenMap.set(key, item);
-                }
-              }
-              const deduped = Array.from(seenMap.values());
-              setInventory(deduped);
-              saveLocal('weldor_inventory', deduped);
-              // Push to MongoDB Atlas so all other browsers/incognito immediately receive it
-              api.bulkCreateInventory(deduped).catch(e => console.warn('Auto-migrate inventory error:', e));
-            } else {
-              setInventory([]);
-            }
-          }
-        } else {
-          smartSync(inventoryRes, 'weldor_inventory', inventory, setInventory, 'inventory');
-        }
+        // Inventory: MongoDB Atlas is the 100% single source of truth across all browsers
+        smartSync(inventoryRes, 'weldor_inventory', inventory, setInventory, 'inventory');
         smartSync(invLogsRes, 'weldor_inventory_logs', inventoryLogs, setInventoryLogs, 'inventory_logs');
 
 

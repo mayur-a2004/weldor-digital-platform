@@ -1,25 +1,5 @@
 [
   {
-    "id": "inv-wld-test-precision-torch",
-    "category": "General Spares & Consumables",
-    "costPriceINR": 0,
-    "createdAt": "2026-10-16T04:16:50.002Z",
-    "currentStock": 45,
-    "description": "Test Precision Torch Nozzle 16mm",
-    "gstRatePct": 18,
-    "hsnCode": "85159000",
-    "minStockAlert": 10,
-    "name": "Test Precision Torch Nozzle 16mm",
-    "sku": "WLD-TEST-PRECISION-TORCH",
-    "status": "In Stock",
-    "supplierName": "Earth Metal Industries",
-    "unit": "PCS",
-    "unitPriceINR": 320,
-    "unitPriceUSD": 3.76,
-    "updatedAt": "2026-10-16T04:16:50.002Z",
-    "warehouseLocation": "Jamnagar Central Godown"
-  },
-  {
     "id": "inv-1792093175152-143-184",
     "createdAt": "2026-10-15T19:39:35.152Z",
     "updatedAt": "2026-10-15T19:39:35.152Z",
