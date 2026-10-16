@@ -809,19 +809,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             dedupedList.push(item);
           }
 
-          let finalData: T[];
-          if (dedupedList.length === 0) {
-            if (collection === 'employees') finalData = [DEFAULT_EMPLOYEE] as unknown as T[];
-            else if (collection === 'products') finalData = OFFICIAL_WELDOR_PRODUCTS as unknown as T[];
-            else if (collection === 'categories') finalData = OFFICIAL_WELDOR_CATEGORIES as unknown as T[];
-            else if (collection === 'gallery') finalData = OFFICIAL_WELDOR_GALLERY as unknown as T[];
-            else if (collection === 'exhibitions') finalData = OFFICIAL_WELDOR_EXHIBITIONS as unknown as T[];
-            else if (collection === 'banners') finalData = OFFICIAL_WELDOR_BANNERS as unknown as T[];
-            else finalData = [];
-          } else {
-            finalData = dedupedList.map(normalizeItem);
-          }
-
+          const finalData: T[] = dedupedList.map(normalizeItem);
           setter(finalData);
           saveLocal(localKey, finalData);
         };
@@ -902,16 +890,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     document.addEventListener('visibilitychange', onVisibility);
 
-    // 2. Real-time Background Polling: syncs with MongoDB Atlas every 4 seconds
-    // so changes in Incognito or external browsers appear on all open windows automatically!
-    const pollInterval = setInterval(() => {
-      fetchBackendData();
-    }, 4000);
-
     return () => {
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVisibility);
-      clearInterval(pollInterval);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -31,6 +31,12 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// Request logger for transparent visibility
+app.use('/api', (req, res, next) => {
+  console.log(`📡 [${new Date().toISOString().slice(11, 19)}] ${req.method} ${req.url}`);
+  next();
+});
+
 // Ensure database connection is active before processing any API request
 app.use('/api', async (req, res, next) => {
   try {
