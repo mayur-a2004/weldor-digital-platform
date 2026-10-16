@@ -69,6 +69,7 @@ export const InventoryManager: React.FC = () => {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importCsvText, setImportCsvText] = useState<string>('');
   const [importParsedCount, setImportParsedCount] = useState<number | null>(null);
+  const [isProcessingImport, setIsProcessingImport] = useState(false);
 
   const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
   const [historyItemId, setHistoryItemId] = useState<string | null>(null);
@@ -598,6 +599,9 @@ export const InventoryManager: React.FC = () => {
     };
 
     const parsedItems: any[] = [];
+    const seenSkus = new Set<string>();
+    const seenNames = new Set<string>();
+
     for (let i = headerRowIdx + 1; i < rawLines.length; i++) {
       const cleanCols = parseLine(rawLines[i]);
       const rawName = (nameIdx !== -1 ? cleanCols[nameIdx] : cleanCols[skuIdx]) || '';
@@ -608,18 +612,28 @@ export const InventoryManager: React.FC = () => {
         continue;
       }
 
-      // Resolve or auto-generate SKU if file has no SKU column (like Tally StkGrpSum)
+      // Resolve or auto-generate deterministic SKU (never use random/row-index)
       let sku = skuIdx !== -1 ? (cleanCols[skuIdx] || '').trim() : '';
       if (!sku) {
         const slug = name
           .replace(/[^a-zA-Z0-9]/g, ' ')
           .trim()
           .split(/\s+/)
-          .slice(0, 3)
+          .slice(0, 4)
           .join('-')
           .toUpperCase();
-        sku = slug ? `WLD-${slug}-${i}` : `WLD-ITEM-${1000 + i}`;
+        sku = slug ? `WLD-${slug}` : `WLD-ITEM-${name.length}`;
       }
+
+      const normSku = sku.toUpperCase();
+      const normName = name.toLowerCase();
+
+      // Strict Deduplication Guard: Ignore if this exact SKU or item name was already encountered in the file
+      if (seenSkus.has(normSku) || seenNames.has(normName)) {
+        continue;
+      }
+      seenSkus.add(normSku);
+      seenNames.add(normName);
 
       // Quantity resolution
       const rawQty = getCol(cleanCols, /closing.*(qty|quantity)|quantity|qty|current.*stock|stock.*qty|in.*stock|balance/i) || '0';
@@ -659,7 +673,7 @@ export const InventoryManager: React.FC = () => {
   };
 
   // Parse and Bulk Import
-  const handleProcessImport = () => {
+  const handleProcessImport = async () => {
     if (!importCsvText.trim()) {
       showNotification('Please paste CSV / Excel text or select a file first!', 'warning');
       return;
@@ -676,11 +690,17 @@ export const InventoryManager: React.FC = () => {
       return;
     }
 
-    bulkImportInventory(items);
-    setIsImportModalOpen(false);
-    setImportCsvText('');
-    setImportParsedCount(null);
-    showNotification(`🎉 Successfully imported ${items.length} inventory items!`, 'success');
+    setIsProcessingImport(true);
+    try {
+      await bulkImportInventory(items);
+      setIsImportModalOpen(false);
+      setImportCsvText('');
+      setImportParsedCount(null);
+    } catch (err: any) {
+      showNotification(`Import error: ${err.message || 'Failed to import'}`, 'warning');
+    } finally {
+      setIsProcessingImport(false);
+    }
   };
 
   // Read uploaded Excel (.xlsx, .xls, .ods) or CSV / TXT file
@@ -2333,10 +2353,18 @@ WLD-FT-8MM,Brass Push-In Male 8mm x 1/8",Brass Pneumatic Fittings,74122019,PCS,5
                 </button>
                 <button
                   type="button"
+                  disabled={isProcessingImport}
                   onClick={handleProcessImport}
-                  className="px-5 py-2 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 rounded-xl shadow-xs"
+                  className="px-5 py-2 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 rounded-xl shadow-xs disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                 >
-                  Process & Import Items
+                  {isProcessingImport ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving to MongoDB Atlas...</span>
+                    </>
+                  ) : (
+                    <span>Process & Import Items</span>
+                  )}
                 </button>
               </div>
 

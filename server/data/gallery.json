@@ -1,38 +1,5 @@
 [
   {
-    "id": "gal-07",
-    "title": "Zeiss Contura CMM 3D Quality Inspection Lab",
-    "category": "R&D Quality Lab",
-    "type": "Photo",
-    "mediaTypeGroup": "photo",
-    "url": "/images/quality_inspection_lab.jpg",
-    "thumbnail": "/images/quality_inspection_lab.jpg",
-    "caption": "In-house Zeiss CMM coordinate measuring probe testing critical component tolerances to ±0.005mm.",
-    "tags": [
-      "Zeiss CMM",
-      "Metrology",
-      "Quality Control",
-      "ISO 9001"
-    ],
-    "createdAt": "2026-10-01"
-  },
-  {
-    "id": "gal-08",
-    "title": "Earth Metal Industries Jamnagar Plant Campus",
-    "category": "Factory Floor",
-    "type": "Photo",
-    "mediaTypeGroup": "photo",
-    "url": "/images/banners/hero_welding_plant.jpg",
-    "thumbnail": "/images/banners/hero_welding_plant.jpg",
-    "caption": "Modern manufacturing facility in GIDC Jamnagar producing precision brass components and welding systems.",
-    "tags": [
-      "Factory Floor",
-      "Jamnagar",
-      "Make In India"
-    ],
-    "createdAt": "2026-10-01"
-  },
-  {
     "id": "gal-01",
     "title": "MIG / CO2 Torches Range - 24KD & 36KD",
     "category": "Product Closeups",
@@ -129,5 +96,38 @@
       "Factory Production"
     ],
     "createdAt": "2026-09-25"
+  },
+  {
+    "id": "gal-07",
+    "title": "Zeiss Contura CMM 3D Quality Inspection Lab",
+    "category": "R&D Quality Lab",
+    "type": "Photo",
+    "mediaTypeGroup": "photo",
+    "url": "/images/quality_inspection_lab.jpg",
+    "thumbnail": "/images/quality_inspection_lab.jpg",
+    "caption": "In-house Zeiss CMM coordinate measuring probe testing critical component tolerances to ±0.005mm.",
+    "tags": [
+      "Zeiss CMM",
+      "Metrology",
+      "Quality Control",
+      "ISO 9001"
+    ],
+    "createdAt": "2026-10-01"
+  },
+  {
+    "id": "gal-08",
+    "title": "Earth Metal Industries Jamnagar Plant Campus",
+    "category": "Factory Floor",
+    "type": "Photo",
+    "mediaTypeGroup": "photo",
+    "url": "/images/banners/hero_welding_plant.jpg",
+    "thumbnail": "/images/banners/hero_welding_plant.jpg",
+    "caption": "Modern manufacturing facility in GIDC Jamnagar producing precision brass components and welding systems.",
+    "tags": [
+      "Factory Floor",
+      "Jamnagar",
+      "Make In India"
+    ],
+    "createdAt": "2026-10-01"
   }
 ]

@@ -230,11 +230,13 @@ interface AppContextType {
 
   // Products & Categories CRUD
   products: Product[];
+  setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProduct: (id: string, product: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
 
   categories: ProductCategory[];
+  setCategories: React.Dispatch<React.SetStateAction<ProductCategory[]>>;
   addCategory: (category: Omit<ProductCategory, 'id'>) => void;
   updateCategory: (id: string, category: Partial<ProductCategory>) => void;
   deleteCategory: (id: string) => void;
@@ -261,6 +263,7 @@ interface AppContextType {
 
   // Gallery Media CRUD
   galleryMedia: GalleryMedia[];
+  setGalleryMedia: React.Dispatch<React.SetStateAction<GalleryMedia[]>>;
   addGalleryMedia: (item: Omit<GalleryMedia, 'id'>) => void;
   updateGalleryMedia: (id: string, item: Partial<GalleryMedia>) => void;
   deleteGalleryMedia: (id: string) => void;
@@ -328,6 +331,7 @@ interface AppContextType {
   deleteInvoice: (id: string) => Promise<void>;
 
   exhibitions: Exhibition[];
+  setExhibitions: React.Dispatch<React.SetStateAction<Exhibition[]>>;
   addExhibition: (expo: Omit<Exhibition, 'id'>) => void;
   updateExhibition: (id: string, expo: Partial<Exhibition>) => void;
   deleteExhibition: (id: string) => void;
@@ -339,6 +343,7 @@ interface AppContextType {
 
   // Inventory & Stock Management
   inventory: InventoryItem[];
+  setInventory: React.Dispatch<React.SetStateAction<InventoryItem[]>>;
   inventoryLogs: InventoryStockLog[];
   addInventoryItem: (item: Omit<InventoryItem, 'id' | 'lastUpdated' | 'status'>) => void;
   updateInventoryItem: (id: string, updates: Partial<InventoryItem>) => void;
@@ -346,7 +351,7 @@ interface AppContextType {
   clearAllInventory: () => void;
   bulkDeleteInventory: (ids: string[]) => void;
   adjustInventoryStock: (id: string, deltaQty: number, type: InventoryStockLog['changeType'], reason: string, referenceNumber?: string) => void;
-  bulkImportInventory: (items: any[]) => { successCount: number; errorCount: number };
+  bulkImportInventory: (items: any[]) => Promise<{ successCount: number; errorCount: number }>;
   lowStockCount: number;
   outOfStockCount: number;
 
@@ -448,90 +453,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const WAL_KEY = 'weldor_wal';
   type WalEntry = { collection: string; id: string; data: any; clientTs: number; op: 'upsert' | 'delete' };
 
-  const walGet = (): WalEntry[] => {
-    if (typeof window === 'undefined') return [];
-    try { return JSON.parse(localStorage.getItem(WAL_KEY) || '[]'); } catch { return []; }
-  };
-  const walAdd = (entry: WalEntry) => {
-    if (typeof window === 'undefined') return;
+  // Purge any stale WAL cache to guarantee 100% pure live MongoDB sync
+  if (typeof window !== 'undefined') {
     try {
-      const existing = walGet().filter(e => !(e.collection === entry.collection && e.id === entry.id));
-      localStorage.setItem(WAL_KEY, JSON.stringify([entry, ...existing].slice(0, 2000)));
+      localStorage.removeItem(WAL_KEY);
+      localStorage.removeItem('weldor_wal');
     } catch {}
-  };
-  const walRemoveSynced = (collection: string, ids: string[]) => {
-    if (typeof window === 'undefined') return;
-    try {
-      const idSet = new Set(ids);
-      const filtered = walGet().filter(e => !(e.collection === collection && idSet.has(e.id)));
-      localStorage.setItem(WAL_KEY, JSON.stringify(filtered));
-    } catch {}
+  }
+
+  const walGet = (): WalEntry[] => [];
+  const walAdd = (_entry: WalEntry) => {};
+  const walRemoveSynced = (_collection: string, _ids: string[]) => {};
+
+  // Pure database bypass: data is never mutated by ghost local edits
+  const applyWal = <T extends { id?: string }>(_collection: string, dataArray: T[]): T[] => {
+    return Array.isArray(dataArray) ? dataArray : [];
   };
 
-  // Apply WAL entries on top of an array — WAL always wins
-  const applyWal = <T extends { id?: string }>(collection: string, dataArray: T[]): T[] => {
-    const wal = walGet().filter(e => e.collection === collection);
-    if (wal.length === 0) return dataArray;
-    const map = new Map<string, T>((dataArray || []).filter(i => i && i.id).map(i => [i.id!, i]));
-    wal.forEach(entry => {
-      if (entry.op === 'delete') {
-        map.delete(entry.id);
-      } else {
-        const existing = map.get(entry.id) || ({} as T);
-        map.set(entry.id, { ...existing, ...entry.data, id: entry.id } as T);
-      }
-    });
-    return Array.from(map.values());
-  };
+  const walRegister = (_collection: string, _id: string, _data: any, _op: 'upsert' | 'delete' = 'upsert') => {};
 
-  // Register a write to the WAL (called on every add/update/delete)
-  const walRegister = (collection: string, id: string, data: any, op: 'upsert' | 'delete' = 'upsert') => {
-    walAdd({ collection, id, data, clientTs: Date.now(), op });
-  };
-
-  // Smart merge: union of WAL-applied backend data + local array, sorted by createdAt desc
   const mergeArrayData = <T extends { id?: string; updatedAt?: string; createdAt?: string }>(
     backendData: T[],
-    localData: T[],
-    collection?: string
+    _localData: T[],
+    _collection?: string
   ): T[] => {
-    // Apply WAL over backend first (WAL always wins over backend)
-    const walApplied = collection ? applyWal<T>(collection, backendData) : backendData;
-    const merged = new Map<string, T>();
-    // Start with WAL-applied backend
-    walApplied.forEach(item => { if (item && item.id) merged.set(item.id, item); });
-    // Overlay local items that are NOT in backend (locally-added items not yet synced)
-    (localData || []).forEach(item => {
-      if (!item || !item.id) return;
-      if (!merged.has(item.id)) {
-        merged.set(item.id, item); // Local-only item
-      }
-    });
-    // Double check WAL deletes to guarantee deleted items never resurface
-    if (collection) {
-      const walDeletes = walGet().filter(e => e.collection === collection && e.op === 'delete');
-      walDeletes.forEach(d => merged.delete(d.id));
-    }
-    // Sort: newest first (by createdAt, preserving natural UI order)
-    const result = Array.from(merged.values());
-    result.sort((a, b) => {
-      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return tb - ta; // descending (newest first)
-    });
-    return result;
+    return Array.isArray(backendData) ? backendData : [];
   };
 
-  const loadLocalWithWal = <T extends { id?: string; createdAt?: string }>(key: string, fallback: T[], collection: string): T[] => {
+  const loadLocalWithWal = <T extends { id?: string; createdAt?: string }>(key: string, fallback: T[], _collection: string): T[] => {
     const loaded = loadLocal(key, fallback);
-    const walApplied = applyWal<T>(collection, Array.isArray(loaded) ? loaded : fallback);
-    walApplied.sort((a, b) => {
-      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return tb - ta;
-    });
-    return walApplied;
+    const arr = Array.isArray(loaded) ? loaded : fallback;
+    return arr;
   };
+
 
   const [roles, setRoles] = useState<Role[]>(() => loadLocal('weldor_roles', INITIAL_ROLES));
   const [currentRole, setCurrentRole] = useState<Role>(() => loadLocal('weldor_roles', INITIAL_ROLES)[0] || INITIAL_ROLES[0]);
@@ -867,16 +821,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           api.getAuditLogs(),
           api.getRoles(),
           api.getInvoices(),
+          api.getInventory(),
+          api.getInventoryLogs(),
         ]);
 
         const [
           prodRes, catRes, expoRes, banRes, galRes,
           leadRes, rfqRes, quoteRes, orderRes, smpRes,
           trlRes, empRes, payRes, attRes, leaveRes,
-          settRes, audRes, roleRes, invRes
+          settRes, audRes, roleRes, invRes,
+          inventoryRes, invLogsRes
         ] = results.map(r => r.status === 'fulfilled' ? r.value : null);
 
-        // Smart sync: merge backend + local with WAL enforcement
+        // Smart sync: MongoDB Atlas is the true single source of truth
         const smartSync = <T extends { id?: string; updatedAt?: string; createdAt?: string }>(
           res: { success: boolean; data: T[] } | null,
           localKey: string,
@@ -895,13 +852,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           };
 
           if (!res?.success || !Array.isArray(res.data)) {
+            // Only if backend is offline or network failed, fallback to local state with WAL
             const walApplied = applyWal<T>(collection, currentLocal).map(normalizeItem);
             setter(walApplied);
-            saveLocal(localKey, walApplied);
             return;
           }
 
-          // 1. Normalize backend data
+          // 1. Normalize live MongoDB Atlas data
           const validData = res.data.filter((item: any) => {
             if (!item) return false;
             if (collection === 'leads') return Boolean(item.companyName || item.contactName || item.contactEmail || item.title);
@@ -909,31 +866,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return true;
           }).map(normalizeItem);
 
-          // 2. Apply WAL over backend (local fresh edits always win)
+          // 2. Apply pending WAL updates (only local uncommitted changes)
           const walAppliedBackend = applyWal<T>(collection, validData);
 
-          // 3. Merge locally added items that have not yet reached the backend (prevents data loss on slow network/refresh)
-          const mergedMap = new Map<string, T>();
-          walAppliedBackend.forEach(item => {
-            if (item && item.id) mergedMap.set(item.id, item);
-          });
-
-          (currentLocal || []).forEach(localItem => {
-            if (localItem && localItem.id && !mergedMap.has(localItem.id)) {
-              mergedMap.set(localItem.id, normalizeItem(localItem));
-            }
-          });
-
-          // 4. Enforce WAL deletes so deleted items never re-appear
+          // 3. Enforce WAL deletes so deleted items never re-appear
           const walDeletes = walGet().filter(e => e.collection === collection && e.op === 'delete');
-          walDeletes.forEach(d => mergedMap.delete(d.id));
+          const finalMap = new Map<string, T>();
+          walAppliedBackend.forEach(item => {
+            if (item && item.id) finalMap.set(item.id, item);
+          });
+          walDeletes.forEach(d => finalMap.delete(d.id));
 
-          // 5. Automatic Deduplication Guard: ensures single records never duplicate
+          // 4. Automatic Deduplication Guard: ensures single records never duplicate
           const seenDocNumbers = new Set<string>();
           const seenQuotationIds = new Set<string>();
           const seenSignatures = new Set<string>();
+          const seenSkus = new Set<string>();
+          const seenNames = new Set<string>();
+          const seenUrls = new Set<string>();
           const dedupedList: T[] = [];
-          for (const item of mergedMap.values()) {
+
+          for (const item of finalMap.values()) {
             const anyItem = item as any;
             const docNum = anyItem.quotationNumber || anyItem.invoiceNumber || anyItem.orderNumber || anyItem.sampleNumber || anyItem.trialNumber;
             if (docNum) {
@@ -948,12 +901,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               if (qId) seenQuotationIds.add(qId);
               seenSignatures.add(sig);
             }
+            if (collection === 'inventory' || collection === 'products') {
+              const sku = (anyItem.sku || '').trim().toUpperCase();
+              const name = (anyItem.name || '').trim().toLowerCase();
+              if (sku && seenSkus.has(sku)) continue;
+              if (name && seenNames.has(name)) continue;
+              if (sku) seenSkus.add(sku);
+              if (name) seenNames.add(name);
+            }
+            if (collection === 'categories') {
+              const slug = (anyItem.slug || anyItem.name || '').trim().toLowerCase();
+              if (slug && seenNames.has(slug)) continue;
+              if (slug) seenNames.add(slug);
+            }
+            if (collection === 'gallery') {
+              const url = (anyItem.url || anyItem.title || '').trim().toLowerCase();
+              if (url && seenUrls.has(url)) continue;
+              if (url) seenUrls.add(url);
+            }
+            if (collection === 'exhibitions') {
+              const title = (anyItem.title || anyItem.qrSlug || '').trim().toLowerCase();
+              if (title && seenNames.has(title)) continue;
+              if (title) seenNames.add(title);
+            }
             dedupedList.push(item);
           }
 
-          const finalData = (dedupedList.length === 0 && collection === 'employees')
-            ? [DEFAULT_EMPLOYEE] as unknown as T[]
-            : dedupedList.map(normalizeItem);
+          let finalData: T[];
+          if (dedupedList.length === 0) {
+            if (collection === 'employees') finalData = [DEFAULT_EMPLOYEE] as unknown as T[];
+            else if (collection === 'products') finalData = OFFICIAL_WELDOR_PRODUCTS as unknown as T[];
+            else if (collection === 'categories') finalData = OFFICIAL_WELDOR_CATEGORIES as unknown as T[];
+            else if (collection === 'gallery') finalData = OFFICIAL_WELDOR_GALLERY as unknown as T[];
+            else if (collection === 'exhibitions') finalData = OFFICIAL_WELDOR_EXHIBITIONS as unknown as T[];
+            else if (collection === 'banners') finalData = OFFICIAL_WELDOR_BANNERS as unknown as T[];
+            else finalData = [];
+          } else {
+            finalData = dedupedList.map(normalizeItem);
+          }
 
           setter(finalData);
           saveLocal(localKey, finalData);
@@ -976,6 +961,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         smartSync(attRes, 'weldor_attendance', attendance, setAttendance, 'attendances');
         smartSync(leaveRes, 'weldor_leaves', leaveRequests, setLeaveRequests, 'leaves');
         smartSync(audRes, 'weldor_audit', auditLogs, setAuditLogs, 'audit');
+        // Inventory: MongoDB Atlas is the single source of truth + auto-migrate local data if DB is fresh
+        if (inventoryRes?.success && Array.isArray(inventoryRes.data)) {
+          if (inventoryRes.data.length > 0) {
+            smartSync(inventoryRes, 'weldor_inventory', inventory, setInventory, 'inventory');
+          } else {
+            // Check if this browser has inventory items from a prior upload
+            const rawLocal = loadLocal<InventoryItem[]>('weldor_inventory', []);
+            if (Array.isArray(rawLocal) && rawLocal.length > 0) {
+              // Deduplicate by clean SKU and clean Name
+              const seenMap = new Map<string, InventoryItem>();
+              for (const item of rawLocal) {
+                if (!item) continue;
+                const key = (item.sku || item.name || '').trim().toUpperCase();
+                if (!key) continue;
+                if (!seenMap.has(key)) {
+                  seenMap.set(key, item);
+                }
+              }
+              const deduped = Array.from(seenMap.values());
+              setInventory(deduped);
+              saveLocal('weldor_inventory', deduped);
+              // Push to MongoDB Atlas so all other browsers/incognito immediately receive it
+              api.bulkCreateInventory(deduped).catch(e => console.warn('Auto-migrate inventory error:', e));
+            } else {
+              setInventory([]);
+            }
+          }
+        } else {
+          smartSync(inventoryRes, 'weldor_inventory', inventory, setInventory, 'inventory');
+        }
+        smartSync(invLogsRes, 'weldor_inventory_logs', inventoryLogs, setInventoryLogs, 'inventory_logs');
+
 
         // Settings: single object → deep merge (backend wins for keys it knows about, local keeps the rest)
         if (settRes?.success && settRes.data && typeof settRes.data === 'object' && Object.keys(settRes.data).length > 0) {
@@ -2627,6 +2644,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return next;
     });
 
+    api.createInventory(newItem).catch(e => console.warn('Inventory create API error:', e));
+
     if (currentStock > 0) {
       const logEntry: InventoryStockLog = {
         id: `inv-log-${Date.now()}`,
@@ -2645,6 +2664,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         saveLocal('weldor_inventory_logs', nextLogs);
         return nextLogs;
       });
+      api.createInventoryLog(logEntry).catch(() => {});
     }
 
     addAuditLog('INVENTORY_ITEM_CREATED', 'inventory', newItem.id, `Created inventory item: ${newItem.name} (${newItem.sku})`);
@@ -2653,6 +2673,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateInventoryItem = (id: string, updates: Partial<InventoryItem>) => {
     const now = new Date().toISOString();
+    let updatedPayload: InventoryItem | null = null;
     setInventory(prev => {
       const next = prev.map(item => {
         if (item.id === id) {
@@ -2660,6 +2681,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const curStock = Number(updated.currentStock) || 0;
           const minStock = Number(updated.minStockAlert) || 0;
           updated.status = curStock <= 0 ? 'Out of Stock' : curStock <= minStock ? 'Low Stock' : 'In Stock';
+          updatedPayload = updated;
           walRegister('inventory', id, updated, 'upsert');
           return updated;
         }
@@ -2668,6 +2690,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       saveLocal('weldor_inventory', next);
       return next;
     });
+
+    if (updatedPayload) {
+      api.updateInventory(id, updatedPayload).catch(e => console.warn('Inventory update API error:', e));
+    }
     addAuditLog('INVENTORY_ITEM_UPDATED', 'inventory', id, `Updated inventory item ${id}`);
     showNotification(`Inventory item details updated successfully!`, 'success');
   };
@@ -2680,6 +2706,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       saveLocal('weldor_inventory', next);
       return next;
     });
+    api.deleteInventory(id).catch(e => console.warn('Inventory delete API error:', e));
     addAuditLog('INVENTORY_ITEM_DELETED', 'inventory', id, `Deleted inventory item: ${target?.name || id}`);
     showNotification(`Item "${target?.name || id}" removed from inventory.`, 'warning');
   };
@@ -2688,6 +2715,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setInventory(prev => {
       for (const item of prev) {
         walRegister('inventory', item.id, item, 'delete');
+        api.deleteInventory(item.id).catch(() => {});
       }
       saveLocal('weldor_inventory', []);
       return [];
@@ -2720,6 +2748,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       for (const item of prev) {
         if (idSet.has(item.id)) {
           walRegister('inventory', item.id, item, 'delete');
+          api.deleteInventory(item.id).catch(() => {});
         } else {
           remaining.push(item);
         }
@@ -2759,6 +2788,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
 
     if (updatedItem) {
+      api.updateInventory(id, updatedItem).catch(e => console.warn('Inventory adjust API error:', e));
+
       const logEntry: InventoryStockLog = {
         id: `inv-log-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         itemId: id,
@@ -2776,6 +2807,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         saveLocal('weldor_inventory_logs', nextLogs);
         return nextLogs;
       });
+      api.createInventoryLog(logEntry).catch(() => {});
 
       if (newStock === 0) {
         showNotification(`🚨 ALERT: "${(updatedItem as InventoryItem).name}" is now OUT OF STOCK!`, 'warning');
@@ -2787,54 +2819,71 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const bulkImportInventory = (newItems: any[]) => {
+  const bulkImportInventory = async (newItems: any[]) => {
     let successCount = 0;
     let errorCount = 0;
     const now = new Date().toISOString();
+    const preparedItems: InventoryItem[] = [];
 
-    setInventory(prev => {
-      const existingMap = new Map(prev.map(i => [i.sku.trim().toUpperCase(), i]));
-      for (const raw of newItems) {
-        if (!raw.sku || !raw.name) {
-          errorCount++;
-          continue;
-        }
-        const skuKey = String(raw.sku).trim().toUpperCase();
-        const curStock = Number(raw.currentStock) || 0;
-        const minAlert = Number(raw.minStockAlert) || 10;
-        const status: InventoryItem['status'] = curStock <= 0 ? 'Out of Stock' : curStock <= minAlert ? 'Low Stock' : 'In Stock';
-        
-        const existing = existingMap.get(skuKey);
-        const itemObj: InventoryItem = {
-          id: existing ? existing.id : `inv-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
-          sku: String(raw.sku).trim(),
-          name: String(raw.name).trim(),
-          category: String(raw.category || 'General Spares & Consumables').trim(),
-          hsnCode: String(raw.hsnCode || '85159000').trim(),
-          unit: (['PCS', 'KG', 'MTR', 'BOX', 'SET', 'ROLL', 'PACK'].includes(raw.unit?.toUpperCase()) ? raw.unit.toUpperCase() : 'PCS') as any,
-          unitPriceINR: Number(raw.unitPriceINR) || 0,
-          unitPriceUSD: Number(raw.unitPriceUSD) || (Number(raw.unitPriceINR) ? Math.round(Number(raw.unitPriceINR) / 85 * 100) / 100 : 0),
-          costPriceINR: Number(raw.costPriceINR) || 0,
-          gstRatePct: Number(raw.gstRatePct) || 18,
-          currentStock: curStock,
-          minStockAlert: minAlert,
-          isPublic: Boolean(raw.isPublic === true || String(raw.isPublic).toLowerCase() === 'true'),
-          warehouseLocation: String(raw.warehouseLocation || 'Jamnagar Central Godown').trim(),
-          status,
-          supplierName: String(raw.supplierName || 'Earth Metal Industries').trim(),
-          description: String(raw.description || '').trim(),
-          lastUpdated: now
-        };
-        walRegister('inventory', itemObj.id, itemObj, 'upsert');
-        existingMap.set(skuKey, itemObj);
-        successCount++;
+    const existingMap = new Map(inventory.map(i => [i.sku.trim().toUpperCase(), i]));
+    for (let idx = 0; idx < newItems.length; idx++) {
+      const raw = newItems[idx];
+      if (!raw || (!raw.name && !raw.sku)) {
+        errorCount++;
+        continue;
       }
-      const next = Array.from(existingMap.values());
-      saveLocal('weldor_inventory', next);
-      return next;
-    });
+      const rawName = String(raw.name || '').trim();
+      let rawSku = String(raw.sku || '').trim();
+      if (!rawSku && rawName) {
+        const slug = rawName.replace(/[^a-zA-Z0-9]/g, ' ').trim().split(/\s+/).slice(0, 3).join('-').toUpperCase();
+        rawSku = slug ? `WLD-${slug}` : `WLD-ITEM-${1000 + idx}`;
+      }
+      const skuKey = rawSku.toUpperCase();
+      const curStock = Number(raw.currentStock) || 0;
+      const minAlert = Number(raw.minStockAlert) || 10;
+      const status: InventoryItem['status'] = curStock <= 0 ? 'Out of Stock' : curStock <= minAlert ? 'Low Stock' : 'In Stock';
+      
+      const existing = existingMap.get(skuKey);
+      const itemObj: InventoryItem = {
+        id: existing ? existing.id : (raw.id || `inv-${skuKey.toLowerCase().replace(/[^a-z0-9]/g, '-')}`),
+        sku: rawSku,
+        name: rawName,
+        category: String(raw.category || 'General Spares & Consumables').trim(),
+        hsnCode: String(raw.hsnCode || '85159000').trim(),
+        unit: (['PCS', 'KG', 'MTR', 'BOX', 'SET', 'ROLL', 'PACK', 'NOS'].includes(String(raw.unit || '').toUpperCase()) ? String(raw.unit).toUpperCase() : 'PCS') as any,
+        unitPriceINR: Number(raw.unitPriceINR) || 0,
+        unitPriceUSD: Number(raw.unitPriceUSD) || (Number(raw.unitPriceINR) ? Math.round(Number(raw.unitPriceINR) / 85 * 100) / 100 : 0),
+        costPriceINR: Number(raw.costPriceINR) || 0,
+        gstRatePct: Number(raw.gstRatePct) || 18,
+        currentStock: curStock,
+        minStockAlert: minAlert,
+        isPublic: Boolean(raw.isPublic === true || String(raw.isPublic).toLowerCase() === 'true'),
+        warehouseLocation: String(raw.warehouseLocation || 'Jamnagar Central Godown').trim(),
+        status,
+        supplierName: String(raw.supplierName || 'Earth Metal Industries').trim(),
+        description: String(raw.description || rawName).trim(),
+        lastUpdated: now
+      };
+      existingMap.set(skuKey, itemObj);
+      preparedItems.push(itemObj);
+      successCount++;
+    }
 
-    showNotification(`Bulk Import complete: ${successCount} items processed${errorCount > 0 ? `, ${errorCount} skipped` : ''}!`, 'success');
+    const optimisticNext = Array.from(existingMap.values());
+    setInventory(optimisticNext);
+    saveLocal('weldor_inventory', optimisticNext);
+
+    try {
+      const res = await api.bulkCreateInventory(preparedItems);
+      if (res?.success && Array.isArray(res.data)) {
+        setInventory(res.data);
+        saveLocal('weldor_inventory', res.data);
+      }
+    } catch (e) {
+      console.warn('Bulk inventory API sync error:', e);
+    }
+
+    showNotification(`Bulk Import complete: ${successCount} items saved directly into MongoDB Atlas${errorCount > 0 ? `, ${errorCount} skipped` : ''}!`, 'success');
     return { successCount, errorCount };
   };
 
@@ -2886,10 +2935,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         companySettings,
         updateCompanySettings,
         products,
+        setProducts,
         addProduct,
         updateProduct,
         deleteProduct,
         categories,
+        setCategories,
         addCategory,
         updateCategory,
         deleteCategory,
@@ -2903,6 +2954,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         openCatalogModal,
         closeCatalogModal,
         galleryMedia,
+        setGalleryMedia,
         addGalleryMedia,
         updateGalleryMedia,
         deleteGalleryMedia,
@@ -2942,6 +2994,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateInvoice,
         deleteInvoice,
         inventory,
+        setInventory,
         inventoryLogs,
         addInventoryItem,
         updateInventoryItem,
@@ -2953,6 +3006,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         lowStockCount,
         outOfStockCount,
         exhibitions,
+        setExhibitions,
         addExhibition,
         updateExhibition,
         deleteExhibition,

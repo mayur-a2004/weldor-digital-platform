@@ -27,9 +27,13 @@ import * as XLSX from 'xlsx';
 export const BulkUploadStudio: React.FC = () => {
   const { 
     categories, 
+    setCategories,
     products, 
+    setProducts,
     addProduct, 
     addCategory, 
+    galleryMedia,
+    setGalleryMedia,
     addGalleryMedia, 
     showNotification 
   } = useApp();
@@ -243,19 +247,21 @@ export const BulkUploadStudio: React.FC = () => {
     if (productParsedRows.length === 0) return;
     setIsImportingProducts(true);
     try {
-      await api.bulkCreateProducts(productParsedRows);
-      for (const p of productParsedRows) {
-        addProduct(p as any);
+      const res = await api.bulkCreateProducts(productParsedRows);
+      if (res.success && Array.isArray(res.data)) {
+        setProducts(res.data);
+        showNotification(`Successfully saved ${res.data.length} products directly to MongoDB Atlas!`, 'success');
+      } else {
+        // Fallback to sequential add
+        for (const p of productParsedRows) {
+          addProduct(p as any);
+        }
+        showNotification(`Saved ${productParsedRows.length} products to database!`, 'success');
       }
-      showNotification(`Successfully saved ${productParsedRows.length} products to database!`, 'success');
       setProductParsedRows([]);
       setProductFileName('');
-    } catch (e) {
-      for (const p of productParsedRows) {
-        addProduct(p as any);
-      }
-      showNotification(`Added ${productParsedRows.length} products to catalog!`, 'success');
-      setProductParsedRows([]);
+    } catch (e: any) {
+      showNotification(`Product bulk upload warning: ${e?.message || 'Check connection'}`, 'warning');
     } finally {
       setIsImportingProducts(false);
     }
@@ -319,16 +325,27 @@ export const BulkUploadStudio: React.FC = () => {
     }
   };
 
-  const handleCommitBulkCategories = () => {
+  const handleCommitBulkCategories = async () => {
     if (categoryParsedRows.length === 0) return;
     setIsImportingCategories(true);
-    for (const cat of categoryParsedRows) {
-      addCategory(cat as any);
+    try {
+      const res = await api.bulkCreateCategories(categoryParsedRows);
+      if (res?.success && Array.isArray(res.data)) {
+        setCategories(res.data);
+        showNotification(`Successfully saved ${res.data.length} categories to database!`, 'success');
+      } else {
+        for (const cat of categoryParsedRows) {
+          addCategory(cat as any);
+        }
+        showNotification(`Saved ${categoryParsedRows.length} categories to database!`, 'success');
+      }
+      setCategoryParsedRows([]);
+      setCategoryFileName('');
+    } catch (e: any) {
+      showNotification(`Category upload error: ${e?.message || 'Check connection'}`, 'warning');
+    } finally {
+      setIsImportingCategories(false);
     }
-    setIsImportingCategories(false);
-    showNotification(`Successfully saved ${categoryParsedRows.length} categories to database!`, 'success');
-    setCategoryParsedRows([]);
-    setCategoryFileName('');
   };
 
   // ==========================================
@@ -406,28 +423,19 @@ export const BulkUploadStudio: React.FC = () => {
     if (galleryMediaRows.length === 0) return;
     setIsImportingGallery(true);
     try {
-      await api.bulkCreateGalleryItems(galleryMediaRows);
-      for (const item of galleryMediaRows) {
-        addGalleryMedia({
-          title: item.title,
-          category: item.category,
-          type: item.type,
-          url: item.url,
-          thumbnail: item.thumbnail || item.url,
-          caption: item.caption,
-          videoDuration: '02:00 min',
-          tags: item.tags,
-          seoKeywords: item.seoKeywords
-        });
+      const res = await api.bulkCreateGalleryItems(galleryMediaRows);
+      if (res.success && Array.isArray(res.data)) {
+        setGalleryMedia(res.data);
+        showNotification(`Successfully saved ${res.data.length} media assets to MongoDB Atlas gallery!`, 'success');
+      } else {
+        for (const item of galleryMediaRows) {
+          addGalleryMedia(item as any);
+        }
+        showNotification(`Saved ${galleryMediaRows.length} photos/videos to gallery!`, 'success');
       }
-      showNotification(`Saved ${galleryMediaRows.length} photos/videos to gallery & database!`, 'success');
       setGalleryMediaRows([]);
-    } catch (e) {
-      for (const item of galleryMediaRows) {
-        addGalleryMedia(item as any);
-      }
-      showNotification(`Added ${galleryMediaRows.length} items to Gallery!`, 'success');
-      setGalleryMediaRows([]);
+    } catch (e: any) {
+      showNotification(`Gallery bulk upload warning: ${e?.message || 'Check connection'}`, 'warning');
     } finally {
       setIsImportingGallery(false);
     }

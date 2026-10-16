@@ -156,6 +156,18 @@ export const api = {
       return { success: false };
     }
   },
+  bulkCreateCategories: async (categories: any[]) => {
+    try {
+      const res = await fetch(`${API_BASE}/categories/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categories }),
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false, data: categories };
+    }
+  },
 
   // --- Hero Banners ---
   getBanners: async () => {
@@ -1001,5 +1013,81 @@ export const api = {
       return { success: false, error: 'NETWORK_ERROR' };
     }
   },
+
+  // --- Inventory & Stock Logs (Live MongoDB Atlas) ---
+  getInventory: async (params?: { category?: string; search?: string }) => {
+    try {
+      const query = new URLSearchParams(params as Record<string, string>).toString();
+      const res = await fetch(`${API_BASE}/inventory?${query}`);
+      return await res.json();
+    } catch (e) {
+      return { success: false, data: [] };
+    }
+  },
+  createInventory: async (data: any) => {
+    try {
+      const res = await fetch(`${API_BASE}/inventory`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false, data };
+    }
+  },
+  bulkCreateInventory: async (items: any[]) => {
+    try {
+      const res = await fetch(`${API_BASE}/inventory/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items }),
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false, data: items };
+    }
+  },
+  updateInventory: async (id: string, data: any) => {
+    try {
+      const res = await fetch(`${API_BASE}/inventory/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false, data };
+    }
+  },
+  deleteInventory: async (id: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/inventory/${id}`, { method: 'DELETE' });
+      return await res.json();
+    } catch (e) {
+      return { success: false };
+    }
+  },
+  getInventoryLogs: async () => {
+    try {
+      const res = await fetch(`${API_BASE}/inventory/logs`);
+      return await res.json();
+    } catch (e) {
+      return { success: false, data: [] };
+    }
+  },
+  createInventoryLog: async (data: any) => {
+    try {
+      const res = await fetch(`${API_BASE}/inventory/logs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false, data };
+    }
+  },
 };
+
 

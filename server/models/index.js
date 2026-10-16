@@ -35,6 +35,8 @@ export const GalleryModel = mongoose.models.Gallery || mongoose.model('Gallery',
 export const ExhibitionModel = mongoose.models.Exhibition || mongoose.model('Exhibition', createFlexibleSchema(), 'exhibitions');
 export const SettingModel = mongoose.models.Setting || mongoose.model('Setting', createFlexibleSchema(), 'settings');
 export const AuditLogModel = mongoose.models.AuditLog || mongoose.model('AuditLog', createFlexibleSchema(), 'auditlogs');
+export const InventoryModel = mongoose.models.Inventory || mongoose.model('Inventory', createFlexibleSchema(), 'inventory');
+export const InventoryStockLogModel = mongoose.models.InventoryStockLog || mongoose.model('InventoryStockLog', createFlexibleSchema(), 'inventory_logs');
 
 export const COLLECTION_MODELS = {
   products: ProductModel,
@@ -56,4 +58,7 @@ export const COLLECTION_MODELS = {
   exhibitions: ExhibitionModel,
   settings: SettingModel,
   auditlogs: AuditLogModel,
+  inventory: InventoryModel,
+  inventory_logs: InventoryStockLogModel,
 };
+

@@ -1481,23 +1481,23 @@ export const QuotationBuilder: React.FC = () => {
                       <span>⚡ Multi-Product Quick Picker</span>
                     </button>
 
-                    {/* Quick Add from Inventory */}
-                    {inventory.length > 0 && (
+                    {/* Quick Add from Catalog / Inventory */}
+                    {selectableCatalog.length > 0 && (
                       <select
                         onChange={(e) => {
                           const id = e.target.value;
                           if (!id) return;
-                          const inv = inventory.find(i => i.id === id);
-                          if (inv) {
+                          const item = selectableCatalog.find(i => i.id === id);
+                          if (item) {
                             setLineItems(prev => [
                               ...prev,
                               {
-                                productName: inv.name,
-                                sku: inv.sku,
-                                hsnCode: inv.hsnCode || '85159000',
+                                productName: item.name,
+                                sku: item.sku,
+                                hsnCode: item.hsnCode || '85159000',
                                 quantity: 1,
-                                unit: inv.unit || 'PCS',
-                                unitPriceUSD: inv.unitPriceUSD || Math.round(inv.unitPriceINR / 87),
+                                unit: item.unit || 'PCS',
+                                unitPriceUSD: item.unitPriceUSD || (item.unitPriceINR ? Math.round(item.unitPriceINR / 85) : 100),
                                 discountPct: 0
                               }
                             ]);
@@ -1505,14 +1505,27 @@ export const QuotationBuilder: React.FC = () => {
                           e.target.value = '';
                         }}
                         defaultValue=""
-                        className="text-xs font-mono font-bold text-amber-900 bg-amber-50 border border-amber-300 rounded-lg px-2.5 py-1 focus:ring-2 focus:ring-amber-500 cursor-pointer shadow-xs"
+                        className="text-xs font-mono font-bold text-amber-900 bg-amber-50 border border-amber-300 rounded-lg px-2.5 py-1 focus:ring-2 focus:ring-amber-500 cursor-pointer shadow-xs max-w-[220px]"
                       >
-                        <option value="">+ Single Inventory Item...</option>
-                        {inventory.map(inv => (
-                          <option key={inv.id} value={inv.id}>
-                            {inv.currentStock <= 0 ? '🔴 OUT' : inv.currentStock <= inv.minStockAlert ? `🟡 LOW (${inv.currentStock})` : `🟢 (${inv.currentStock})`} {inv.sku} - {inv.name.slice(0, 32)}
-                          </option>
-                        ))}
+                        <option value="">+ Add Product / Item...</option>
+                        {products && products.length > 0 && (
+                          <optgroup label="🏭 Official Catalog Products">
+                            {products.map(p => (
+                              <option key={p.id} value={p.id}>
+                                {p.sku || 'WLD'} - {p.name.slice(0, 30)}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {inventory && inventory.length > 0 && (
+                          <optgroup label="📦 Godown Spares & Inventory">
+                            {inventory.map(inv => (
+                              <option key={inv.id} value={inv.id}>
+                                {inv.currentStock <= 0 ? '🔴' : '🟢'} {inv.sku} - {inv.name.slice(0, 28)} ({inv.currentStock} {inv.unit})
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
                       </select>
                     )}
 
@@ -1547,39 +1560,53 @@ export const QuotationBuilder: React.FC = () => {
                       <div className="sm:col-span-4">
                         <div className="flex items-center justify-between mb-1">
                           <label className="text-[10px] font-mono text-slate-500 block">Product / Part Name</label>
-                          {inventory.length > 0 && (
+                          {selectableCatalog.length > 0 && (
                             <select
                               onChange={e => {
                                 const val = e.target.value;
                                 if (!val) return;
-                                const inv = inventory.find(i => i.id === val);
-                                if (inv) {
+                                const matched = selectableCatalog.find(i => i.id === val);
+                                if (matched) {
                                   setLineItems(prev => {
                                     const updated = [...prev];
                                     updated[idx] = {
                                       ...updated[idx],
-                                      productName: inv.name,
-                                      sku: inv.sku,
-                                      hsnCode: inv.hsnCode || '85159000',
-                                      unit: inv.unit || 'PCS',
-                                      unitPriceUSD: inv.unitPriceUSD || Math.round(inv.unitPriceINR / 87)
+                                      productName: matched.name,
+                                      sku: matched.sku,
+                                      hsnCode: matched.hsnCode || '85159000',
+                                      unit: matched.unit || 'PCS',
+                                      unitPriceUSD: matched.unitPriceUSD || (matched.unitPriceINR ? Math.round(matched.unitPriceINR / 85) : 100)
                                     };
                                     return updated;
                                   });
                                 }
                               }}
                               defaultValue=""
-                              className="text-[9.5px] font-mono font-semibold text-orange-700 bg-orange-50 border border-orange-200 rounded px-1.5 py-0.5 max-w-[170px]"
+                              className="text-[9.5px] font-mono font-semibold text-orange-700 bg-orange-50 border border-orange-200 rounded px-1.5 py-0.5 max-w-[190px]"
                             >
-                              <option value="">Auto-fill item...</option>
-                              {inventory.map(inv => (
-                                <option key={inv.id} value={inv.id}>
-                                  {inv.sku} ({inv.currentStock} {inv.unit})
-                                </option>
-                              ))}
+                              <option value="">Auto-fill product/item...</option>
+                              {products && products.length > 0 && (
+                                <optgroup label="🏭 Catalog Products">
+                                  {products.map(p => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.sku || 'WLD'} - {p.name.slice(0, 24)}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              )}
+                              {inventory && inventory.length > 0 && (
+                                <optgroup label="📦 Inventory Spares">
+                                  {inventory.map(inv => (
+                                    <option key={inv.id} value={inv.id}>
+                                      {inv.sku} ({inv.currentStock} {inv.unit})
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              )}
                             </select>
                           )}
                         </div>
+
                         <input
                           type="text"
                           required

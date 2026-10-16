@@ -15,6 +15,7 @@ import hrmsRouter from './routes/hrms.js';
 import settingsRouter from './routes/settings.js';
 import uploadRouter from './routes/upload.js';
 import authRouter from './routes/auth.js';
+import inventoryRouter from './routes/inventory.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -69,6 +70,8 @@ apiRouter.use('/hrms', hrmsRouter);
 apiRouter.use('/settings', settingsRouter);
 apiRouter.use('/upload', uploadRouter);
 apiRouter.use('/auth', authRouter);
+apiRouter.use('/inventory', inventoryRouter);
+
 
 // Reset / Clear database endpoint
 apiRouter.post('/clear-database', (req, res) => {
