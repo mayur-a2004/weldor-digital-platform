@@ -619,14 +619,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   };
 
-  const [categories, setCategories] = useState<ProductCategory[]>(() => 
-    OFFICIAL_WELDOR_CATEGORIES.map(normalizeCategory)
-  );
-  const [products, setProducts] = useState<Product[]>(() => 
-    OFFICIAL_WELDOR_PRODUCTS.map(normalizeProduct)
-  );
-  const [galleryMedia, setGalleryMedia] = useState<GalleryMedia[]>(() => OFFICIAL_WELDOR_GALLERY);
-  const [banners, setBanners] = useState<HeroBanner[]>(() => OFFICIAL_WELDOR_BANNERS);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [galleryMedia, setGalleryMedia] = useState<GalleryMedia[]>([]);
+  const [banners, setBanners] = useState<HeroBanner[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [compareList, setCompareList] = useState<Product[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState<boolean>(false);
@@ -679,7 +675,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [invoices, setInvoices] = useState<any[]>(() => []);
-  const [exhibitions, setExhibitions] = useState<Exhibition[]>(() => OFFICIAL_WELDOR_EXHIBITIONS);
+  const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
   const [selectedExpoSlug, setSelectedExpoSlug] = useState<string | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => []);
 

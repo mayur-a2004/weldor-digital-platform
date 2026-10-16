@@ -54,34 +54,8 @@ mongoose.connection.on('disconnected', () => {
   console.warn('⚠️  MongoDB disconnected. Using in-memory & file storage fallback.');
 });
 
-// Auto-seed collections from bundled JSON files into MongoDB
-const autoSeedFromLocalData = async () => {
-  try {
-    const ALLOWED_SEED_COLLECTIONS = ['categories', 'roles', 'settings', 'products', 'gallery', 'exhibitions', 'banners'];
-    for (const [key, Model] of Object.entries(COLLECTION_MODELS)) {
-      if (!ALLOWED_SEED_COLLECTIONS.includes(key)) continue;
-      const count = await Model.countDocuments();
-      if (count === 0) {
-        const filePath = path.join(BUNDLED_DATA_DIR, `${key}.json`);
-        if (fs.existsSync(filePath)) {
-          const content = fs.readFileSync(filePath, 'utf-8');
-          if (content && content.trim()) {
-            const data = JSON.parse(content);
-            if (Array.isArray(data) && data.length > 0) {
-              await Model.insertMany(data, { ordered: false }).catch(() => {});
-              console.log(`🌱 Auto-seeded ${data.length} records into MongoDB collection: ${key}`);
-            } else if (data && typeof data === 'object' && Object.keys(data).length > 0) {
-              await Model.create({ id: `${key}-main`, ...data }).catch(() => {});
-              console.log(`🌱 Auto-seeded settings document into MongoDB: ${key}`);
-            }
-          }
-        }
-      }
-    }
-  } catch (e) {
-    console.warn('Auto-seed check complete:', e.message);
-  }
-};
+// Auto-seed disabled: MongoDB Atlas is authoritative and user deletions must stay deleted
+const autoSeedFromLocalData = async () => {};
 
 // Start initial connection attempt
 connectMongo();
