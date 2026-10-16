@@ -888,6 +888,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     fetchBackendData();
+
+    // 1. Instant Tab-Switch Sync: As soon as user clicks back to this window/tab, sync immediately with MongoDB!
+    const onFocus = () => {
+      fetchBackendData();
+    };
+    window.addEventListener('focus', onFocus);
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchBackendData();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    // 2. Real-time Background Polling: syncs with MongoDB Atlas every 4 seconds
+    // so changes in Incognito or external browsers appear on all open windows automatically!
+    const pollInterval = setInterval(() => {
+      fetchBackendData();
+    }, 4000);
+
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+      clearInterval(pollInterval);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1016,7 +1041,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addAuditLog = (action: string, module: string, targetId: string, details: string) => {
     const newLog: AuditLog = {
-      id: `aud-${Date.now()}`,
+      id: `aud-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       timestamp: new Date().toISOString(),
       userName: currentEmployee.name,
       userRole: currentRole.name,
