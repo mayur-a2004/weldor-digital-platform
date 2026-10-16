@@ -788,11 +788,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
             if (collection === 'inventory' || collection === 'products') {
               const sku = (anyItem.sku || '').trim().toUpperCase();
-              const name = (anyItem.name || '').trim().toLowerCase();
               if (sku && seenSkus.has(sku)) continue;
-              if (name && seenNames.has(name)) continue;
               if (sku) seenSkus.add(sku);
-              if (name) seenNames.add(name);
             }
             if (collection === 'categories') {
               const slug = (anyItem.slug || anyItem.name || '').trim().toLowerCase();
