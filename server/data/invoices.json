@@ -1,1 +1,87 @@
-[]
+[
+  {
+    "id": "inv-1792139295428",
+    "createdAt": "2026-10-16T08:28:15.428Z",
+    "updatedAt": "2026-10-16T08:41:32.819Z",
+    "invoiceNumber": "WEL-INV-2026-2554",
+    "orderId": "ord-1792139275456",
+    "orderNumber": "WEL-ORD-2026-5208",
+    "quotationRef": "WEL-ORD-2026-5208",
+    "poNumber": "PO-20265208",
+    "poDate": "2026-10-16",
+    "companyName": "kevin",
+    "contactPerson": "ffff",
+    "seller": {
+      "companyName": "Earth Metal Industries",
+      "address": "588, GIDC, PHASE-2, DARED, JAMNAGAR, GUJARAT-361004. INDIA",
+      "gstin": "24AGGPL9330C1ZP",
+      "pan": "AGGPL9330C",
+      "state": "Gujarat",
+      "stateCode": "",
+      "email": "brm@weldorindustries.com",
+      "phone": "+91 87800 98088",
+      "bankName": "BANK OF INDIA",
+      "accountNo": "325130110000097",
+      "ifscCode": "BKID0003251",
+      "branch": "HOSPITAL ROAD JAMNAGAR"
+    },
+    "buyer": {
+      "companyName": "kevin",
+      "contactName": "ffff",
+      "billingAddress": "Industrial Area, India",
+      "shippingAddress": "Factory Gate, India",
+      "gstin": "27AAACE1234P1ZV",
+      "pan": "",
+      "state": "Maharashtra",
+      "stateCode": "27",
+      "email": "procurement@client.com",
+      "phone": "+91 98250 99881"
+    },
+    "taxType": "INTER_STATE",
+    "gstRatePct": 18,
+    "agent": {
+      "hasAgent": false,
+      "agentName": "",
+      "agentPhone": "",
+      "commissionType": "PERCENT",
+      "commissionRate": 0,
+      "commissionAmountUSD": 0
+    },
+    "items": [
+      {
+        "id": "item-1792139295428-0",
+        "description": "MIG Copper Gas Diffuser & Tip Holder",
+        "sku": "WLD-MIG-DIF-COP",
+        "hsnCode": "84123100",
+        "quantity": 1,
+        "unit": "PCS",
+        "unitPriceUSD": 4,
+        "discountPct": 0,
+        "taxableAmountUSD": 4,
+        "cgstAmountUSD": 0,
+        "sgstAmountUSD": 0,
+        "igstAmountUSD": 1,
+        "totalUSD": 5
+      }
+    ],
+    "paymentTerms": "100% Advance against Proforma, before Dispatch",
+    "deliveryTerms": "Ex-Factory Jamnagar / Ready Dispatch within 7-10 Business Days",
+    "dispatchThrough": "Industrial Road Logistics",
+    "destination": "Client Factory Gate",
+    "subtotalUSD": 4,
+    "totalDiscountUSD": 0,
+    "taxableTotalUSD": 21,
+    "cgstTotalUSD": 0,
+    "sgstTotalUSD": 0,
+    "igstTotalUSD": 4,
+    "totalTaxUSD": 4,
+    "freightCostUSD": 0,
+    "packagingCostUSD": 17,
+    "grandTotalUSD": 25,
+    "grandTotalINR": 25,
+    "paymentStatus": "Pending Payment",
+    "status": "Pending Payment",
+    "issueDate": "2026-10-16",
+    "dueDate": "2026-11-15"
+  }
+]

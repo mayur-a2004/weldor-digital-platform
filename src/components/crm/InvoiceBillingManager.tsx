@@ -1913,24 +1913,21 @@ export const InvoiceBillingManager: React.FC = () => {
               <tbody>
                 {(activePrintInvoice.items || []).map((item, i) => {
                   const itemRate = Math.round(item.unitPriceUSD || 0);
-                  const itemTaxable = (item.taxableAmountUSD && item.taxableAmountUSD > 0)
-                    ? Math.round(item.taxableAmountUSD)
-                    : Math.round(item.quantity * itemRate * (1 - (item.discountPct || 0) / 100));
-                  const itemTax = ((item.cgstAmountUSD || 0) + (item.sgstAmountUSD || 0) + (item.igstAmountUSD || 0)) > 0
-                    ? Math.round((item.cgstAmountUSD || 0) + (item.sgstAmountUSD || 0) + (item.igstAmountUSD || 0))
-                    : Math.round(itemTaxable * ((activePrintInvoice.gstRatePct ?? 18) / 100));
-                  const itemTotal = (item.totalUSD && item.totalUSD > 0)
-                    ? Math.round(item.totalUSD)
-                    : itemTaxable + itemTax;
+                  const qty = Number(item.quantity || 1);
+                  const disc = Number(item.discountPct || 0);
+                  // Item's actual taxable value = Qty * Rate * (1 - Disc)
+                  const itemTaxable = Math.round(qty * itemRate * (1 - disc / 100));
+                  const itemTax = Math.round(itemTaxable * ((activePrintInvoice.gstRatePct ?? 18) / 100));
+                  const itemTotal = itemTaxable + itemTax;
 
                   return (
                     <tr key={i} className="hover:bg-slate-50">
                       <td className="p-2 border border-slate-300 text-center font-mono">{i + 1}</td>
                       <td className="p-2 border border-slate-300 font-bold text-slate-900">{item.description || (item as any).productName || 'Item'} ({item.sku || 'N/A'})</td>
                       <td className="p-2 border border-slate-300 font-mono text-slate-600">{item.hsnCode || '8481.80.30'}</td>
-                      <td className="p-2 border border-slate-300 text-right font-mono">{item.quantity} {item.unit || 'PCS'}</td>
+                      <td className="p-2 border border-slate-300 text-right font-mono">{qty} {item.unit || 'PCS'}</td>
                       <td className="p-2 border border-slate-300 text-right font-mono">₹{itemRate.toLocaleString('en-IN')}</td>
-                      <td className="p-2 border border-slate-300 text-right font-mono text-orange-700">{item.discountPct || 0}%</td>
+                      <td className="p-2 border border-slate-300 text-right font-mono text-orange-700">{disc}%</td>
                       <td className="p-2 border border-slate-300 text-right font-mono font-bold">₹{itemTaxable.toLocaleString('en-IN')}</td>
                       <td className="p-2 border border-slate-300 text-right font-mono">₹{itemTax.toLocaleString('en-IN')}</td>
                       <td className="p-2 border border-slate-300 text-right font-mono font-black text-slate-900">₹{itemTotal.toLocaleString('en-IN')}</td>
@@ -1967,57 +1964,72 @@ export const InvoiceBillingManager: React.FC = () => {
               {/* Totals Breakdown */}
               <div className="flex justify-end">
                 {(() => {
-                  const viewGrandTotal = activePrintInvoice.grandTotalINR || Math.round(activePrintInvoice.grandTotalUSD || 0);
-                  const viewTaxable = (activePrintInvoice.taxableTotalUSD && activePrintInvoice.taxableTotalUSD > 0)
-                    ? Math.round(activePrintInvoice.taxableTotalUSD)
-                    : (activePrintInvoice.subtotalUSD && activePrintInvoice.subtotalUSD > 0
-                        ? Math.round(activePrintInvoice.subtotalUSD - (activePrintInvoice.totalDiscountUSD || 0))
-                        : Math.round(viewGrandTotal / (1 + (activePrintInvoice.gstRatePct ?? 18) / 100)));
-                  const viewTax = (activePrintInvoice.totalTaxUSD && activePrintInvoice.totalTaxUSD > 0)
-                    ? Math.round(activePrintInvoice.totalTaxUSD)
-                    : Math.max(0, viewGrandTotal - viewTaxable);
-                  const viewSubtotal = (activePrintInvoice.subtotalUSD && activePrintInvoice.subtotalUSD > 0)
-                    ? Math.round(activePrintInvoice.subtotalUSD)
-                    : viewTaxable;
+                  const gstRate = activePrintInvoice.gstRatePct ?? 18;
+                  const packagingCharge = Math.round(activePrintInvoice.packagingCostUSD || (activePrintInvoice as any).packagingCostINR || (activePrintInvoice as any).packagingCost || 0);
+                  const freightCharge = Math.round(activePrintInvoice.freightCostUSD || (activePrintInvoice as any).freightCostINR || (activePrintInvoice as any).freightCost || 0);
+
+                  // 1. Calculate items taxable sum strictly from items (Qty * Rate * (1 - Disc))
+                  const itemsTaxableSum = (activePrintInvoice.items || []).reduce((acc, item) => {
+                    const rate = Math.round(item.unitPriceUSD || 0);
+                    const qty = Number(item.quantity || 1);
+                    const disc = Number(item.discountPct || 0);
+                    const genuineTaxable = Math.round(qty * rate * (1 - disc / 100));
+                    return acc + genuineTaxable;
+                  }, 0);
+
+                  const viewDiscount = Math.round(activePrintInvoice.totalDiscountUSD || 0);
+                  const totalTaxable = Math.max(0, itemsTaxableSum - viewDiscount) + packagingCharge + freightCharge;
+                  const totalTax = Math.round(totalTaxable * (gstRate / 100));
+                  const finalGrandTotal = totalTaxable + totalTax;
 
                   return (
-                    <div className="w-full sm:w-80 space-y-1 text-xs font-mono text-right border border-slate-200 p-3 rounded-xl bg-slate-50">
-                      <div className="flex justify-between">
-                        <span>Subtotal:</span>
-                        <span className="font-bold">₹{viewSubtotal.toLocaleString('en-IN')}</span>
+                    <div className="w-full sm:w-80 space-y-1.5 text-xs font-mono text-right border border-slate-200 p-3.5 rounded-xl bg-slate-50">
+                      <div className="flex justify-between text-slate-700">
+                        <span>Items Subtotal:</span>
+                        <span className="font-bold text-slate-900">₹{itemsTaxableSum.toLocaleString('en-IN')}</span>
                       </div>
-                      <div className="flex justify-between text-orange-700 font-bold">
-                        <span>Discount Total:</span>
-                        <span>-₹{Math.round(activePrintInvoice.totalDiscountUSD || 0).toLocaleString('en-IN')}</span>
-                      </div>
-                      <div className="flex justify-between border-t border-slate-200 pt-1 font-bold">
-                        <span>Taxable Value:</span>
-                        <span>₹{viewTaxable.toLocaleString('en-IN')}</span>
+                      {viewDiscount > 0 && (
+                        <div className="flex justify-between text-orange-700 font-bold">
+                          <span>Discount Total:</span>
+                          <span>-₹{viewDiscount.toLocaleString('en-IN')}</span>
+                        </div>
+                      )}
+                      {packagingCharge > 0 && (
+                        <div className="flex justify-between text-slate-700">
+                          <span>Packaging &amp; Handling:</span>
+                          <span className="font-bold text-slate-900">₹{packagingCharge.toLocaleString('en-IN')}</span>
+                        </div>
+                      )}
+                      {freightCharge > 0 && (
+                        <div className="flex justify-between text-slate-700">
+                          <span>Freight &amp; Shipping:</span>
+                          <span className="font-bold text-slate-900">₹{freightCharge.toLocaleString('en-IN')}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between border-t border-slate-200 pt-1.5 font-bold text-slate-900">
+                        <span>Total Taxable Value:</span>
+                        <span>₹{totalTaxable.toLocaleString('en-IN')}</span>
                       </div>
                       {activePrintInvoice.taxType === 'INTRA_STATE' ? (
                         <>
                           <div className="flex justify-between text-slate-600">
-                            <span>CGST ({((activePrintInvoice.gstRatePct ?? 18) / 2)}%):</span>
-                            <span>₹{Math.round(viewTax / 2).toLocaleString('en-IN')}</span>
+                            <span>CGST ({(gstRate / 2)}%):</span>
+                            <span>₹{Math.round(totalTax / 2).toLocaleString('en-IN')}</span>
                           </div>
                           <div className="flex justify-between text-slate-600">
-                            <span>SGST ({((activePrintInvoice.gstRatePct ?? 18) / 2)}%):</span>
-                            <span>₹{Math.round(viewTax / 2).toLocaleString('en-IN')}</span>
+                            <span>SGST ({(gstRate / 2)}%):</span>
+                            <span>₹{Math.round(totalTax / 2).toLocaleString('en-IN')}</span>
                           </div>
                         </>
                       ) : (
                         <div className="flex justify-between text-slate-600">
-                          <span>IGST ({activePrintInvoice.gstRatePct ?? 18}%):</span>
-                          <span>₹{viewTax.toLocaleString('en-IN')}</span>
+                          <span>IGST ({gstRate}%):</span>
+                          <span>₹{totalTax.toLocaleString('en-IN')}</span>
                         </div>
                       )}
-                      <div className="flex justify-between text-slate-600">
-                        <span>Freight &amp; Forwarding:</span>
-                        <span>₹{Math.round((activePrintInvoice.freightCostUSD || 0) + (activePrintInvoice.packagingCostUSD || 0)).toLocaleString('en-IN')}</span>
-                      </div>
                       <div className="flex justify-between pt-2 border-t-2 border-slate-900 font-black text-base text-orange-700">
                         <span>Grand Total (INR):</span>
-                        <span>₹{viewGrandTotal.toLocaleString('en-IN')}</span>
+                        <span>₹{finalGrandTotal.toLocaleString('en-IN')}</span>
                       </div>
                     </div>
                   );

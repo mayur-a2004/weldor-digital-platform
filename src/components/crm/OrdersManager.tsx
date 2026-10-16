@@ -59,9 +59,57 @@ export const OrdersManager: React.FC = () => {
     setIsGeneratingInvoice(true);
     try {
       const invNumber = `WEL-INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-      const totalUSD = ord.totalValueUSD || 15000;
-      const taxableUSD = Math.round(totalUSD / 1.18);
-      const taxUSD = totalUSD - taxableUSD;
+      
+      const packagingCost = Number(ord.packagingCostUSD || (ord as any).packagingCostINR || (ord as any).packagingCost || 0);
+      const freightCost = Number(ord.freightCostUSD || (ord as any).freightCostINR || (ord as any).freightCost || 0);
+      const gstRate = 18;
+
+      // Item calculations strictly in pure INR
+      const invoiceItems = (ord.items && ord.items.length > 0) ? ord.items.map((it: any, i: number) => {
+        const qty = Number(it.quantity) || 1;
+        const rate = Number(it.unitPriceUSD || (it as any).unitPriceINR || (it as any).unitPrice || 0);
+        const discPct = Number(it.discountPct || 0);
+        const itemTaxable = Math.round(qty * rate * (1 - discPct / 100));
+        const itemTax = Math.round(itemTaxable * (gstRate / 100));
+        const itemTotal = itemTaxable + itemTax;
+
+        return {
+          id: `item-${Date.now()}-${i}`,
+          description: it.productName || it.description || `Industrial Component #${i + 1}`,
+          sku: it.sku || `WLD-ORD-${i + 1}`,
+          hsnCode: it.hsnCode || '8481.80.30',
+          quantity: qty,
+          unit: it.unit || 'PCS',
+          unitPriceUSD: rate,
+          discountPct: discPct,
+          taxableAmountUSD: itemTaxable,
+          cgstAmountUSD: 0,
+          sgstAmountUSD: 0,
+          igstAmountUSD: itemTax,
+          totalUSD: itemTotal
+        };
+      }) : [
+        {
+          id: `item-${Date.now()}`,
+          description: `Industrial Precision Components Order ${ord.orderNumber}`,
+          sku: 'WLD-ORD-01',
+          hsnCode: '8481.80.30',
+          quantity: 1,
+          unit: 'SET',
+          unitPriceUSD: Math.round(ord.totalValueUSD || 0),
+          discountPct: 0,
+          taxableAmountUSD: Math.round(ord.totalValueUSD || 0),
+          cgstAmountUSD: 0,
+          sgstAmountUSD: 0,
+          igstAmountUSD: Math.round((ord.totalValueUSD || 0) * 0.18),
+          totalUSD: Math.round((ord.totalValueUSD || 0) * 1.18)
+        }
+      ];
+
+      const itemsTaxableSum = invoiceItems.reduce((acc, it) => acc + it.taxableAmountUSD, 0);
+      const totalTaxable = itemsTaxableSum + packagingCost + freightCost;
+      const totalTax = Math.round(totalTaxable * (gstRate / 100));
+      const grandTotal = totalTaxable + totalTax;
 
       const newInvoice: any = {
         id: `inv-${Date.now()}`,
@@ -111,7 +159,7 @@ export const OrdersManager: React.FC = () => {
           phone: (ord as any).phone || '+91 98250 99881'
         },
         taxType: 'INTER_STATE',
-        gstRatePct: 18,
+        gstRatePct: gstRate,
         agent: {
           hasAgent: false,
           agentName: '',
@@ -120,52 +168,22 @@ export const OrdersManager: React.FC = () => {
           commissionRate: 0,
           commissionAmountUSD: 0
         },
-        items: ord.items && ord.items.length > 0 ? ord.items.map((it: any, i: number) => ({
-          id: `item-${Date.now()}-${i}`,
-          description: it.productName || it.description || `Industrial Component #${i + 1}`,
-          sku: it.sku || `WLD-ORD-${i + 1}`,
-          hsnCode: it.hsnCode || '8481.80.30',
-          quantity: it.quantity || 1,
-          unit: it.unit || 'PCS',
-          unitPriceUSD: it.unitPriceUSD || taxableUSD,
-          discountPct: it.discountPct || 0,
-          taxableAmountUSD: it.taxableAmountUSD || taxableUSD,
-          cgstAmountUSD: 0,
-          sgstAmountUSD: 0,
-          igstAmountUSD: taxUSD,
-          totalUSD: totalUSD
-        })) : [
-          {
-            id: `item-${Date.now()}`,
-            description: `Industrial Precision Components Order ${ord.orderNumber}`,
-            sku: 'WLD-ORD-01',
-            hsnCode: '8481.80.30',
-            quantity: 1,
-            unit: 'SET',
-            unitPriceUSD: taxableUSD,
-            discountPct: 0,
-            taxableAmountUSD: taxableUSD,
-            cgstAmountUSD: 0,
-            sgstAmountUSD: 0,
-            igstAmountUSD: taxUSD,
-            totalUSD: totalUSD
-          }
-        ],
+        items: invoiceItems,
         paymentTerms: companySettings?.defaultTerms?.paymentTerms || '30% Advance, 70% against Shipping Documents',
         deliveryTerms: companySettings?.defaultTerms?.deliveryTerms || 'Ex-Factory Weldor Plant / FOB',
         dispatchThrough: 'Industrial Road Logistics',
         destination: 'Client Factory Gate',
-        subtotalUSD: taxableUSD,
+        subtotalUSD: itemsTaxableSum,
         totalDiscountUSD: 0,
-        taxableTotalUSD: taxableUSD,
+        taxableTotalUSD: totalTaxable,
         cgstTotalUSD: 0,
         sgstTotalUSD: 0,
-        igstTotalUSD: taxUSD,
-        totalTaxUSD: taxUSD,
-        freightCostUSD: 0,
-        packagingCostUSD: 0,
-        grandTotalUSD: totalUSD,
-        grandTotalINR: Math.round(totalUSD * 85),
+        igstTotalUSD: totalTax,
+        totalTaxUSD: totalTax,
+        freightCostUSD: freightCost,
+        packagingCostUSD: packagingCost,
+        grandTotalUSD: grandTotal,
+        grandTotalINR: grandTotal,
         paymentStatus: 'Pending Payment',
         status: 'Pending Payment',
         issueDate: new Date().toISOString().slice(0, 10),
