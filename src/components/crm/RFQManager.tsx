@@ -54,12 +54,12 @@ export const RFQManager: React.FC = () => {
     country: 'India',
     categoryName: 'Pneumatic Automation',
     requirementType: 'Custom OEM Drawing' as const,
-    targetQuantity: 200,
+    targetQuantity: 0,
     targetUnit: 'PCS' as const,
-    materialPreference: 'SS304 / Viton Seals',
-    pressureRating: '16 Bar Operating',
+    materialPreference: '',
+    pressureRating: '',
     drawingFileName: '',
-    technicalNotes: 'High-speed automated packaging line requirement.'
+    technicalNotes: ''
   });
 
   const filteredRfqs = (rfqs || []).filter(r => {
@@ -108,12 +108,12 @@ export const RFQManager: React.FC = () => {
       country: 'India',
       categoryName: 'Pneumatic Automation',
       requirementType: 'Custom OEM Drawing',
-      targetQuantity: 200,
+      targetQuantity: 0,
       targetUnit: 'PCS',
-      materialPreference: 'SS304 / Viton Seals',
-      pressureRating: '16 Bar Operating',
+      materialPreference: '',
+      pressureRating: '',
       drawingFileName: '',
-      technicalNotes: 'High-speed automated packaging line requirement.'
+      technicalNotes: ''
     });
   };
 
@@ -566,8 +566,10 @@ export const RFQManager: React.FC = () => {
                   <label className="font-bold text-slate-700 font-mono">Target Volume (Qty)</label>
                   <input 
                     type="number"
-                    value={newRfqData.targetQuantity}
-                    onChange={e => setNewRfqData({ ...newRfqData, targetQuantity: Number(e.target.value) })}
+                    min="0"
+                    placeholder="0"
+                    value={newRfqData.targetQuantity || ''}
+                    onChange={e => setNewRfqData({ ...newRfqData, targetQuantity: e.target.value === '' ? 0 : Number(e.target.value) })}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 font-mono font-bold"
                   />
                 </div>

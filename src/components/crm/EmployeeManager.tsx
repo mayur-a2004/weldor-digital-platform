@@ -107,19 +107,19 @@ export const EmployeeManager: React.FC = () => {
 
   // Default Form state
   const defaultFormData: Omit<Employee, 'id'> = {
-    employeeId: `WEL-${Math.floor(1000 + Math.random() * 9000)}`,
-    employeeCode: `WLD-${String(employees.length + 1).padStart(3, '0')}`,
+    employeeId: '',
+    employeeCode: '',
     name: '',
     fatherName: '',
-    dateOfBirth: '1995-01-01',
-    dateOfJoining: new Date().toISOString().split('T')[0],
+    dateOfBirth: '',
+    dateOfJoining: '',
     gender: 'Male',
     employmentType: 'Full-Time',
     designation: '',
     department: 'Sales & BD',
     roleId: roles[2]?.id || 'role-sales-exec',
     roleName: (roles[2]?.name as RoleName) || 'Sales Executive',
-    reportingManager: currentUser?.name || 'Super Admin',
+    reportingManager: '',
     email: '',
     phone: '',
     panNumber: '',
@@ -127,26 +127,26 @@ export const EmployeeManager: React.FC = () => {
     uanNumber: '',
     pfNumber: '',
     bankDetails: {
-      bankName: 'HDFC Bank Ltd',
+      bankName: '',
       accountNumber: '',
       ifscCode: '',
-      branch: 'Ahmedabad',
+      branch: '',
       accountType: 'Salary',
     },
     salaryStructure: {
-      baseSalary: 30000,
-      hra: 12000,
-      da: 6000,
-      specialAllowance: 6000,
-      conveyanceAllowance: 3000,
-      medicalAllowance: 3000,
-      pfDeductionEmployee: 3600,
-      pfDeductionEmployer: 3600,
-      professionalTax: 200,
-      tdsTax: 1500,
-      grossMonthlySalary: 60000,
-      netMonthlySalary: 54700,
-      annualCTC: 763200,
+      baseSalary: 0,
+      hra: 0,
+      da: 0,
+      specialAllowance: 0,
+      conveyanceAllowance: 0,
+      medicalAllowance: 0,
+      pfDeductionEmployee: 0,
+      pfDeductionEmployer: 0,
+      professionalTax: 0,
+      tdsTax: 0,
+      grossMonthlySalary: 0,
+      netMonthlySalary: 0,
+      annualCTC: 0,
     },
     territory: ['India'],
     productCategories: ['Pneumatic Components'],
@@ -155,16 +155,16 @@ export const EmployeeManager: React.FC = () => {
     avatarUrl: '',
     address: {
       currentAddress: '',
-      city: 'Ahmedabad',
-      state: 'Gujarat',
-      pincode: '380015',
+      city: '',
+      state: '',
+      pincode: '',
     },
     emergencyContact: {
       name: '',
       relation: 'Parent / Spouse',
       phone: '',
     },
-    password: 'Weldor@2026',
+    password: '',
   };
 
   const [formData, setFormData] = useState<Omit<Employee, 'id'>>(defaultFormData);
@@ -325,9 +325,9 @@ export const EmployeeManager: React.FC = () => {
   const openAddModal = () => {
     setFormData({
       ...defaultFormData,
-      employeeId: `WEL-${Math.floor(1000 + Math.random() * 9000)}`,
-      employeeCode: `WLD-${String(employees.length + 1).padStart(3, '0')}`,
-      reportingManager: currentUser?.name || 'Super Admin',
+      employeeId: '',
+      employeeCode: '',
+      reportingManager: '',
     });
     setFormTab('personal');
     setEditingEmployee(null);
@@ -1276,6 +1276,7 @@ export const EmployeeManager: React.FC = () => {
                       <label className="block font-bold text-slate-700 mb-1">Employee Code</label>
                       <input
                         type="text"
+                        placeholder="Enter Employee Code"
                         value={formData.employeeCode || formData.employeeId}
                         onChange={e => setFormData(prev => ({ ...prev, employeeCode: e.target.value }))}
                         className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-orange-500 font-bold"
@@ -1379,7 +1380,8 @@ export const EmployeeManager: React.FC = () => {
                       <label className="block font-bold text-slate-700 mb-1">Reporting Manager / Signatory</label>
                       <input
                         type="text"
-                        value={formData.reportingManager || currentUser?.name || 'Super Admin'}
+                        placeholder="e.g. Super Admin / Operations Head"
+                        value={formData.reportingManager}
                         onChange={e => setFormData(prev => ({ ...prev, reportingManager: e.target.value }))}
                         className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500 font-medium"
                       />

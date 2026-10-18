@@ -83,18 +83,18 @@ export const InventoryManager: React.FC = () => {
   const initialFormState: Omit<InventoryItem, 'id' | 'lastUpdated' | 'status'> = {
     sku: '',
     name: '',
-    category: 'MIG Consumables & Spares',
-    hsnCode: '85159000',
+    category: '',
+    hsnCode: '',
     unit: 'PCS',
-    unitPriceINR: 150,
-    unitPriceUSD: 1.80,
-    costPriceINR: 90,
+    unitPriceINR: 0,
+    unitPriceUSD: 0,
+    costPriceINR: 0,
     gstRatePct: 18,
-    currentStock: 50,
-    minStockAlert: 15,
+    currentStock: 0,
+    minStockAlert: 0,
     isPublic: false,
-    warehouseLocation: 'Jamnagar Plant Godown A - Rack B1',
-    supplierName: 'Earth Metal Industries In-House',
+    warehouseLocation: '',
+    supplierName: '',
     description: ''
   };
 
@@ -224,7 +224,7 @@ export const InventoryManager: React.FC = () => {
     setEditingItem(null);
     setFormData({
       ...initialFormState,
-      sku: `WLD-${Math.floor(100 + Math.random() * 900)}-${Date.now().toString().slice(-4)}`
+      sku: ''
     });
     setIsAddEditModalOpen(true);
   };
@@ -255,15 +255,21 @@ export const InventoryManager: React.FC = () => {
   // Save Add/Edit
   const handleSaveItem = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.sku.trim() || !formData.name.trim()) {
-      showNotification('SKU and Product Name are mandatory!', 'warning');
+    if (!formData.name.trim()) {
+      showNotification('Product Name is mandatory!', 'warning');
       return;
     }
 
+    const cleanSku = formData.sku.trim();
+    const itemData = {
+      ...formData,
+      sku: cleanSku || (formData.name.replace(/[^a-zA-Z0-9]/g, ' ').trim().split(/\s+/).slice(0, 3).join('-').toUpperCase() || `ITEM-${Date.now().toString().slice(-4)}`)
+    };
+
     if (editingItem) {
-      updateInventoryItem(editingItem.id, formData);
+      updateInventoryItem(editingItem.id, itemData);
     } else {
-      addInventoryItem(formData);
+      addInventoryItem(itemData);
     }
     setIsAddEditModalOpen(false);
   };
@@ -353,11 +359,11 @@ export const InventoryManager: React.FC = () => {
   const handleDownloadSampleCSV = () => {
     const csvContent = '\uFEFF' + [
       'sku,name,category,hsnCode,unit,unitPriceINR,unitPriceUSD,costPriceINR,gstRatePct,currentStock,minStockAlert,isPublic,warehouseLocation,supplierName,description',
-      'WLD-TIP-1.0-M6,"MIG Contact Tip 1.0mm CuCrZr M6","MIG Consumables & Spares",85159000,PCS,45,0.55,25,18,500,100,FALSE,"Jamnagar Godown A - Rack B12","Earth Metal Industries In-House","Heavy-duty copper contact tip for MIG torches"',
-      'WLD-NOZ-250A,"MIG Gas Nozzle 250A Conical","MIG Consumables & Spares",85159000,PCS,180,2.15,110,18,40,15,FALSE,"Jamnagar Godown A - Bin C02","Earth Metal Industries Pressings","Conical gas shielding nozzle"',
-      'WLD-VALV-12V,"Direct Solenoid Valve 12V DC 1/8""","Pneumatic Automation Valves",84818030,PCS,1250,15.00,800,18,12,5,FALSE,"Automation Assembly Rack E1","Earth Pneumatics Sub-Assembly","Compact pilot-operated solenoid valve"',
-      'WLD-FT-8MM,"Brass Male Push-In 8mm OD x 1/8"" BSPT","Brass Pneumatic Fittings",74122019,PCS,58,0.70,32,18,1200,200,TRUE,"Jamnagar Brass Yard Bay 2","Earth Metal Jamnagar Foundry","Nickel-plated precision brass push-in fitting"',
-      'WLD-ROD-HEX20,"Brass Hex Rod CW617N 20mm (3 Mtr)","Raw Materials & Extrusions",74072110,KG,690,8.25,590,18,25,10,FALSE,"Raw Yard Bay 1","Earth Extrusions Plant","High-machinability forging grade brass rod"'
+      'TIP-1.0-M6,"MIG Contact Tip 1.0mm CuCrZr M6","MIG Consumables & Spares",85159000,PCS,45,0.55,25,18,500,100,FALSE,"Jamnagar Godown A - Rack B12","Earth Metal Industries In-House","Heavy-duty copper contact tip for MIG torches"',
+      'NOZ-250A,"MIG Gas Nozzle 250A Conical","MIG Consumables & Spares",85159000,PCS,180,2.15,110,18,40,15,FALSE,"Jamnagar Godown A - Bin C02","Earth Metal Industries Pressings","Conical gas shielding nozzle"',
+      'VALV-12V,"Direct Solenoid Valve 12V DC 1/8""","Pneumatic Automation Valves",84818030,PCS,1250,15.00,800,18,12,5,FALSE,"Automation Assembly Rack E1","Earth Pneumatics Sub-Assembly","Compact pilot-operated solenoid valve"',
+      'FT-8MM,"Brass Male Push-In 8mm OD x 1/8"" BSPT","Brass Pneumatic Fittings",74122019,PCS,58,0.70,32,18,1200,200,TRUE,"Jamnagar Brass Yard Bay 2","Earth Metal Jamnagar Foundry","Nickel-plated precision brass push-in fitting"',
+      'ROD-HEX20,"Brass Hex Rod CW617N 20mm (3 Mtr)","Raw Materials & Extrusions",74072110,KG,690,8.25,590,18,25,10,FALSE,"Raw Yard Bay 1","Earth Extrusions Plant","High-machinability forging grade brass rod"'
     ].join('\r\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -622,7 +628,7 @@ export const InventoryManager: React.FC = () => {
           .slice(0, 4)
           .join('-')
           .toUpperCase();
-        sku = slug ? `WLD-${slug}` : `WLD-ITEM-${name.length}`;
+        sku = slug ? slug : `ITEM-${name.length}`;
       }
 
       const normSku = sku.toUpperCase();
@@ -1810,14 +1816,13 @@ export const InventoryManager: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-slate-700 uppercase font-mono mb-1">
-                    Part Code / SKU *
+                    Part Code / SKU
                   </label>
                   <input
                     type="text"
-                    required
                     value={formData.sku}
                     onChange={e => setFormData({ ...formData, sku: e.target.value.toUpperCase() })}
-                    placeholder="e.g. WLD-TIP-1.2"
+                    placeholder="Enter SKU / Part Code (Optional)"
                     className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-orange-500 font-mono font-bold"
                   />
                 </div>
@@ -1895,7 +1900,8 @@ export const InventoryManager: React.FC = () => {
                     type="number"
                     step="0.01"
                     min="0"
-                    value={formData.unitPriceINR}
+                    placeholder="0.00"
+                    value={formData.unitPriceINR || ''}
                     onChange={e => {
                       const inr = parseFloat(e.target.value) || 0;
                       setFormData({ 
@@ -1916,7 +1922,8 @@ export const InventoryManager: React.FC = () => {
                     type="number"
                     step="0.01"
                     min="0"
-                    value={formData.unitPriceUSD}
+                    placeholder="0.00"
+                    value={formData.unitPriceUSD || ''}
                     onChange={e => setFormData({ ...formData, unitPriceUSD: parseFloat(e.target.value) || 0 })}
                     className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-orange-500 font-mono font-bold"
                   />
@@ -1930,7 +1937,8 @@ export const InventoryManager: React.FC = () => {
                     type="number"
                     step="0.01"
                     min="0"
-                    value={formData.costPriceINR || 0}
+                    placeholder="0.00"
+                    value={formData.costPriceINR || ''}
                     onChange={e => setFormData({ ...formData, costPriceINR: parseFloat(e.target.value) || 0 })}
                     className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-orange-500 font-mono"
                   />

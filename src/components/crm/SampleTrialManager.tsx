@@ -54,7 +54,7 @@ export const SampleTrialManager: React.FC = () => {
   const [sampleForm, setSampleForm] = useState({
     companyName: '',
     productName: '',
-    quantityRequested: 2,
+    quantityRequested: 0,
     courierTrackingNo: '',
     courierPartner: 'DHL Express',
   });
@@ -63,12 +63,12 @@ export const SampleTrialManager: React.FC = () => {
   const [trialForm, setTrialForm] = useState({
     companyName: '',
     productName: '',
-    pressureTestBar: 525,
-    leakageTestResult: '0.000 sccs (Zero Bubble Helium Mass Spec)',
-    corrosionHours: 500,
-    cycleCount: 250000,
-    evaluatorEngineer: currentEmployee?.name || 'Amit Verma (QC & Metallurgy Lead)',
-    completionDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+    pressureTestBar: 0,
+    leakageTestResult: '',
+    corrosionHours: 0,
+    cycleCount: 0,
+    evaluatorEngineer: '',
+    completionDate: '',
   });
 
   const [isSubmittingSample, setIsSubmittingSample] = useState(false);
@@ -147,7 +147,7 @@ export const SampleTrialManager: React.FC = () => {
       });
 
       setIsSampleModalOpen(false);
-      setSampleForm({ companyName: '', productName: '', quantityRequested: 2, courierTrackingNo: '', courierPartner: 'DHL Express' });
+      setSampleForm({ companyName: '', productName: '', quantityRequested: 0, courierTrackingNo: '', courierPartner: 'DHL Express' });
     } finally {
       setIsSubmittingSample(false);
     }
@@ -168,10 +168,10 @@ export const SampleTrialManager: React.FC = () => {
         companyName: trialForm.companyName,
         productName: trialForm.productName,
         testParameters: {
-          pressureTestBar: Number(trialForm.pressureTestBar) || 525,
-          leakageTestResult: trialForm.leakageTestResult || '0.000 sccs (Zero Bubble Helium Mass Spec)',
-          corrosionHours: Number(trialForm.corrosionHours) || 500,
-          cycleCount: Number(trialForm.cycleCount) || 250000,
+          pressureTestBar: Number(trialForm.pressureTestBar) || 0,
+          leakageTestResult: trialForm.leakageTestResult || '',
+          corrosionHours: Number(trialForm.corrosionHours) || 0,
+          cycleCount: Number(trialForm.cycleCount) || 0,
         },
         evaluatorEngineer: trialForm.evaluatorEngineer,
         completionDate: trialForm.completionDate,
@@ -182,12 +182,12 @@ export const SampleTrialManager: React.FC = () => {
       setTrialForm({
         companyName: '',
         productName: '',
-        pressureTestBar: 525,
-        leakageTestResult: '0.000 sccs (Zero Bubble Helium Mass Spec)',
-        corrosionHours: 500,
-        cycleCount: 250000,
-        evaluatorEngineer: currentEmployee?.name || 'Amit Verma (QC & Metallurgy Lead)',
-        completionDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+        pressureTestBar: 0,
+        leakageTestResult: '',
+        corrosionHours: 0,
+        cycleCount: 0,
+        evaluatorEngineer: '',
+        completionDate: '',
       });
     } finally {
       setIsSubmittingTrial(false);
@@ -612,9 +612,10 @@ export const SampleTrialManager: React.FC = () => {
                   <label className="block text-xs font-mono font-bold text-slate-700 mb-1">Quantity (PCS)</label>
                   <input
                     type="number"
-                    min="1"
-                    value={sampleForm.quantityRequested}
-                    onChange={e => setSampleForm({ ...sampleForm, quantityRequested: parseInt(e.target.value) || 1 })}
+                    min="0"
+                    placeholder="0"
+                    value={sampleForm.quantityRequested || ''}
+                    onChange={e => setSampleForm({ ...sampleForm, quantityRequested: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:border-orange-500 focus:outline-hidden"
                   />
                 </div>
@@ -712,8 +713,10 @@ export const SampleTrialManager: React.FC = () => {
                   <label className="block text-xs font-mono font-bold text-slate-700 mb-1">Test Pressure (Bar)</label>
                   <input
                     type="number"
-                    value={trialForm.pressureTestBar}
-                    onChange={e => setTrialForm({ ...trialForm, pressureTestBar: parseInt(e.target.value) || 350 })}
+                    min="0"
+                    placeholder="0"
+                    value={trialForm.pressureTestBar || ''}
+                    onChange={e => setTrialForm({ ...trialForm, pressureTestBar: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:border-blue-500 focus:outline-hidden"
                   />
                 </div>
@@ -721,8 +724,10 @@ export const SampleTrialManager: React.FC = () => {
                   <label className="block text-xs font-mono font-bold text-slate-700 mb-1">Corrosion Hours (Salt Spray)</label>
                   <input
                     type="number"
-                    value={trialForm.corrosionHours}
-                    onChange={e => setTrialForm({ ...trialForm, corrosionHours: parseInt(e.target.value) || 500 })}
+                    min="0"
+                    placeholder="0"
+                    value={trialForm.corrosionHours || ''}
+                    onChange={e => setTrialForm({ ...trialForm, corrosionHours: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:border-blue-500 focus:outline-hidden"
                   />
                 </div>
@@ -732,6 +737,7 @@ export const SampleTrialManager: React.FC = () => {
                 <label className="block text-xs font-mono font-bold text-slate-700 mb-1">Leakage Benchmark Result</label>
                 <input
                   type="text"
+                  placeholder="e.g. 0.000 sccs (Zero Bubble Helium Mass Spec)"
                   value={trialForm.leakageTestResult}
                   onChange={e => setTrialForm({ ...trialForm, leakageTestResult: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:border-blue-500 focus:outline-hidden"
@@ -743,6 +749,7 @@ export const SampleTrialManager: React.FC = () => {
                   <label className="block text-xs font-mono font-bold text-slate-700 mb-1">Lead QC Specialist</label>
                   <input
                     type="text"
+                    placeholder="e.g. QC & Metallurgy Lead"
                     value={trialForm.evaluatorEngineer}
                     onChange={e => setTrialForm({ ...trialForm, evaluatorEngineer: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono focus:border-blue-500 focus:outline-hidden"

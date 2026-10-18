@@ -2614,7 +2614,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       let rawSku = String(raw.sku || '').trim();
       if (!rawSku && rawName) {
         const slug = rawName.replace(/[^a-zA-Z0-9]/g, ' ').trim().split(/\s+/).slice(0, 3).join('-').toUpperCase();
-        rawSku = slug ? `WLD-${slug}` : `WLD-ITEM-${1000 + idx}`;
+        rawSku = slug ? slug : `ITEM-${1000 + idx}`;
       }
       const skuKey = rawSku.toUpperCase();
       const curStock = Number(raw.currentStock) || 0;

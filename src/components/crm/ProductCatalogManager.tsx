@@ -161,7 +161,7 @@ export const ProductCatalogManager: React.FC = () => {
     setEditingProduct(null);
     setFormData({
       name: '',
-      sku: `WEL-${Date.now().toString().slice(-4)}`,
+      sku: '',
       modelNumber: '',
       brand: 'WELDOR PRECISION',
       category: categories[0]?.name || 'Industrial Components',

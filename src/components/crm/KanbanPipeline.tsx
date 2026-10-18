@@ -57,21 +57,22 @@ export const KanbanPipeline: React.FC = () => {
   const [confirmDeleteLeadId, setConfirmDeleteLeadId] = useState<string | null>(null);
 
   // Lead Simulator Modal State
-  const [isSimulateModalOpen, setIsSimulateModalOpen] = useState(false);
-  const [simFormData, setSimFormData] = useState({
-    companyName: 'Tata Motors Precision Engineering',
-    contactPerson: 'Sanjay Deshmukh',
-    email: 'sanjay.d@tatamotors.com',
-    phone: '+91 98250 99881',
+  const emptySimFormData = {
+    companyName: '',
+    contactPerson: '',
+    email: '',
+    phone: '',
     country: 'India',
-    title: 'Custom 500-ton Hydraulic Press Manifold Inquiry',
-    categoryName: 'Hydraulic Components',
-    targetQuantity: 250,
-    estimatedValueUSD: 85000,
-    priority: 'Urgent' as const,
-    drawingFileName: 'Tata_EV_Manifold_Drawing_Rev3.pdf',
-    technicalNotes: 'Urgent custom manifold evaluation for new EV assembly line.',
-  });
+    title: '',
+    categoryName: '',
+    targetQuantity: 0,
+    estimatedValueUSD: 0,
+    priority: 'Normal' as const,
+    drawingFileName: '',
+    technicalNotes: '',
+  };
+  const [isSimulateModalOpen, setIsSimulateModalOpen] = useState(false);
+  const [simFormData, setSimFormData] = useState(emptySimFormData);
 
   const stages: { key: LeadStage; label: string; color: string; bgBadge: string }[] = [
     { key: 'NEW_LEAD', label: 'New Inbound Lead', color: 'border-orange-500', bgBadge: 'bg-orange-50 text-orange-700' },
@@ -109,6 +110,7 @@ export const KanbanPipeline: React.FC = () => {
       drawingFileName: simFormData.drawingFileName,
       technicalNotes: simFormData.technicalNotes,
     });
+    setSimFormData(emptySimFormData);
     setIsSimulateModalOpen(false);
   };
 
@@ -676,6 +678,7 @@ export const KanbanPipeline: React.FC = () => {
                   <input
                     type="text"
                     required
+                    placeholder="e.g. Tata Motors Precision Engineering"
                     value={simFormData.companyName}
                     onChange={e => setSimFormData(prev => ({ ...prev, companyName: e.target.value }))}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 font-medium"
@@ -687,6 +690,7 @@ export const KanbanPipeline: React.FC = () => {
                   <input
                     type="text"
                     required
+                    placeholder="e.g. Sanjay Deshmukh"
                     value={simFormData.contactPerson}
                     onChange={e => setSimFormData(prev => ({ ...prev, contactPerson: e.target.value }))}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900"
@@ -700,6 +704,7 @@ export const KanbanPipeline: React.FC = () => {
                   <input
                     type="email"
                     required
+                    placeholder="e.g. contact@company.com"
                     value={simFormData.email}
                     onChange={e => setSimFormData(prev => ({ ...prev, email: e.target.value }))}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 font-mono"
@@ -711,6 +716,7 @@ export const KanbanPipeline: React.FC = () => {
                   <input
                     type="tel"
                     required
+                    placeholder="e.g. +91 98250 99881"
                     value={simFormData.phone}
                     onChange={e => setSimFormData(prev => ({ ...prev, phone: e.target.value }))}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 font-mono"
@@ -723,6 +729,7 @@ export const KanbanPipeline: React.FC = () => {
                 <input
                   type="text"
                   required
+                  placeholder="e.g. Custom 500-ton Hydraulic Press Manifold Inquiry"
                   value={simFormData.title}
                   onChange={e => setSimFormData(prev => ({ ...prev, title: e.target.value }))}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900"
@@ -734,8 +741,10 @@ export const KanbanPipeline: React.FC = () => {
                   <label className="block font-bold text-slate-700 mb-1">Estimated Value (₹ INR)</label>
                   <input
                     type="number"
-                    value={simFormData.estimatedValueUSD}
-                    onChange={e => setSimFormData(prev => ({ ...prev, estimatedValueUSD: Number(e.target.value) }))}
+                    min="0"
+                    placeholder="0"
+                    value={simFormData.estimatedValueUSD || ''}
+                    onChange={e => setSimFormData(prev => ({ ...prev, estimatedValueUSD: e.target.value === '' ? 0 : Number(e.target.value) }))}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 font-mono font-bold"
                   />
                 </div>
@@ -744,6 +753,7 @@ export const KanbanPipeline: React.FC = () => {
                   <label className="block font-bold text-slate-700 mb-1">Attached CAD Blueprint</label>
                   <input
                     type="text"
+                    placeholder="e.g. Blueprint_Drawing_Rev1.pdf"
                     value={simFormData.drawingFileName}
                     onChange={e => setSimFormData(prev => ({ ...prev, drawingFileName: e.target.value }))}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-900 font-mono"
