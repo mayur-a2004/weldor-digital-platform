@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   FileText, 
@@ -523,6 +523,51 @@ export const QuotationBuilder: React.FC = () => {
     showNotification(`⚡ Successfully added ${newItems.length} products to quotation!`, 'success');
     setMultiPickerSelected({});
     setIsMultiPickerOpen(false);
+  };
+
+  // Quick Product Search & Direct Add state
+  const [searchProductQuery, setSearchProductQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const instantSearchedProducts = useMemo(() => {
+    const q = searchProductQuery.trim().toLowerCase();
+    if (!q) return [];
+    return selectableCatalog.filter(item =>
+      (item.name || '').toLowerCase().includes(q) ||
+      (item.sku || '').toLowerCase().includes(q) ||
+      (item.category && item.category.toLowerCase().includes(q)) ||
+      (item.hsnCode && item.hsnCode.includes(q))
+    ).slice(0, 15);
+  }, [selectableCatalog, searchProductQuery]);
+
+  const handleDirectAddProduct = (item: (typeof selectableCatalog)[0]) => {
+    setLineItems(prev => [
+      ...prev,
+      {
+        productName: item.name,
+        sku: item.sku,
+        hsnCode: item.hsnCode || '85159000',
+        quantity: 1,
+        unit: item.unit || 'PCS',
+        unitPriceUSD: item.unitPriceUSD || (item.unitPriceINR ? Math.round(item.unitPriceINR / 85) : 100),
+        discountPct: 0
+      }
+    ]);
+    setSearchProductQuery('');
+    setIsSearchOpen(false);
+    showNotification(`Added "${item.name}" directly to bill!`, 'success');
   };
 
   const handleAddItemRow = () => {
@@ -1449,6 +1494,98 @@ export const QuotationBuilder: React.FC = () => {
                     Itemized Product Bill ({lineItems.length} items)
                   </h3>
                   <div className="flex items-center gap-2 flex-wrap">
+                    {/* DIRECT PRODUCT SEARCH & QUICK ADD BAR */}
+                    <div ref={searchContainerRef} className="relative min-w-[240px] sm:min-w-[280px]">
+                      <div className="relative flex items-center">
+                        <Search className="w-3.5 h-3.5 text-orange-500 absolute left-2.5 pointer-events-none" />
+                        <input
+                          ref={searchInputRef}
+                          type="text"
+                          value={searchProductQuery}
+                          onChange={e => {
+                            setSearchProductQuery(e.target.value);
+                            setIsSearchOpen(true);
+                          }}
+                          onFocus={() => setIsSearchOpen(true)}
+                          placeholder="Search product name..."
+                          className="w-full pl-8 pr-7 py-1 text-xs bg-white border border-orange-300 focus:border-orange-500 rounded-lg shadow-xs focus:outline-hidden font-medium text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-orange-200 transition-all"
+                        />
+                        {searchProductQuery && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSearchProductQuery('');
+                              setIsSearchOpen(false);
+                            }}
+                            className="absolute right-2 text-slate-400 hover:text-slate-600 p-0.5"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Floating Autocomplete Search Results Dropdown */}
+                      {isSearchOpen && (
+                        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 max-h-80 overflow-y-auto divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-100 min-w-[320px]">
+                          {searchProductQuery.trim() ? (
+                            instantSearchedProducts.length === 0 ? (
+                              <div className="p-4 text-center text-xs text-slate-500 font-medium">
+                                No product found matching "{searchProductQuery}"
+                              </div>
+                            ) : (
+                              <>
+                                <div className="px-3 py-1.5 bg-slate-50 border-b border-slate-100 text-[10px] font-mono text-slate-500 flex items-center justify-between">
+                                  <span>Matches ({instantSearchedProducts.length})</span>
+                                  <span className="text-orange-600 font-bold">Click to add directly</span>
+                                </div>
+                                {instantSearchedProducts.map(item => (
+                                  <button
+                                    key={item.id}
+                                    type="button"
+                                    onClick={() => handleDirectAddProduct(item)}
+                                    className="w-full text-left p-2.5 hover:bg-orange-50/80 transition-colors flex items-center justify-between gap-2 group cursor-pointer"
+                                  >
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-xs font-bold text-slate-900 group-hover:text-orange-600 truncate block">
+                                          {item.name}
+                                        </span>
+                                        {item.stock !== undefined && (
+                                          <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-bold shrink-0 ${
+                                            item.stock > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                                          }`}>
+                                            {item.stock > 0 ? `${item.stock} in stock` : 'Out of stock'}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500 font-mono">
+                                        <span className="bg-slate-100 px-1 rounded">{item.sku}</span>
+                                        <span>•</span>
+                                        <span>{item.category}</span>
+                                      </div>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                      <div className="text-xs font-bold font-mono text-slate-900">
+                                        ₹{item.unitPriceINR ? item.unitPriceINR.toLocaleString() : (item.unitPriceUSD * 85).toLocaleString()}
+                                      </div>
+                                      <span className="text-[10px] text-orange-600 font-bold group-hover:underline flex items-center gap-0.5 justify-end mt-0.5">
+                                        <Plus className="w-3 h-3" /> Add
+                                      </span>
+                                    </div>
+                                  </button>
+                                ))}
+                              </>
+                            )
+                          ) : (
+                            <div className="p-3 text-slate-500 text-xs">
+                              <p className="font-semibold text-slate-700 mb-1">Quick Search Products</p>
+                              <p className="text-[11px] text-slate-400">Type product name or part code to add directly to quotation bill.</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
                     <button
                       type="button"
                       onClick={() => setIsMultiPickerOpen(true)}
@@ -1489,7 +1626,7 @@ export const QuotationBuilder: React.FC = () => {
                           <optgroup label="🏭 Official Catalog Products">
                             {products.map(p => (
                               <option key={p.id} value={p.id}>
-                                {p.sku || 'WLD'} - {p.name.slice(0, 30)}
+                                {p.sku || 'SKU'} - {p.name.slice(0, 30)}
                               </option>
                             ))}
                           </optgroup>
@@ -1518,18 +1655,31 @@ export const QuotationBuilder: React.FC = () => {
 
                 <div className="space-y-2.5">
                   {lineItems.length === 0 ? (
-                    <div className="bg-white p-6 rounded-xl border border-dashed border-slate-300 text-center space-y-2">
+                    <div className="bg-white p-6 rounded-xl border border-dashed border-slate-300 text-center space-y-3">
                       <p className="text-xs font-mono text-slate-500">
                         No product items in this quotation yet.
                       </p>
-                      <button
-                        type="button"
-                        onClick={handleAddItemRow}
-                        className="px-3 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 font-mono text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer border border-orange-200 transition-colors"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Add Product Row</span>
-                      </button>
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            searchInputRef.current?.focus();
+                            setIsSearchOpen(true);
+                          }}
+                          className="px-3.5 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-mono text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                        >
+                          <Search className="w-3.5 h-3.5" />
+                          <span>Search Product Name</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleAddItemRow}
+                          className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer border border-slate-200 transition-colors"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Empty Row</span>
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     lineItems.map((item, idx) => (
